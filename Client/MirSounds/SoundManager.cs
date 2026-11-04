@@ -72,8 +72,61 @@ namespace Client.MirSounds
             _OneShots.Play();
         }
 
+        private static bool _soundListRequested;
+        private static bool _soundListLoadedLate;
+
+        /// <summary>
+        /// SoundList.lst 是"音效编号 → 文件名"的映射，只有 10 KB。
+        /// 没有它时只有 1431/1608 个音效能靠命名规则推出来，剩下 177 个特殊命名就播不了。
+        /// </summary>
+        private static void EnsureSoundList()
+        {
+            if (_indexList.Count > 0) return;
+
+            string path = Path.Combine(Settings.SoundPath, "SoundList.lst");
+
+            if (File.Exists(path))
+            {
+                // 运行中才下到 → 清掉之前用命名规则猜出来的名字再重新载入
+                if (_soundListLoadedLate)
+                    _indexList.Clear();
+
+                SoundList.LoadSoundList();
+                return;
+            }
+
+            if (!_soundListRequested && Settings.DownloadSound && MirDownload.Enabled)
+            {
+                _soundListRequested = true;
+                MirDownload.Request(@".\Sound\SoundList.lst");
+            }
+        }
+
+        /// <summary>音效文件（.wav/.mp3）是否存在；不在就排队下载，返回 false 表示这次先别播</summary>
+        private static bool EnsureSoundFile(string name)
+        {
+            string basePath = Path.Combine(Settings.SoundPath, name);
+
+            if (!string.IsNullOrEmpty(Path.GetExtension(basePath)))
+            {
+                if (File.Exists(basePath)) return true;
+            }
+            else
+            {
+                foreach (string ext in SupportedFileTypes)
+                    if (File.Exists(basePath + ext)) return true;
+            }
+
+            if (Settings.DownloadSound && MirDownload.Enabled)
+                MirDownload.Request(@".\Sound\" + name + ".wav");
+
+            return false;
+        }
+
         public static void PlaySound(int index, bool loop = false, int delay = 0)
         {
+            EnsureSoundList();
+
             CheckSoundTimeOut();
 
             if (delay > 0)
@@ -95,7 +148,14 @@ namespace Client.MirSounds
             {
                 if (!_cachedOneShots.TryGetValue(index, out CachedSound cachedSound))
                 {
+                    if (!EnsureSoundFile(_indexList[index]))
+                        return;                     // 还在下载，这次静默跳过
+
                     cachedSound = new CachedSound(index, _indexList[index]);
+
+                    if (cachedSound.AudioData == null || cachedSound.AudioData.Length == 0)
+                        return;                     // 重要：不要缓存失败结果，否则永远不重试
+
                     _cachedOneShots.Add(index, cachedSound);
                 }
 
@@ -107,6 +167,9 @@ namespace Client.MirSounds
             }
             else
             {
+                if (!EnsureSoundFile(_indexList[index]))
+                    return;
+
                 var sound = LoopProvider.TryCreate(index, _indexList[index], MusicVol, loop);
                 if (sound != null)
                 {
@@ -129,8 +192,13 @@ namespace Client.MirSounds
         {
             StopMusic();
 
+            EnsureSoundList();
+
             if (_indexList.TryGetValue(index, out string value))
             {
+                if (!EnsureSoundFile(value))
+                    return;
+
                 _music = LoopProvider.TryCreate(index, value, MusicVol, loop);
             }
         }

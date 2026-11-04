@@ -63,6 +63,9 @@ namespace Client.MirObjects
         public Point CurrentLocation, MapLocation;
         public MirDirection Direction;
         public bool Dead, Hidden, SitDown, Sneaking;
+
+        /// <summary>最近一次"打到我/对我施法"的时间（CMain.Time）。自动战斗用来做优先反击。</summary>
+        public long AttackedUserTime;
         public PoisonType Poison;
         public long DeadTime;
         public byte AI;

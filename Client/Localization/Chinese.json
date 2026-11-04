@@ -1089,6 +1089,16 @@
     "CleanFiles": "清理文件",
     "BadBrowserFormat": "错误的 BROWSER 格式",
     "BadHostFormat": "错误的 HOST 格式",
+    "AutoFight": "内挂（自动战斗）",
+    "AutoPot": "自动喝药",
+    "AutoPotStatusOn": "已开启（点击关闭）",
+    "AutoPotStatusOff": "已关闭（点击开启）",
+    "AutoPotHPRow": "HP 低于 {0}%  使用 {1}",
+    "AutoPotMPRow": "MP 低于 {0}%  使用 {1}",
+    "AutoPotNotSet": "未设置",
+    "AutoPotNoPotion": "背包里没有可用药水",
+    "AutoPotTip": "左键点击药水切换 / 点击百分比修改",
+    "AutoPotInterval": "检测间隔 {0} 毫秒（点击修改）",
     "Max": "最大"
   },
   "Enum": {

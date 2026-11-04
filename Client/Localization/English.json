@@ -1089,6 +1089,16 @@
     "CleanFiles": "Clean Files",
     "BadBrowserFormat": "Bad BROWSER Format",
     "BadHostFormat": "Bad HOST Format",
+    "AutoFight": "Auto Combat",
+    "AutoPot": "Auto Potion",
+    "AutoPotStatusOn": "Enabled (click to disable)",
+    "AutoPotStatusOff": "Disabled (click to enable)",
+    "AutoPotHPRow": "HP below {0}%  use {1}",
+    "AutoPotMPRow": "MP below {0}%  use {1}",
+    "AutoPotNotSet": "Not set",
+    "AutoPotNoPotion": "No usable potion in bag",
+    "AutoPotTip": "Left click potion to switch / Click percent to edit",
+    "AutoPotInterval": "Check interval {0} ms (click to edit)",
     "Max": "Max"
   },
   "Enum": {
@@ -1097,7 +1107,6 @@
     "MirClass_Taoist": "Taoist",
     "MirClass_Assassin": "Assassin",
     "MirClass_Archer": "Archer",
-
     "RequiredClass_Warrior": "Warrior",
     "RequiredClass_Wizard": "Wizard",
     "RequiredClass_Taoist": "Taoist",
@@ -1105,7 +1114,6 @@
     "RequiredClass_Archer": "Archer",
     "RequiredClass_WarWizTao": "WarWizTao",
     "RequiredClass_None": "All Class",
-
     "Stat_MinAC": "MinAC",
     "Stat_MaxAC": "MaxAC",
     "Stat_MinMAC": "MinMAC",
@@ -1165,7 +1173,6 @@
     "Stat_TeleportManaPenaltyPercent": "TeleportManaPenalty",
     "Stat_Hero": "Hero",
     "Stat_Unknown": "Unknown",
-
     "BuffType_None": "None",
     "BuffType_TemporalFlux": "TemporalFlux",
     "BuffType_Hiding": "Hiding",

@@ -365,6 +365,12 @@ namespace Client
 
             Network.Process();
 
+            // 资源按需下载：任何场景（登录/选人/游戏）都能把刚下完的库热加载进来
+            Libraries.ProcessDownloads();
+
+            PrefetchSmallAssets();
+            RefreshCursorsIfReady();
+
             if (MirScene.ActiveScene != null)
                 MirScene.ActiveScene.Process();
 
@@ -379,6 +385,61 @@ namespace Client
             if (Settings.DebugMode)
             {
                 CreateDebugLabel();
+            }
+        }
+
+        private static bool _smallAssetsRequested;
+
+        /// <summary>开局就把小而必需、但不走 MLibrary 的东西排队：鼠标指针 + 像素着色器</summary>
+        private static void PrefetchSmallAssets()
+        {
+            if (_smallAssetsRequested) return;
+            _smallAssetsRequested = true;
+
+            if (!MirDownload.Enabled) return;
+
+            string[] cursors =
+            {
+                "Cursor_Default.CUR", "Cursor_Normal_Atk.CUR", "Cursor_Compulsion_Atk.CUR",
+                "Cursor_Npc.cur", "Cursor_TextPrompt.CUR", "Cursor_Trash.CUR", "Cursor_Upgrade.CUR",
+            };
+
+            foreach (string name in cursors)
+                MirDownload.Request(@".\Data\Cursors\" + name);
+
+            // 进游戏后随时都会用到、而且客户端拼写和清单不一致的三个库
+            // （清单里是 mmap / Stateitem / dnitems，客户端代码写的是 MMap / StateItem / DNItems，
+            //   靠 MirDownload 的规范名映射来纠正大小写）
+            MirDownload.Request(@".\Data\MMap.Lib");       // 右上角小地图 / 大地图
+            MirDownload.Request(@".\Data\StateItem.Lib");  // 装备外观
+            MirDownload.Request(@".\Data\DNItems.Lib");    // 地面物品
+
+            // 着色器是可选项（灰度/魔法效果），下到了下次启动生效
+            MirDownload.Request(@".\Data\Shaders\normal.ps");
+            MirDownload.Request(@".\Data\Shaders\grayscale.ps");
+            MirDownload.Request(@".\Data\Shaders\magic.ps");
+        }
+
+        /// <summary>鼠标指针文件下到后热加载一次（原本只在启动时读一次，永远等不到）</summary>
+        private static void RefreshCursorsIfReady()
+        {
+            if (Cursors == null || !Settings.UseMouseCursors) return;
+            if (Cursors[(int)MouseCursor.Default] != null) return;
+
+            string path = $"{Settings.MouseCursorPath}Cursor_Default.CUR";
+            if (!File.Exists(path)) return;
+
+            try
+            {
+                LoadMouseCursors();
+
+                int cur = (int)CurrentCursor;
+                if (cur >= 0 && cur < Cursors.Length && Cursors[cur] != null)
+                    Program.Form.Cursor = Cursors[cur];
+            }
+            catch (Exception ex)
+            {
+                SaveError("Reload mouse cursors: " + ex.Message);
             }
         }
 

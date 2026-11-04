@@ -191,7 +191,12 @@ namespace Client.MirObjects
             }
         }
 
-        public List<Node> FindPath(Point start, Point target, int MaxNodes = 0)
+        /// <param name="MaxNodes">找到的路径超过这个节点数就判为失败（0 = 不限）</param>
+        /// <param name="MaxExpansions">
+        /// 搜索节点预算（0 = 不限）。目标不可达时 A* 会把整张可达区域搜完，
+        /// 之前是每帧调用一次，直接把帧率拖死；给个预算保证单次开销有上界。
+        /// </param>
+        public List<Node> FindPath(Point start, Point target, int MaxNodes = 0, int MaxExpansions = 0)
         {
             Node startNode = GetNode(start);
             Node targetNode = GetNode(target);
@@ -201,8 +206,13 @@ namespace Client.MirObjects
 
             openSet.Add(startNode);
 
+            int expansions = 0;
+
             while (openSet.Count > 0)
             {
+                if (MaxExpansions > 0 && ++expansions > MaxExpansions)
+                    return null;
+
                 Node currentNode = openSet.RemoveFirst();
 
                 closedSet.Add(currentNode);
@@ -271,9 +281,18 @@ namespace Client.MirObjects
             return Grid[location.X, location.Y];
         }
 
+        // 复用缓冲：原来每次扩展节点都 new List<Node>()，全图搜索时是几万次分配，
+        // 光 GC 就够把帧率拉下来。FindPath 不是递归的，复用安全。
+        [ThreadStatic] private static List<Node> _neighbourBuffer;
+
         private List<Node> GetNeighbours(Node node)
         {
-            List<Node> neighbours = new List<Node>();
+            List<Node> neighbours = _neighbourBuffer;
+            if (neighbours == null)
+                neighbours = _neighbourBuffer = new List<Node>(8);
+
+            neighbours.Clear();
+
             for (int x = -1; x <= 1; x++)
             {
                 for (int y = -1; y <= 1; y++)

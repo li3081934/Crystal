@@ -5,6 +5,15 @@ public class InIReader
     #region Fields
     private readonly List<string> _contents;
     private readonly string _fileName;
+
+    /// <summary>
+    /// 挂起写盘。每个 Write 都会调 Save()，一次批量改十几个键就会把整个文件重写十几遍，
+    /// 实测在带杀毒软件的环境下会卡出几百毫秒。批量写时先挂起，最后手动调一次 Save()。
+    /// </summary>
+    public bool SuspendSave;
+
+    /// <summary>上次落盘时的内容快照，用来跳过"内容没变"的重复写盘</summary>
+    private string _savedSnapshot;
     #endregion
 
     #region Constructor
@@ -26,6 +35,15 @@ public class InIReader
         catch
         {
         }
+
+        _savedSnapshot = Snapshot();
+    }
+
+    private const string SEP = "\n";
+
+    private string Snapshot()
+    {
+        return string.Join(SEP, _contents);
     }
     #endregion
 
@@ -69,9 +87,15 @@ public class InIReader
 
     public void Save()
     {
+        if (SuspendSave) return;
+
         try
         {
+            string snapshot = Snapshot();
+            if (snapshot == _savedSnapshot) return;      // 内容没变，不用重复写盘
+
             File.WriteAllLines(_fileName, _contents);
+            _savedSnapshot = snapshot;
         }
         catch
         {

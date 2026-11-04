@@ -775,6 +775,9 @@ namespace Client.MirObjects
 
             item.Count = canGain;
         }
+        /// <summary>背包空格子数（含快捷栏 0~5 格）。0 = 满了，捡东西会被服务端拒绝。</summary>
+        public int FreeInventorySlots => FreeSpace(Inventory);
+
         private int FreeSpace(UserItem[] array)
         {
             int freeSlots = 0;
