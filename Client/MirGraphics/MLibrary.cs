@@ -12,6 +12,74 @@ namespace Client.MirGraphics
         public static bool Loaded;
         public static int Count, Progress;
 
+        // ---- 按需下载：已创建的 MLibrary 实例登记表，key = 规范化本地路径 ----
+        // 必须声明在所有 MLibrary 字段之前（静态字段按声明顺序初始化）
+        private static readonly object DownloadRegistryLock = new object();
+        private static readonly Dictionary<string, MLibrary> DownloadRegistry = new Dictionary<string, MLibrary>(StringComparer.OrdinalIgnoreCase);
+
+        internal static void RegisterForDownload(MLibrary lib)
+        {
+            try
+            {
+                string key = Path.GetFullPath(lib.FileName);
+                lock (DownloadRegistryLock) DownloadRegistry[key] = lib;
+            }
+            catch
+            {
+                // 路径非法就忽略
+            }
+        }
+
+        /// <summary>
+        /// 需在渲染线程（GameScene.Process）调用：
+        /// 把 MirDownload 刚下完的文件热加载进对应的 MLibrary。
+        /// </summary>
+        public static void ProcessDownloads()
+        {
+            bool any = false;
+
+            while (MirDownload.Finished.TryDequeue(out string path))
+            {
+                MLibrary lib;
+                lock (DownloadRegistryLock)
+                    DownloadRegistry.TryGetValue(path, out lib);
+
+                if (lib == null) continue;
+
+                lib.Reload();
+                any = true;
+            }
+
+            // 新库刚上线：强制重画一帧，否则可能等下一次地图动画才刷出来
+            if (any)
+            {
+                try { Client.MirControls.MirScene.ActiveScene?.Redraw(); }
+                catch { }
+            }
+        }
+
+        /// <summary>进图时预取地图用到的图块库，不用等画到才下</summary>
+        public static void PrefetchMapLibraries(int libIndex)
+        {
+            if (libIndex < 0 || libIndex >= MapLibs.Length) return;
+
+            MLibrary lib = MapLibs[libIndex];
+            if (lib == null) return;
+
+            lib.RequestDownload();
+        }
+
+        /// <summary>下载开启时，编号套装库统一给足槽位，避免本地目录为空导致索引越界</summary>
+        private const int MinLibrarySlots = 600;
+
+        /// <summary>
+        /// 启动时的“全库预扫描”阶段。此阶段只把本地已有文件打开，
+        /// 不触发下载 —— 真正需要的库等实际绘制时再按需拉取（省 60%+ 流量）。
+        /// 用 ThreadStatic，避免影响主/渲染线程。
+        /// </summary>
+        [ThreadStatic]
+        internal static bool EagerLoading;
+
         public static readonly MLibrary
             ChrSel = new MLibrary(Settings.DataPath + "ChrSel"),
             Prguse = new MLibrary(Settings.DataPath + "Prguse"),
@@ -206,6 +274,11 @@ namespace Client.MirGraphics
 
             var count = int.Parse(Regex.Match(lastFile, @"\d+").Value) + 1;
 
+            // 本地目录为空（count=1）时，上层仍可能访问到较大的索引。
+            // 开启按需下载时统一拉齐槽位：缺文件只是“画不出来”，不会越界。
+            if (Settings.DownloadEnabled && count < MinLibrarySlots)
+                count = MinLibrarySlots;
+
             library = new MLibrary[count];
 
             for (int i = 0; i < count; i++)
@@ -236,6 +309,21 @@ namespace Client.MirGraphics
         }
 
         private static void LoadGameLibraries()
+        {
+            // 预扫描阶段：只打开本地已有文件，不触发下载。
+            // 真正需要的库等绘制时由 MLibrary.EnsureOpen() 按需拉取。
+            EagerLoading = true;
+            try
+            {
+                LoadGameLibrariesCore();
+            }
+            finally
+            {
+                EagerLoading = false;
+            }
+        }
+
+        private static void LoadGameLibrariesCore()
         {
             Count = MapLibs.Length + Monsters.Length + Gates.Length + Flags.Length + Siege.Length + NPCs.Length + CArmours.Length +
                 CHair.Length + CWeapons.Length + CWeaponEffect.Length + AArmours.Length + AHair.Length + AWeaponsL.Length + AWeaponsR.Length +
@@ -497,26 +585,312 @@ namespace Client.MirGraphics
         public MLibrary(string filename)
         {
             _fileName = Path.ChangeExtension(filename, Extention);
+
+            Libraries.RegisterForDownload(this);
+        }
+
+        /// <summary>本地文件路径（形如 ".\\Data\\Prguse.Lib"）</summary>
+        public string FileName => _fileName;
+
+        /// <summary>主动请求下载这个库（用于进图预取）</summary>
+        public void RequestDownload()
+        {
+            MirDownload.Request(_fileName);
+        }
+
+        /// <summary>本地文件到位后重新加载（仅限渲染线程调用）</summary>
+        public void Reload()
+        {
+            try
+            {
+                if (_fStream != null)
+                {
+                    _fStream.Dispose();
+                    _fStream = null;
+                }
+
+                _reader = null;
+                _images = null;
+                _indexList = null;
+                _frames = null;
+                _count = 0;
+                _initialized = false;
+                _headerLoaded = false;
+                _isPart = false;
+                _nextOpenAttempt = 0;      // 立即重试
+
+                Initialize();
+            }
+            catch (Exception ex)
+            {
+                CMain.SaveError("MLibrary.Reload " + _fileName + " : " + ex.Message);
+            }
+        }
+
+        // ================= 按需下载：边下边读 =================
+
+        /// <summary>文件不存在时重新探测的间隔（毫秒）</summary>
+        private const int ReopenInterval = 500;
+
+        private long _nextOpenAttempt;
+        private bool _isPart;          // 当前读的是 .part（未下载完）
+        private bool _headerLoaded;
+
+        // ===== 损坏自愈 =====
+        private const int CorruptImageThreshold = 5;   // 完整文件里出现这么多张坏图 → 判为文件损坏
+        private const int MaxRepairAttempts = 2;       // 每个库最多重下几次，防止无限循环
+
+        private readonly HashSet<int> _badImages = new HashSet<int>();            // 触发自愈计数（按图去重）
+        private readonly Dictionary<int, int> _imageFailCount = new Dictionary<int, int>();
+        private readonly HashSet<int> _deadImages = new HashSet<int>();           // 反复失败，本会话不再尝试
+        private int _repairCount;
+        private bool _repairing;
+
+        /// <summary>是否正在读一个还没下载完的 .part 文件</summary>
+        public bool IsPartial => _isPart;
+
+        /// <summary>
+        /// 确保文件已打开（优先正式文件，其次 .part），并已解析完索引表。
+        /// 任何一步条件不满足就返回 false，调用方当作“这张图还没有”处理即可。
+        /// </summary>
+        private bool EnsureOpen()
+        {
+            long now = CMain.Time;
+
+            // 真·完整文件已加载 → 什么都不用做
+            if (_fStream != null && _headerLoaded && !_isPart)
+                return true;
+
+            // 走到这里说明：还没文件，或者正在读一个没下完的 .part
+            // → 必须周期性催下载器（Request 内部有去重 + 失败冷却），否则旧的
+            //   .part 重启后就没人续传，永远补不齐（建筑/地图就是这么缺的）。
+            if (now < _nextOpenAttempt)
+                return _fStream != null && _headerLoaded;
+
+            _nextOpenAttempt = now + ReopenInterval;
+
+            // EagerLoading = 启动时的全库预扫描，此时不触发下载（真正画到才算“需要”）
+            if (!Libraries.EagerLoading) MirDownload.Request(_fileName);
+
+            if (_fStream != null)
+            {
+                if (_headerLoaded) return true;
+                return LoadHeader();
+            }
+
+            string path = null;
+
+            if (File.Exists(_fileName))
+            {
+                path = _fileName;
+                _isPart = false;
+            }
+            else if (File.Exists(_fileName + ".part"))
+            {
+                path = _fileName + ".part";
+                _isPart = true;
+            }
+
+            if (path == null)
+                return false;
+
+            try
+            {
+                // 允许下载线程同时往同一个 .part 里写，也允许它下载完后把它 rename 成正式文件
+                _fStream = new FileStream(path, FileMode.Open, FileAccess.Read,
+                                          FileShare.ReadWrite | FileShare.Delete);
+                _reader = new BinaryReader(_fStream);
+            }
+            catch
+            {
+                _fStream = null;
+                _reader = null;
+                return false;
+            }
+
+            _headerLoaded = false;
+            return LoadHeader();
+        }
+
+        /// <summary>
+        /// 某个图解码失败。
+        ///  - 同一张图连续失败 3 次 → 本会话放弃它（避免每帧都重建纹理）
+        ///  - 完整文件里累计出现 5 张不同的坏图 → 判定整个 .Lib 损坏 → 删除重下
+        ///  - .part 还没下完，坏图是正常的，不参与判定
+        /// </summary>
+        private void NoteBadImage(int index)
+        {
+            if (_isPart || _fStream == null || _repairing) return;
+
+            int n;
+            _imageFailCount.TryGetValue(index, out n);
+            n++;
+            _imageFailCount[index] = n;
+
+            if (n >= 3)
+                _deadImages.Add(index);
+
+            if (!_badImages.Add(index)) return;
+            if (_badImages.Count < CorruptImageThreshold) return;
+
+            RepairCorruptFile();
+        }
+
+        /// <summary>把当前文件判为损坏：删掉 + 重新下载（有次数上限）</summary>
+        private void RepairCorruptFile()
+        {
+            if (_repairing) return;
+
+            if (_repairCount >= MaxRepairAttempts)
+            {
+                if (_repairCount == MaxRepairAttempts)
+                {
+                    _repairCount++;
+                    CMain.SaveError("MLibrary: " + _fileName + " 重下 " + MaxRepairAttempts +
+                                    " 次仍有坏图，停止自愈（源文件本身可能就有问题）");
+                }
+                return;
+            }
+
+            _repairCount++;
+            _repairing = true;
+            _badImages.Clear();
+            _imageFailCount.Clear();
+            _deadImages.Clear();
+
+            CMain.SaveError("MLibrary: " + _fileName + " 判定文件损坏 → 删除并重新下载（第 " +
+                            _repairCount + " 次）");
+
+            try
+            {
+                if (_fStream != null)
+                {
+                    _fStream.Dispose();
+                    _fStream = null;
+                }
+
+                _reader = null;
+                _images = null;
+                _indexList = null;
+                _frames = null;
+                _count = 0;
+                _initialized = false;
+                _headerLoaded = false;
+                _isPart = false;
+                _nextOpenAttempt = 0;
+
+                if (File.Exists(_fileName)) File.Delete(_fileName);
+                if (File.Exists(_fileName + ".part")) File.Delete(_fileName + ".part");
+                if (File.Exists(_fileName + ".part.meta")) File.Delete(_fileName + ".part.meta");
+
+                MirDownload.InvalidateFile(_fileName);      // 清掉 Done/冷却，立刻重新排队
+            }
+            catch (Exception ex)
+            {
+                CMain.SaveError("MLibrary repair " + _fileName + " : " + ex.Message);
+            }
+        }
+
+        private bool HasBytes(long offset, int count)
+        {
+            try
+            {
+                return _fStream != null && _fStream.Length >= offset + count;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>索引表还没读完（或图还没下到）时返回 false，下次重试</summary>
+        private bool EnsureImage(int index)
+        {
+            _initialized = true;
+
+            // 无条件走 EnsureOpen：
+            //  - 真·完整文件 → 第一行就返回 true，几乎零开销
+            //  - 没文件 / 正在读 .part → 顺手催下载器续传
+            //  之前这里写成 “只有 _fStream == null 才调 EnsureOpen”，
+            //  导致 .part 文件一旦被打开过就再也不会被续传（建筑/地板一直缺就是这个原因）。
+            if (!EnsureOpen())
+                return false;
+
+            if (_images == null || _indexList == null || index < 0 || index >= _images.Length)
+                return false;
+
+            if (_images[index] != null)
+                return true;
+
+            long off = _indexList[index];
+            if (!HasBytes(off, 17))
+                return false;                       // 这张图的数据还没下到
+
+            MImage probe;
+            try
+            {
+                _fStream.Position = off;
+                probe = new MImage(_reader);
+            }
+            catch
+            {
+                NoteBadImage(index);
+                return false;
+            }
+
+            long need = 17L + probe.Length;
+            if (probe.HasMask)
+                need = 29L + probe.Length * 2;      // CreateTexture 里 mask 也用 Length 长度
+
+            if (!HasBytes(off, (int)Math.Min(int.MaxValue, need)))
+                return false;                       // 只下了半张，先不缓存
+
+            _images[index] = probe;
+            return true;
         }
 
         public void Initialize()
         {
             _initialized = true;
 
-            if (!File.Exists(_fileName))
+            if (!EnsureOpen())
                 return;
+
+            LoadHeader();
+        }
+
+        /// <summary>解析文件头 + 索引表（数据不够就返回 false，下次重试）</summary>
+        private bool LoadHeader()
+        {
+            if (_headerLoaded) return true;
+            if (_fStream == null) return false;
 
             try
             {
-                _fStream = new FileStream(_fileName, FileMode.Open, FileAccess.Read);
+                _fStream.Position = 0;
                 _reader = new BinaryReader(_fStream);
+
+                if (!HasBytes(0, 8)) return false;
+
                 int currentVersion = _reader.ReadInt32();
                 if (currentVersion < 2)
                 {
+                    // 开了按需下载时，版本号错几乎一定是文件损坏 → 按损坏处理而不是直接退出程序
+                    if (Settings.DownloadEnabled && !_isPart)
+                    {
+                        _headerLoaded = false;
+                        _count = 0;
+                        RepairCorruptFile();
+                        return false;
+                    }
+
                     System.Windows.Forms.MessageBox.Show("Wrong version, expecting lib version: " + LibVersion.ToString() + " found version: " + currentVersion.ToString() + ".", _fileName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error, System.Windows.Forms.MessageBoxDefaultButton.Button1);
                     System.Windows.Forms.Application.Exit();
-                    return;
+                    return false;
                 }
+
+                int headerSize = currentVersion >= 3 ? 12 : 8;
+
                 _count = _reader.ReadInt32();
 
                 int frameSeek = 0;
@@ -525,13 +899,19 @@ namespace Client.MirGraphics
                     frameSeek = _reader.ReadInt32();
                 }
 
+                if (_count <= 0 || _count > 200000 || !HasBytes(headerSize, _count * 4))
+                {
+                    _count = 0;                     // 索引表还没下完
+                    return false;
+                }
+
                 _images = new MImage[_count];
                 _indexList = new int[_count];
 
                 for (int i = 0; i < _count; i++)
                     _indexList[i] = _reader.ReadInt32();
 
-                if (currentVersion >= 3)
+                if (currentVersion >= 3 && frameSeek > 0 && HasBytes(frameSeek, 4))
                 {
                     _fStream.Seek(frameSeek, SeekOrigin.Begin);
 
@@ -546,34 +926,55 @@ namespace Client.MirGraphics
                         }
                     }
                 }
+
+                _headerLoaded = true;
+                _repairing = false;
+                _badImages.Clear();
+                _imageFailCount.Clear();
+                _deadImages.Clear();
+                return true;
             }
-            catch (Exception)
+            catch (EndOfStreamException)
             {
-                _initialized = false;
-                throw;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _headerLoaded = false;
+                CMain.SaveError("MLibrary.LoadHeader " + _fileName + " : " + ex.Message);
+                return false;
             }
         }
 
         private bool CheckImage(int index)
         {
-            if (!_initialized)
-                Initialize();
-
-            if (_images == null || index < 0 || index >= _images.Length)
+            if (!EnsureImage(index))
                 return false;
 
-            if (_images[index] == null)
-            {
-                _fStream.Position = _indexList[index];
-                _images[index] = new MImage(_reader);
-            }
             MImage mi = _images[index];
+            if (mi == null)
+                return false;
+
             if (!mi.TextureValid)
             {
                 if ((mi.Width == 0) || (mi.Height == 0))
                     return false;
-                _fStream.Seek(_indexList[index] + 17, SeekOrigin.Begin);
-                mi.CreateTexture(_reader);
+
+                if (_deadImages.Contains(index))
+                    return false;                 // 反复失败的图，本会话不再尝试
+
+                try
+                {
+                    _fStream.Seek(_indexList[index] + 17, SeekOrigin.Begin);
+                    mi.CreateTexture(_reader);
+                }
+                catch
+                {
+                    // .part 还在增长，半张图解不开 → 下帧再试；完整文件里的坏图 → 累计自愈
+                    mi.DisposeTexture();
+                    NoteBadImage(index);
+                    return false;
+                }
             }
 
             return true;
@@ -581,60 +982,31 @@ namespace Client.MirGraphics
 
         public Point GetOffSet(int index)
         {
-            if (!_initialized) Initialize();
-
-            if (_images == null || index < 0 || index >= _images.Length)
+            if (!EnsureImage(index))
                 return Point.Empty;
-
-            if (_images[index] == null)
-            {
-                _fStream.Seek(_indexList[index], SeekOrigin.Begin);
-                _images[index] = new MImage(_reader);
-            }
 
             return new Point(_images[index].X, _images[index].Y);
         }
         public Size GetSize(int index)
         {
-            if (!_initialized) Initialize();
-            if (_images == null || index < 0 || index >= _images.Length)
+            if (!EnsureImage(index))
                 return Size.Empty;
-
-            if (_images[index] == null)
-            {
-                _fStream.Seek(_indexList[index], SeekOrigin.Begin);
-                _images[index] = new MImage(_reader);
-            }
 
             return new Size(_images[index].Width, _images[index].Height);
         }
         public Size GetTrueSize(int index)
         {
-            if (!_initialized)
-                Initialize();
-
-            if (_images == null || index < 0 || index >= _images.Length)
+            // 之前这里直接调 mi.CreateTexture() 而没有 try/catch，
+            // 遇到损坏的图会把异常抛到调用方 —— 严重时直接把 MirScene 的静态构造炸掉，
+            // 整个客户端启动即崩。统一走 CheckImage（内部已捕获并记账）。
+            if (!CheckImage(index))
                 return Size.Empty;
 
-            if (_images[index] == null)
-            {
-                _fStream.Position = _indexList[index];
-                _images[index] = new MImage(_reader);
-            }
             MImage mi = _images[index];
-            if (mi.TrueSize.IsEmpty)
-            {
-                if (!mi.TextureValid)
-                {
-                    if ((mi.Width == 0) || (mi.Height == 0))
-                        return Size.Empty;
+            if (mi == null)
+                return Size.Empty;
 
-                    _fStream.Seek(_indexList[index] + 17, SeekOrigin.Begin);
-                    mi.CreateTexture(_reader);
-                }
-                return mi.GetTrueSize();
-            }
-            return mi.TrueSize;
+            return mi.TrueSize.IsEmpty ? mi.GetTrueSize() : mi.TrueSize;
         }
 
         public void Draw(int index, int x, int y)

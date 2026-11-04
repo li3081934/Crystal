@@ -14,11 +14,55 @@ namespace Client.MirControls
         private static long _lastClickTime;
         private static MirControl _clickedControl;
 
+        // 资源下载进度提示（所有场景共用）
+        private MirLabel _downloadLabel;
+        private static string _downloadText = string.Empty;
+        private static long _nextDownloadUi;
+
         protected MirScene()
         {
             DrawControlTexture = true;
             BackColour = Color.Magenta;
             Size = new Size(Settings.ScreenWidth, Settings.ScreenHeight);
+
+            // 注意：这里刻意不设 Parent —— 它是场景纹理之外的一层覆盖，
+            // 否则会被 MapControl 这种全屏子控件盖掉（和 CMain.DebugBaseLabel 一个思路）
+            _downloadLabel = new MirLabel
+            {
+                AutoSize = true,
+                BackColour = Color.FromArgb(170, 0, 0, 0),
+                ForeColour = Color.White,
+                OutLine = true,
+                OutLineColour = Color.Black,
+                Font = new System.Drawing.Font(Settings.FontName, 9F),
+                Location = new Point(10, 8),
+                Visible = false,
+                NotControl = true,
+            };
+        }
+
+        private void UpdateDownloadLabel()
+        {
+            if (_downloadLabel == null || _downloadLabel.IsDisposed) return;
+
+            long now = CMain.Time;
+            if (now < _nextDownloadUi) return;
+            _nextDownloadUi = now + 250;         // 每 250ms 刷新一次就够
+
+            string text = MirDownload.IsActive ? MirDownload.ProgressText() : string.Empty;
+            if (text == _downloadText) return;
+
+            _downloadText = text;
+
+            if (text.Length > 0)
+            {
+                _downloadLabel.Text = text;      // 先设文字，AutoSize 才会算好尺寸
+                _downloadLabel.Visible = true;
+            }
+            else
+            {
+                _downloadLabel.Visible = false;
+            }
         }
 
         public override sealed Size Size
@@ -35,6 +79,11 @@ namespace Client.MirControls
             OnBeforeShown();
 
             DrawControl();
+
+            // 资源下载提示：画在场景纹理之上，保证不会被地图/对话框盖住
+            UpdateDownloadLabel();
+            if (_downloadLabel != null && !_downloadLabel.IsDisposed && _downloadLabel.Visible)
+                _downloadLabel.Draw();
 
             if (CMain.DebugBaseLabel != null && !CMain.DebugBaseLabel.IsDisposed)
                 CMain.DebugBaseLabel.Draw();

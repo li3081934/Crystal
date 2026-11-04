@@ -1114,6 +1114,19 @@ public enum ClientTextKeys
     BadHostFormat,
     WarWizTao,
     WarWizTao_Assassin_Archer,
+
+    // ==== 客户端内挂：自动喝药（自定义功能） ====
+    AutoFight,
+    AutoPot,
+    AutoPotStatusOn,
+    AutoPotStatusOff,
+    AutoPotHPRow,
+    AutoPotMPRow,
+    AutoPotNotSet,
+    AutoPotNoPotion,
+    AutoPotTip,
+    AutoPotInterval,
+
     Max
 }
 
@@ -4097,6 +4110,16 @@ public static class GameLanguage
             { nameof(ClientTextKeys.CleanFiles), "Clean Files" },
             { nameof(ClientTextKeys.BadBrowserFormat), "Bad BROWSER Format" },
             { nameof(ClientTextKeys.BadHostFormat), "Bad HOST Format" },
+            { nameof(ClientTextKeys.AutoFight), "Auto Combat" },
+            { nameof(ClientTextKeys.AutoPot), "Auto Potion" },
+            { nameof(ClientTextKeys.AutoPotStatusOn), "Enabled (click to disable)" },
+            { nameof(ClientTextKeys.AutoPotStatusOff), "Disabled (click to enable)" },
+            { nameof(ClientTextKeys.AutoPotHPRow), "HP below {0}%  use {1}" },
+            { nameof(ClientTextKeys.AutoPotMPRow), "MP below {0}%  use {1}" },
+            { nameof(ClientTextKeys.AutoPotNotSet), "Not set" },
+            { nameof(ClientTextKeys.AutoPotNoPotion), "No usable potion in bag" },
+            { nameof(ClientTextKeys.AutoPotTip), "Left click potion to switch / Click percent to edit" },
+            { nameof(ClientTextKeys.AutoPotInterval), "Check interval {0} ms (click to edit)" },
             { nameof(ClientTextKeys.Max), "Max" },
         },
         Enum = new Dictionary<string, string>

@@ -70,6 +70,7 @@ namespace Client.MirScenes
         public MiniMapDialog MiniMapDialog;
         public InspectDialog InspectDialog;
         public OptionDialog OptionDialog;
+        public AutoFightDialog AutoFightDialog;
         public MenuDialog MenuDialog;
         public NPCDialog NPCDialog;
         public NPCGoodsDialog NPCGoodsDialog;
@@ -298,6 +299,7 @@ namespace Client.MirScenes
             MiniMapDialog = new MiniMapDialog { Parent = this };
             InspectDialog = new InspectDialog { Parent = this, Visible = false };
             OptionDialog = new OptionDialog { Parent = this, Visible = false };
+            AutoFightDialog = new AutoFightDialog { Parent = this, Visible = false };
             MenuDialog = new MenuDialog { Parent = this, Visible = false };
             NPCDialog = new NPCDialog { Parent = this, Visible = false };
             NPCGoodsDialog = new NPCGoodsDialog(PanelType.Buy) { Parent = this, Visible = false };
@@ -620,6 +622,10 @@ namespace Client.MirScenes
                     case KeybindOptions.Fishing:
                         if (!FishingDialog.Visible) FishingDialog.Show();
                         else FishingDialog.Hide();
+                        break;
+                    case KeybindOptions.AutoPot:
+                        if (!AutoFightDialog.Visible) AutoFightDialog.Show();
+                        else AutoFightDialog.Hide();
                         break;
                     case KeybindOptions.Skillbar:
                         if (!Settings.SkillBar)
@@ -1184,6 +1190,12 @@ namespace Client.MirScenes
         {
             if (MapControl == null || User == null)
                 return;
+
+            // 客户端内挂：自动喝药 + 自动战斗
+            AutoPotion.Process();
+            AutoFight.Process();
+
+            // （资源热加载统一在 CMain.UpdateEnviroment 中处理，覆盖登录/选人/游戏全部场景）
 
             if (CMain.Time >= MoveTime)
             {
@@ -3338,6 +3350,11 @@ namespace Client.MirScenes
 
             if (MapControl.Objects.TryGetValue(p.ObjectID, out var ob))
             {
+                // 近战包没有 TargetID，只能推断：攻击命中"朝向前方一格"。
+                // 那一格正好是玩家脚下 → 这个怪是在打我（自动战斗用来优先反击）。
+                if (Functions.PointMove(p.Location, p.Direction, 1) == User.CurrentLocation)
+                    ob.AttackedUserTime = CMain.Time;
+
                 if (ob.Race == ObjectType.Player)
                 {
                     action = new QueuedAction { Action = MirAction.Attack1, Direction = p.Direction, Location = p.Location, Params = new List<object>() };
@@ -4672,6 +4689,9 @@ namespace Client.MirScenes
 
             if (MapControl.Objects.TryGetValue(p.ObjectID, out var ob))
             {
+                if (p.TargetID == User.ObjectID)
+                    ob.AttackedUserTime = CMain.Time;
+
                 QueuedAction action = new QueuedAction { Action = MirAction.Spell, Direction = p.Direction, Location = p.Location, Params = new List<object>() };
                 action.Params.Add(p.Spell);
                 action.Params.Add(p.TargetID);
@@ -5144,6 +5164,9 @@ namespace Client.MirScenes
 
             if (MapControl.Objects.TryGetValue(p.ObjectID, out var ob))
             {
+                if (p.TargetID == User.ObjectID)
+                    ob.AttackedUserTime = CMain.Time;
+
                 QueuedAction action = null;
                 if (ob.Race == ObjectType.Player)
                 {
@@ -10299,6 +10322,13 @@ namespace Client.MirScenes
         public static int ViewRangeY;
 
         private bool _autoPath;
+
+        // 自动寻路重新计算路径的最小间隔。
+        // 上游原来是「每帧一次 FindPath（MaxNodes 不传 = 不限节点）」，正常手动点地面走还行，
+        // 但自动战斗会长时间保持 AutoPath = true，等于每帧跑一次全图 A*，直接把帧率拖死。
+        private const int AutoPathRepathInterval = 300;
+        private long _nextAutoPathRepath;
+
         public bool AutoPath
         {
             get
@@ -10311,7 +10341,13 @@ namespace Client.MirScenes
                 _autoPath = value;
 
                 if (!_autoPath)
+                {
                     CurrentPath = null;
+                }
+                else
+                {
+                    _nextAutoPathRepath = CMain.Time + AutoPathRepathInterval;
+                }
             }
         }
 
@@ -10447,6 +10483,8 @@ namespace Client.MirScenes
             Width = Map.Width;
             Height = Map.Height;
 
+            PrefetchMapLibraries();
+
             PathFinder = new PathFinder(this);
 
             try
@@ -10466,6 +10504,40 @@ namespace Client.MirScenes
             SoundList.Music = Music;
 
             UpdateWeather();
+        }
+
+        /// <summary>
+        /// 进图时把这幅图用到的所有图块库一次性排进下载队列。
+        /// 否则只有在格子被画到时才会请求，视野外的建筑/图块就一直缺。
+        /// </summary>
+        private void PrefetchMapLibraries()
+        {
+            if (!Settings.DownloadEnabled || M2CellInfo == null) return;
+
+            try
+            {
+                HashSet<int> seen = new HashSet<int>();
+
+                for (int x = 0; x < Width; x++)
+                    for (int y = 0; y < Height; y++)
+                    {
+                        CellInfo cell = M2CellInfo[x, y];
+                        if (cell == null) continue;
+
+                        if (cell.BackIndex >= 0 && seen.Add(cell.BackIndex))
+                            Libraries.PrefetchMapLibraries(cell.BackIndex);
+
+                        if (cell.MiddleIndex >= 0 && seen.Add(cell.MiddleIndex))
+                            Libraries.PrefetchMapLibraries(cell.MiddleIndex);
+
+                        if (cell.FrontIndex >= 0 && seen.Add(cell.FrontIndex))
+                            Libraries.PrefetchMapLibraries(cell.FrontIndex);
+                    }
+            }
+            catch (Exception ex)
+            {
+                CMain.SaveError("PrefetchMapLibraries: " + ex.Message);
+            }
         }
 
 
@@ -11470,8 +11542,17 @@ namespace Client.MirScenes
 
             if (MapObject.TargetObject != null && !MapObject.TargetObject.Dead)
             {
-                if (((MapObject.TargetObject.Name.EndsWith(")") || MapObject.TargetObject is PlayerObject) && CMain.Shift) ||
-                    (!MapObject.TargetObject.Name.EndsWith(")") && MapObject.TargetObject is MonsterObject))
+                // 内挂把"普通攻击"关掉时，别对**内挂自己锁定的目标**自动发起攻击。
+                // 这一段是客户端原生的"自动索敌攻击"：只要 TargetObject 有值且贴身 1 格就会发 Attack1，
+                // 完全绕过内挂的普攻开关，表现就是"一边放技能一边砍"。
+                // 手动点选的目标不受影响（只比较 AutoFight 自己的目标）。
+                bool suppressAutoAttack = Settings.AutoFightEnabled
+                                          && !Settings.AutoFightBasicAttack
+                                          && MapObject.TargetObject == AutoFight.Target;
+
+                if (!suppressAutoAttack &&
+                    (((MapObject.TargetObject.Name.EndsWith(")") || MapObject.TargetObject is PlayerObject) && CMain.Shift) ||
+                     (!MapObject.TargetObject.Name.EndsWith(")") && MapObject.TargetObject is MonsterObject)))
                 {
                     GameScene.LogTime = CMain.Time + Globals.LogDelay;
 
@@ -11720,14 +11801,21 @@ namespace Client.MirScenes
                     return;
                 }
 
-                var path = GameScene.Scene.MapControl.PathFinder.FindPath(MapObject.User.CurrentLocation, CurrentPath.Last().Location);
-
-                if (path != null && path.Count > 0)
-                    GameScene.Scene.MapControl.CurrentPath = path;
-                else
+                // 只有到时间了才重算路径：路径节点是逐步消费的，没必要每帧都做一次 A*
+                if (CMain.Time >= _nextAutoPathRepath)
                 {
-                    AutoPath = false;
-                    return;
+                    _nextAutoPathRepath = CMain.Time + AutoPathRepathInterval;
+
+                    var path = GameScene.Scene.MapControl.PathFinder.FindPath(
+                        MapObject.User.CurrentLocation, CurrentPath.Last().Location, 0, 4000);
+
+                    if (path != null && path.Count > 0)
+                        GameScene.Scene.MapControl.CurrentPath = path;
+                    else
+                    {
+                        AutoPath = false;
+                        return;
+                    }
                 }
 
                 Node currentNode = CurrentPath.SingleOrDefault(x => User.CurrentLocation == x.Location);
@@ -11762,6 +11850,14 @@ namespace Client.MirScenes
             }
 
             if (MapObject.TargetObject == null || MapObject.TargetObject.Dead) return;
+
+            // 内挂自己锁定的目标不要走这条「自动贴近」逻辑。
+            // 这段是客户端原生的"左键选中怪 → 一路走过去贴身砍"，只要 TargetObject 是怪、
+            // 且不在 1 格内，每帧都会发一次 Walking。
+            // 法师/道士需要站在技能射程外输出，被这条拖到 1 格就会表现为"内挂自己跑去贴脸"。
+            // 手动点选的目标不受影响（只比较 AutoFight 自己的目标）。
+            if (Settings.AutoFightEnabled && MapObject.TargetObject == AutoFight.Target) return;
+
             if (((!MapObject.TargetObject.Name.EndsWith(")") && !(MapObject.TargetObject is PlayerObject)) || !CMain.Shift) &&
                 (MapObject.TargetObject.Name.EndsWith(")") || !(MapObject.TargetObject is MonsterObject))) return;
             if (Functions.InRange(MapObject.TargetObject.CurrentLocation, User.CurrentLocation, 1)) return;

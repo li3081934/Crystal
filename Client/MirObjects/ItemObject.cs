@@ -18,6 +18,9 @@ namespace Client.MirObjects
 
         public Size Size;
 
+        /// <summary>这堆是金币（S.ObjectGold），不是道具。内挂拾取过滤要靠它区分。</summary>
+        public bool IsGold;
+
 
         public ItemObject(uint objectID) : base(objectID)
         {
@@ -26,6 +29,7 @@ namespace Client.MirObjects
 
         public void Load(S.ObjectItem info)
         {
+            IsGold = false;
             Name = info.Name;
             NameColour = info.NameColour;
 
@@ -43,6 +47,7 @@ namespace Client.MirObjects
         }
         public void Load(S.ObjectGold info)
         {
+            IsGold = true;
             Name = GameLanguage.ClientTextMap.GetLocalization((ClientTextKeys.GoldAmount), info.Gold);
 
 
