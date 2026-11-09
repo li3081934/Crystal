@@ -4016,3 +4016,211 @@ private static bool LootAllowed(MapObject ob)
 
 查不到 `ItemInfo` 的物品（比如本地物品库还没下完、或者服务端有客户端没有的道具）
 归到「其它」处理，不会因为查不到就完全不捡。
+
+---
+
+# 四十四、寻敌/漫游重做：从"原地转圈"改成"方向性探索"
+
+## 问题
+
+清完身边的怪之后，人物会在同一小片地上来回抖，出不去。根因在 `DoRoam`：
+
+```csharp
+int radius = Math.Max(1, Settings.AutoFightRoamRange);      // 6
+
+// 离锚点太远 → 先走回去
+if (Dist(user.CurrentLocation, _anchor) > radius)
+{
+    Status = "状态：返回巡逻点";
+    MoveTo(_anchor);                                        // ← 硬拉回锚点
+    ...
+}
+
+Point dest = FindRoamCell(map, user.CurrentLocation, _anchor, radius);   // 锚点周围 6 格随机挑
+```
+
+四个问题：
+
+1. **半径固定 6 格** —— 视觉上就是一个小圈
+2. **离开锚点超过半径就被拉回锚点** —— 永远出不去（`MoveTo(_anchor)` 是个死循环）
+3. **`FindRoamCell` 没有任何方向记忆** —— 纯随机抖动，来回踩同一片地
+4. **锚点只在接敌时更新** —— 清完怪之后锚点固定死在最后一只怪的位置
+
+## 改法一：方向性游走（momentum walk）
+
+不再"锚点 + 随机点"，改成**记住一个方向，大部分时间沿着它继续走**：
+
+```csharp
+private static MirDirection PickRoamDirection(long idle)
+{
+    if (!_hasRoamDir) return (MirDirection)_rand.Next(8);
+
+    int r = _rand.Next(100);
+
+    if (idle < 8000)                 // 刚清完怪：一路走过去，不原地抖
+    {
+        if (r < 60) return _roamDir;
+        if (r < 80) return OffsetDir(_roamDir, 1);
+        return OffsetDir(_roamDir, -1);
+    }
+
+    if (idle < 20000)                // 十几秒没怪：六成概率换个新方向
+    {
+        if (r < 40) return _roamDir;
+        return (MirDirection)_rand.Next(8);
+    }
+
+    MirDirection opposite = OffsetDir(_roamDir, 4);
+    MirDirection dir = (MirDirection)_rand.Next(8);
+
+    if (dir == opposite) dir = OffsetDir(dir, 1);      // 很久没怪：绝不回头
+    return dir;
+}
+```
+
+方向定了之后再挑落点：
+
+```csharp
+private static Point PickRoamDest(MapControl map, Point from, MirDirection dir, int step, int minStep)
+{
+    for (int i = 0; i < 40; i++)
+    {
+        // 前 24 次只在指定方向 ±1 格内挑（保持"一路走过去"的感觉），之后放开全方向兜底
+        MirDirection d = i < 24 ? OffsetDir(dir, _rand.Next(-1, 2)) : (MirDirection)_rand.Next(8);
+
+        int r = _rand.Next(minStep, step + 1);
+        Point p = Functions.PointMove(from, d, r);
+
+        if (!InBounds(map, p)) continue;
+        if (!map.EmptyCell(p)) continue;
+        if (NearRecentRoam(p)) continue;         // 最近去过的点附近不要
+
+        RememberRoam(p);
+        return p;
+    }
+
+    return Point.Empty;
+}
+```
+
+`_recentRoam` 是个 6 个点的环形缓冲，新落点离旧点 ≤2 格就跳过一个候选 —— 防止在已经清空的区域里反复踩。
+
+中间有没有墙不用管，`MoveTo()` 的 A* 会自己绕。
+
+## 改法二：空闲越久走越远
+
+```csharp
+if (_idleSince == 0) _idleSince = now;
+long idle = now - _idleSince;
+
+if (idle < 8000)        step = radius;                       // 刚清完怪：正常巡逻（RoamRange）
+else if (idle < 20000)  step = Math.Max(radius, radius * 3 / 2);
+else                    step = Math.Max(radius, 12);         // 很久没怪：大步探索
+```
+
+接敌时（`AcquireTarget`）把 `_idleSince` 清零，步长回到正常。
+`Stop()` 里也重置 —— 否则关掉内挂再开，会带着"已经空闲很久"的计时直接大步乱跑。
+
+## 改法三：锚点跟着人走
+
+`_anchor` 不再是把人拉回去的中心，改成"跟着当前位置更新"，彻底去掉"返回巡逻点"那条死循环。
+现在 `_anchor` 只在 `Stop()` / `AcquireTarget()` / `DoRoam()` 里做记录，不再参与任何决策。
+
+## 改法四：撞墙/走不通 → 换方向
+
+```csharp
+if (dest == Point.Empty)                        // 这个方向挑不到落点
+{
+    _hasRoamDir = false;
+    _roamFailStreak++;
+
+    if (_roamFailStreak >= 3) { /* 原地歇 1 秒，清锚点 */ }
+    else { Status = "状态：换个方向"; }
+    return;
+}
+
+MoveTo(dest);
+
+// MoveTo 找不到路时不会置 AutoPath，立刻退回来换方向
+if (!map.AutoPath)
+{
+    _hasRoamDir = false;
+    _roamFailStreak++;
+    Status = "状态：走不过去，换方向";
+    return;
+}
+```
+
+再加一层 `IsStuck`：漫游中 3 秒没挪窝也算"卡住"，同样换方向。
+
+## 额外修掉的另一个"空转"
+
+`Chase=False`（不追击）时，原来的寻敌仍然用 `SeekRange=16`，于是会**锁定一只 16 格外的怪，然后站在原地盯着它看**：
+
+```csharp
+if (dist > engageRange)
+{
+    if (!Settings.AutoFightChase)
+    {
+        // 留着目标等它自己靠近 —— 但一直够不着就一直站着
+        SetStatus("状态：超出攻击距离 d{0}/r{1}（不追击）");
+        return;
+    }
+```
+
+现在两处都改：
+
+**1. 不追击时把搜索范围压到实际射程内**
+
+```csharp
+int seekLimit = int.MaxValue;
+
+if (!Settings.AutoFightChase)
+    seekLimit = Math.Max(1, Math.Max(Settings.AutoFightAttackRange, SkillRange(user)));
+
+// 近处寻敌
+FindNearTarget(user, now, out MapObject near, Math.Min(Settings.AutoFightTargetRange, seekLimit));
+
+// 远处寻敌
+int seekRange = Math.Min(Settings.AutoFightSeekRange, seekLimit);
+```
+
+**2. 够不着超过 3 秒就放弃目标**
+
+```csharp
+if (_outOfRangeSince == 0) _outOfRangeSince = now;
+
+if (now - _outOfRangeSince > 3000)
+{
+    _outOfRangeSince = 0;
+    MapObject.TargetObjectID = 0;
+    ClearTarget();
+    SetStatus("状态：超出攻击距离，放弃");
+    return;
+}
+```
+
+放弃之后 `_target == null` → 进入正常寻敌 → 没有就漫游 ✓
+
+## 面板改动
+
+「漫游 半径 [6] 格」→「漫游 **步长** [6] 格」（语义变了：从"巡逻半径"变成"一次朝某个方向走多远"）。
+
+`RoamRange` 含义对照：
+
+| 值 | 效果 |
+|---|---|
+| 4~6 | 小范围巡逻，适合刷怪密集的小房间 |
+| 8~12 | 正常探索 |
+| 15~20 | 大步跑图（配合空闲升级会走很远） |
+
+## 状态栏新增
+
+```
+状态：漫游寻敌 6格
+状态：漫游寻敌 12格       ← 空闲 20 秒后
+状态：换个方向
+状态：走不过去，换方向
+状态：卡住了，换方向
+状态：超出攻击距离，放弃
+```

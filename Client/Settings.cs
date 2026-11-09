@@ -173,7 +173,7 @@ namespace Client
         public static int AutoFightTargetRange = 8;          // 寻敌范围(格)
         public static int AutoFightSeekRange = 16;           // 范围内没怪时，扩大到这个范围继续找
         public static bool AutoFightRoam = true;             // 完全没有目标时随机漫游
-        public static int AutoFightRoamRange = 6;            // 漫游半径(格)
+        public static int AutoFightRoamRange = 6;            // 漫游步长(格)：一次朝某个方向走多远
         public static int AutoFightPriority = 0;             // 0=最近 1=血最少
         public static bool AutoFightIgnorePlayers = true;    // 不打玩家
         public static string AutoFightIgnoreMonsters = "";   // 不攻击的怪物名单（逗号分隔，按名字匹配）

@@ -43,6 +43,16 @@ namespace Client
         private static long _nextRoamTime;
         private static readonly Random _rand = new Random();
 
+        // 方向性游走：原来的"锚点周围随机挑点"会在同一片地来回抖，
+        // 清完身边怪之后就原地打转。改成记住一个方向、大部分时间沿着它继续走。
+        private static MirDirection _roamDir;
+        private static bool _hasRoamDir;
+        private static long _idleSince;                  // 从"没有目标"开始计时
+        private static long _outOfRangeSince;            // 不追击时，从"够不着"开始计时
+        private static int _roamFailStreak;              // 连续挑不到落点/走不过去的次数
+        private static readonly Point[] _recentRoam = new Point[6];
+        private static int _recentRoamIndex;
+
         // 打不动检测：连续攻击但对方血量一次都没变
         private static uint _streakTargetId;
         private static int _streakHp = -1;
@@ -141,6 +151,13 @@ namespace Client
             TargetID = 0;
             Status = status ?? string.Empty;
 
+            // 漫游状态也清掉：否则下次开启时会带着"已经空闲很久"的计时直接大步乱跑
+            _idleSince = 0;
+            _roamFailStreak = 0;
+            _hasRoamDir = false;
+            Array.Clear(_recentRoam, 0, _recentRoam.Length);
+            _recentRoamIndex = 0;
+
             MapControl map = GameScene.Scene == null ? null : GameScene.Scene.MapControl;
             if (map != null && map.AutoPath)
                 map.AutoPath = false;
@@ -236,12 +253,19 @@ namespace Client
                 }
             }
 
+            // 不追击时，把"能锁定的距离"压到实际打得到的范围：
+            // 否则会锁定一只永远够不着的怪，站在原地盯着它看 —— 表现为"空转"。
+            int seekLimit = int.MaxValue;
+
+            if (!Settings.AutoFightChase)
+                seekLimit = Math.Max(1, Math.Max(Settings.AutoFightAttackRange, SkillRange(user)));
+
             // ---------- 2) 近处寻敌（只找"身边"的怪） ----------
             // 关键：这里只用 TargetRange，不扩大到 SeekRange。
             // 之前把远近两次搜索放在一起，16 格内总能搜到怪 → _target 几乎永远非空 →
             // 「先捡后打 = 否」要求 _target == null 才捡，结果就永远不捡了。
             // 现在把"远处寻敌"挪到拾取之后，中间这段空隙就是用来捡东西的。
-            if (_target == null && FindNearTarget(user, now, out MapObject near))
+            if (_target == null && FindNearTarget(user, now, out MapObject near, Math.Min(Settings.AutoFightTargetRange, seekLimit)))
                 AcquireTarget(near, user, now);
 
             // ---------- 3) 拾取 ----------
@@ -272,9 +296,11 @@ namespace Client
             }
 
             // ---------- 4) 远处寻敌（身边和掉落都处理完了，再去看远处的怪） ----------
+            int seekRange = Math.Min(Settings.AutoFightSeekRange, seekLimit);
+
             if (_target == null
-                && Settings.AutoFightSeekRange > Settings.AutoFightTargetRange
-                && FindNearTarget(user, now, out MapObject far, Settings.AutoFightSeekRange))
+                && seekRange > Settings.AutoFightTargetRange
+                && FindNearTarget(user, now, out MapObject far, seekRange))
             {
                 AcquireTarget(far, user, now);
             }
@@ -328,10 +354,24 @@ namespace Client
             {
                 if (!Settings.AutoFightChase)
                 {
-                    // 不清目标：留着它，等怪自己靠近就能打
-                    // （Stop() 会把 _target 清空，导致每 tick 重新搜索、状态乱跳）
                     if (scene.MapControl.AutoPath)
                         scene.MapControl.AutoPath = false;
+
+                    // 先留着目标等它自己靠近（Stop() 会清空目标，导致每 tick 重新搜索、状态乱跳）；
+                    // 但一直够不着就别死盯着了 —— 3 秒后放弃，回去正常寻敌/漫游。
+                    if (_outOfRangeSince == 0)
+                        _outOfRangeSince = now;
+
+                    if (now - _outOfRangeSince > 3000)
+                    {
+                        _outOfRangeSince = 0;
+
+                        MapObject.TargetObjectID = 0;
+                        ClearTarget();
+
+                        SetStatus("状态：超出攻击距离，放弃");
+                        return;
+                    }
 
                     SetStatus(string.Format("状态：超出攻击距离 d{0}/r{1}（不追击）", dist, engageRange));
                     return;
@@ -362,6 +402,8 @@ namespace Client
             }
 
             // ---------- 5) 攻击 ----------
+            _outOfRangeSince = 0;      // 已经进射程了
+
             // 调整站位（风筝/绕障碍）刚下过路径时不要立刻清掉，否则走一格就被自己停住
             if (scene.MapControl.AutoPath && now >= _repositionUntil)
                 scene.MapControl.AutoPath = false;
@@ -519,6 +561,11 @@ namespace Client
             _lastProgressPos = user.CurrentLocation;
             _lastProgressTime = now;
             _anchor = user.CurrentLocation;      // 巡逻锚点跟着战斗位置走
+
+            // 重新接敌：清空"多久没怪"的计时，漫游步长回到正常
+            _idleSince = 0;
+            _roamFailStreak = 0;
+            _outOfRangeSince = 0;
         }
 
         /// <summary>
@@ -789,49 +836,168 @@ namespace Client
                 return;
             }
 
-            int radius = Math.Max(1, Settings.AutoFightRoamRange);
+            // 已经很久没怪 → 走得更远（原来半径固定 6 格，等于把自己关在一个小圈里）
+            if (_idleSince == 0) _idleSince = now;
+            long idle = now - _idleSince;
 
-            // 离锚点太远 → 先走回去
-            if (Dist(user.CurrentLocation, _anchor) > radius)
+            int radius = Math.Max(1, Settings.AutoFightRoamRange);
+            int step;
+
+            if (idle < 8000)
+                step = radius;                                          // 刚清完怪：正常巡逻
+            else if (idle < 20000)
+                step = Math.Max(radius, radius * 3 / 2);                // 十几秒没怪：走远一点
+            else
+                step = Math.Max(radius, 12);                            // 很久没怪：大步探索
+
+            // 卡住检测：3 秒没挪窝 → 换个方向重挑
+            if (IsStuck(user, now))
             {
-                Status = "状态：返回巡逻点";
-                MoveTo(_anchor);
-                _nextRoamTime = now + 500;
+                _hasRoamDir = false;
+                _roamFailStreak++;
+                Status = "状态：卡住了，换方向";
+                _nextRoamTime = now + 200;
                 return;
             }
 
-            Point dest = FindRoamCell(map, user.CurrentLocation, _anchor, radius);
+            MirDirection dir = PickRoamDirection(idle);
+
+            Point dest = PickRoamDest(map, user.CurrentLocation, dir, step, radius);
 
             if (dest == Point.Empty)
             {
-                Status = "状态：周围走不动";
-                _nextRoamTime = now + 1000;
+                // 这个方向走不通（撞墙/水/悬崖）→ 下次换方向
+                _hasRoamDir = false;
+                _roamFailStreak++;
+
+                if (_roamFailStreak >= 3)
+                {
+                    // 连续走不动：原地歇一秒，把锚点放到自己脚下，
+                    // 免得以后"离锚点太远 → 返回巡逻点"之类的问题
+                    _anchor = user.CurrentLocation;
+                    _roamFailStreak = 0;
+                    Status = "状态：周围走不动";
+                    _nextRoamTime = now + 1000;
+                    return;
+                }
+
+                Status = "状态：换个方向";
+                _nextRoamTime = now + 200;
                 return;
             }
 
-            Status = "状态：漫游寻敌";
+            _roamFailStreak = 0;
+            _roamDir = dir;
+            _hasRoamDir = true;
+            _anchor = user.CurrentLocation;          // 锚点跟着人走，别把人拉回老地方
+
+            Status = "状态：漫游寻敌 " + step + "格";
+
             MoveTo(dest);
+
+            // MoveTo 找不到路时不会置 AutoPath，立刻退回来换方向（别卡在"寻路失败"上）
+            if (!map.AutoPath)
+            {
+                _hasRoamDir = false;
+                _roamFailStreak++;
+                Status = "状态：走不过去，换方向";
+                _nextRoamTime = now + 200;
+                return;
+            }
+
             _nextRoamTime = now + 400;
         }
 
-        /// <summary>在锚点周围随机挑一个可走的格子（离自己太近的不要，否则原地抖）</summary>
-        private static Point FindRoamCell(MapControl map, Point from, Point anchor, int radius)
+        /// <summary>
+        /// 挑漫游方向：
+        ///   刚清完怪 → 60% 沿着上次方向继续（一路走过去，不原地抖）
+        ///   十几秒没怪 → 60% 随便换新方向
+        ///   很久没怪 → 一定不回头（之前的区域已经清空了，回头就是空转）
+        /// </summary>
+        private static MirDirection PickRoamDirection(long idle)
         {
-            for (int i = 0; i < 24; i++)
-            {
-                int dx = _rand.Next(-radius, radius + 1);
-                int dy = _rand.Next(-radius, radius + 1);
+            if (!_hasRoamDir) return (MirDirection)_rand.Next(8);
 
-                Point p = new Point(anchor.X + dx, anchor.Y + dy);
+            int r = _rand.Next(100);
+
+            if (idle < 8000)
+            {
+                if (r < 60) return _roamDir;
+                if (r < 80) return OffsetDir(_roamDir, 1);
+                return OffsetDir(_roamDir, -1);
+            }
+
+            if (idle < 20000)
+            {
+                if (r < 40) return _roamDir;
+                return (MirDirection)_rand.Next(8);
+            }
+
+            MirDirection opposite = OffsetDir(_roamDir, 4);
+            MirDirection dir = (MirDirection)_rand.Next(8);
+
+            if (dir == opposite) dir = OffsetDir(dir, 1);      // 不选正后方
+
+            return dir;
+        }
+
+        /// <summary>
+        /// 沿指定方向挑一个落脚点（尽量远，避开最近去过的区域）。
+        /// 前 24 次只在方向 ±1 格内试（保持"一路走过去"的感觉），后面放开全方向兜底。
+        /// 不管目的地中间有没有障碍，MoveTo 的 A* 会自己绕。
+        /// </summary>
+        private static Point PickRoamDest(MapControl map, Point from, MirDirection dir, int step, int minStep)
+        {
+            if (minStep < 2) minStep = 2;
+            if (step < minStep) step = minStep;
+
+            for (int i = 0; i < 40; i++)
+            {
+                MirDirection d;
+
+                if (i < 24)
+                    d = OffsetDir(dir, _rand.Next(-1, 2));       // -1 / 0 / +1
+                else
+                    d = (MirDirection)_rand.Next(8);
+
+                int r = _rand.Next(minStep, step + 1);
+                Point p = Functions.PointMove(from, d, r);
 
                 if (!InBounds(map, p)) continue;
-                if (Dist(p, from) < 2) continue;        // 太近就不去
                 if (!map.EmptyCell(p)) continue;
+                if (NearRecentRoam(p)) continue;
 
+                RememberRoam(p);
                 return p;
             }
 
             return Point.Empty;
+        }
+
+        /// <summary>方向偏移（绕 8 方向环转）</summary>
+        private static MirDirection OffsetDir(MirDirection dir, int offset)
+        {
+            int d = ((int)dir + offset) % 8;
+            if (d < 0) d += 8;
+            return (MirDirection)d;
+        }
+
+        /// <summary>目的地离最近去过的几个点太近 → 换一个（避免来回踩同一片地）</summary>
+        private static bool NearRecentRoam(Point p)
+        {
+            for (int i = 0; i < _recentRoam.Length; i++)
+            {
+                if (_recentRoam[i] == Point.Empty) continue;
+                if (Dist(p, _recentRoam[i]) <= 2) return true;
+            }
+
+            return false;
+        }
+
+        private static void RememberRoam(Point p)
+        {
+            _recentRoam[_recentRoamIndex] = p;
+            _recentRoamIndex = (_recentRoamIndex + 1) % _recentRoam.Length;
         }
 
         /// <summary>

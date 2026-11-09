@@ -239,7 +239,7 @@ namespace Client.MirScenes.Dialogs
                 Settings.SaveAutoFight();
             });
 
-            Lbl("半径", 224, 128);
+            Lbl("步长", 224, 128);
             AddNum(258, 128, 2, 1, 20, () => Settings.AutoFightRoamRange, v => Settings.AutoFightRoamRange = v);
             Lbl("格", 290, 128);
 
