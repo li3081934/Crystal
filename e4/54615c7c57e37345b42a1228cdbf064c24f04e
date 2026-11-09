@@ -1,0 +1,28 @@
+Client/AutoFight.cs
+  s_fac1f2ea76a1c2::t_659e7336712976 51,300,302-303,360-374,405-406,568
+  s_fac1f2ea76a1c2::t_54650fc32b3067 256-262,268,299
+  s_fac1f2ea76a1c2::t_18f4f1c0c8bc82 46-50,52-55,375,564-567,839-841,843-859,863-865,869-885,889-895,897-907,911-917,919-930,932-937,939-964,968,970,977-1002
+  s_fac1f2ea76a1c2::t_795bf28e61657f 154-160
+Client/Settings.cs
+  s_fac1f2ea76a1c2::t_795bf28e61657f 176
+README-部署.md
+  s_fac1f2ea76a1c2::t_9a7a38f368e145 4019-4226
+Client/MirScenes/Dialogs/AutoFightDialog.cs
+  s_fac1f2ea76a1c2::t_795bf28e61657f 242
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e454615c7c57e37345b42a1228cdbf064c24f04e",
+  "prompts": {},
+  "sessions": {
+    "s_fac1f2ea76a1c2": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a17c44-c63f-71e3-bb2a-edcafaff95c0",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
