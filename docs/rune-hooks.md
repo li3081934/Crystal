@@ -1,0 +1,75 @@
+# 符文系统 · 侵入点清单（Seam Manifest）
+
+> 这份清单是符文系统"低侵入"约定的唯一事实来源。
+> **规则：新增符文内容（数据 / 行为）不允许修改本清单之外的文件。**
+> 若确需新的战斗时机，只能在 `HumanObject` 里加一行 `RuneEvents.OnXxx(...)`，并登记到本文件。
+
+生成时间：首个符文（战士·基本剑术「剑术·疾风」）落地时。
+
+---
+
+## 1. 服务端（9 个文件 / 18 行）
+
+| # | 文件 | 行 | 改动 |
+|---|---|---|---|
+| S1 | `Server/MirObjects/HumanObject.cs` | 12 | `public class` → `public partial class`（让符文扩展文件能以同类身份访问私有成员） |
+| S2 | 同上 | 2977 | `RuneEvents.OnSwing(this, dir, spell);`（挥砍一次触发一次） |
+| S3 | 同上 | 3400 | `return RuneHooks.Cost(magic, cost);`（耗蓝） |
+| S4 | 同上 | 3502 | `if (!RuneEvents.TryCast(...)) switch (spell) {...}`（允许符文接管施法） |
+| S5 | 同上 | 5910 | `if (RuneEvents.OnMagicComplete(this, magic, data)) return;`（法术结算） |
+| S6 | 同上 | 7221 | `RuneEvents.OnDealtDamage(attacker, this, damage - armour);`（真实造成伤害 · 受害者是人类） |
+| S6c | `Server/MirObjects/HumanObject.cs` | 7162 | 暴击判定追加 `|| RuneEvents.ForceCritical(attacker)`（必暴符文） |
+| S6d | `Server/MirObjects/MonsterObject.cs` | 2595 | 同上（受害者是怪物时） |
+| S6b | `Server/MirObjects/MonsterObject.cs` | 2682 | `RuneEvents.OnDealtDamage(attacker, this, damage - armour);`（真实造成伤害 · 受害者是怪物）；外加 `using Server.RuneSystem;` 一行 |
+| S7 | `Server/MirDatabase/MagicInfo.cs` | 103 / 140 / 151 | `UserMagic.RuneId` 字段 + 存档读写（`version > 117` 守卫） |
+| S8 | 同上 | 190 / 200 / 224 / 229 | `GetDamage` / `GetPower` ×2 / `GetDelay` 各包一层 `RuneHooks.*` |
+| S9 | `Server/MirDatabase/CharacterInfo.cs` | 84 / 394 / 576 | `RuneBook Runes` 字段 + 存档读写（`version > 117` 守卫） |
+| S10 | `Server/MirEnvir/Envir.cs` | 57 | `Version = 118`（117 → 118，为新存档字段） |
+| S11 | 同上 | 2910-2911 | `RuneBehaviorRegistry.Scan(); RuneRepository.Load();` |
+| S12 | `Server/MirNetwork/MirConnection.cs` | 511-512 / 1653-1658 | `C.SetRune` 分发 → `Player.SetRune(...)` |
+| S13 | `Server/MirObjects/PlayerObject.cs` | 232 / 1712 | `InitRunes()`（登录校验）/ `SendRuneInfo()`（下发符文表） |
+| S14 | 同上 | 3233 | GM 调试命令 `@RUNE` / `@RUNELIST`（纯调试，可删） |
+| S15 | `Server/MirDatabase/BuffInfo.cs` | 86 | `BuffType.Rune` 的 BuffInfo（**所有符文 Buff 共用**） |
+
+## 2. Shared（5 个文件）
+
+| # | 文件 | 改动 |
+|---|---|---|
+| H1 | `Shared/Enums.cs:1401` | `BuffType.Rune = 216`（**追加在末尾空段，绝不插中间**：玩家 Buff 会存进角色存档） |
+| H2 | `Shared/Enums.cs:1720-1721 / 1888` | `ServerPacketIds.RuneList/SetRune`、`ClientPacketIds.SetRune`（追加在枚举末尾） |
+| H3 | `Shared/ClientPackets.cs` / `ServerPackets.cs` | 3 个新包（纯新增，不动老包结构） |
+| H4 | `Shared/Packet.cs:244-245 / 695-698` | 3 行包注册 |
+| H5 | `Shared/Data/RuneData.cs` | 新文件：`ClientRuneInfo` / `ClientRuneState` |
+
+## 3. 客户端（5 个文件）
+
+| # | 文件 | 改动 |
+|---|---|---|
+| C1 | `Client/MirScenes/GameScene.cs:1724 / 1727` | 2 个 `case` → `RuneLibrary.OnRuneList/OnSetRune` |
+| C2 | `Client/MirScenes/Dialogs/MainDialogs.cs:3285 / 3407 / 3418` | `MagicButton.RuneLabel`（技能页「符」入口） |
+| C3 | 同上（`SkillBarDialog.Update`） | 技能栏提示追加「符文：xxx」 |
+| C4 | `Client/MirScenes/Dialogs/BuffDialog.cs:345 / 468` | `BuffType.Rune` 的图标 / 描述分支（**所有符文 Buff 共用一条分支**） |
+| C5 | `Client/MirScenes/Dialogs/CharacterDialog.cs:657` | `RefreshInterface()` 由 `private` 改 `public`（符文切换后刷新界面） |
+
+## 4. 新增模块（不受限制，可自由扩展）
+
+```
+Server/RuneSystem/                  ← 全部业务逻辑（数据 / 存档 / 门面 / 行为插件）
+Client/RuneSystem/                  ← 符文面板 + 客户端缓存
+Envir/Rune/Runes.json               ← 符文数据（策划改这里，不用编译）
+Tools/RuneTestTool/                 ← 离线建号 + 协议级冒烟测试
+```
+
+## 5. 边界自检
+
+以下命令的合法输出只有 4 处（`CharacterInfo` 的存档字段、`Envir` 的启动载入、`PlayerObject` 的 GM 调试命令）：
+
+```bash
+grep -rn "RuneRepository\|RuneBook\|IRuneBehavior" Server --include=*.cs | grep -v "Server/RuneSystem"
+```
+
+扩展新符文时的检查项：
+
+1. **纯数值 / 上 Buff 类符文** → 只改 `Envir/Rune/Runes.json`。
+2. **新机制** → 在 `Server/RuneSystem/RuneBehaviors/` 新增一个实现 `IRuneBehavior` 的文件（反射自动注册），`Runes.json` 里用 `BehaviorId` 引用。
+3. **需要新战斗时机**（死亡时、受击时…）→ 才允许在 `HumanObject` 加 1 行 `RuneEvents.OnXxx(...)`，并更新本清单第 1 节。

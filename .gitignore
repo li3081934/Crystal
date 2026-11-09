@@ -361,6 +361,14 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Build
+# Build 目录整体忽略，但符文系统配置文件需要随代码版本化
+/Build/*
+!/Build/Server
+/Build/Server/*
+!/Build/Server/Release
+/Build/Server/Release/*
+!/Build/Server/Release/Envir
+/Build/Server/Release/Envir/*
+!/Build/Server/Release/Envir/Rune
 /.idea/.idea.Legend of Mir/.idea
 /.idea/config

@@ -2705,4 +2705,24 @@ namespace ClientPackets
             writer.Write(HeroInventory);
         }
     }
+
+    // ---- Rune System ----
+    public sealed class SetRune : Packet
+    {
+        public override short Index { get { return (short)ClientPacketIds.SetRune; } }
+
+        public Spell Spell;
+        public ushort RuneId;
+
+        protected override void ReadPacket(BinaryReader reader)
+        {
+            Spell = (Spell)reader.ReadByte();
+            RuneId = reader.ReadUInt16();
+        }
+        protected override void WritePacket(BinaryWriter writer)
+        {
+            writer.Write((byte)Spell);
+            writer.Write(RuneId);
+        }
+    }
 }

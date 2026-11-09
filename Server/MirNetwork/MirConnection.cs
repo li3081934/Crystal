@@ -508,6 +508,9 @@ namespace Server.MirNetwork
                 case (short)ClientPacketIds.SpellToggle:
                     SpellToggle((C.SpellToggle)p);
                     return;
+                case (short)ClientPacketIds.SetRune:
+                    SetRune((C.SetRune)p);
+                    return;
                 case (short)ClientPacketIds.ConsignItem:
                     ConsignItem((C.ConsignItem)p);
                     return;
@@ -1645,6 +1648,14 @@ namespace Server.MirNetwork
             if (Stage != GameStage.Game) return;
 
             Player.TownRevive();
+        }
+
+        private void SetRune(C.SetRune p)
+        {
+            if (Stage != GameStage.Game) return;
+            if (Player == null) return;
+
+            Player.SetRune(p.Spell, p.RuneId);
         }
 
         private void SpellToggle(C.SpellToggle p)

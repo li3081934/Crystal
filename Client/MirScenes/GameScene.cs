@@ -10,6 +10,7 @@ using S = ServerPackets;
 using C = ClientPackets;
 using Effect = Client.MirObjects.Effect;
 using Client.MirScenes.Dialogs;
+using Client.RuneSystem;
 using Client.Utils;
 using Client.MirGraphics.Particles;
 
@@ -1718,6 +1719,12 @@ namespace Client.MirScenes
                     break;
                 case (short)ServerPacketIds.SpellToggle:
                     SpellToggle((S.SpellToggle)p);
+                    break;
+                case (short)ServerPacketIds.RuneList:
+                    RuneLibrary.OnRuneList((S.RuneList)p);
+                    break;
+                case (short)ServerPacketIds.SetRune:
+                    RuneLibrary.OnSetRune((S.SetRune)p);
                     break;
                 case (short)ServerPacketIds.ObjectHealth:
                     ObjectHealth((S.ObjectHealth)p);

@@ -341,6 +341,25 @@ namespace Client.MirScenes.Dialogs
                 case BuffType.Newbie:
                     text += GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.GuildMemberBoost);
                     break;
+
+                //符文系统：符文 Buff 显示符文名 + 符文描述
+                case BuffType.Rune:
+                    {
+                        ushort runeId = buff.Values != null && buff.Values.Length > 0 ? (ushort)buff.Values[0] : (ushort)0;
+                        var rune = Client.RuneSystem.RuneLibrary.Get(runeId);
+
+                        if (rune != null)
+                        {
+                            text = rune.Name + Environment.NewLine;
+                            if (!string.IsNullOrEmpty(rune.Description))
+                                text += rune.Description + Environment.NewLine;
+
+                            //剩余次数（必暴类符文）
+                            if (buff.Values.Length > 1)
+                                text += string.Format("剩余次数: {0}" + Environment.NewLine, buff.Values[1]);
+                        }
+                    }
+                    break;
             }
 
             if (!overridestats)
@@ -449,6 +468,10 @@ namespace Client.MirScenes.Dialogs
                     return 45;
                 case BuffType.EnergyShield:
                     return 57;
+
+                //符文系统：所有符文 Buff 共用一条分支，具体符文由 Values[0] 区分
+                case BuffType.Rune:
+                    return 60;
 
                 case BuffType.SwiftFeet:
                     return 67;

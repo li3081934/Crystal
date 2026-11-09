@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 ﻿using Server.MirEnvir;
 using Server.MirNetwork;
 using Server.MirObjects;
@@ -79,6 +79,9 @@ namespace Server.MirDatabase
         public UserItem CurrentRefine = null;
         public long CollectTime = 0, RefineTimeRemaining = 0;
         public List<UserMagic> Magics = new List<UserMagic>();
+
+        /// <summary>符文状态（每个技能当前选择的符文 + 解锁集合）。自带版本头，未来加字段不必再改本文件。</summary>
+        public RuneSystem.RuneBook Runes = new RuneSystem.RuneBook();
         public List<PetInfo> Pets = new List<PetInfo>();
         public List<Buff> Buffs = new List<Buff>();
         public List<Poison> Poisons = new List<Poison>();
@@ -386,6 +389,9 @@ namespace Server.MirDatabase
 
             if (version > 100)
                 HeroBehaviour = (HeroBehaviour)reader.ReadByte();
+
+            if (version > 117)
+                Runes = new RuneSystem.RuneBook(reader);
         }
 
         public virtual void Save(BinaryWriter writer)
@@ -567,6 +573,7 @@ namespace Server.MirDatabase
             writer.Write(CurrentHeroIndex);
             writer.Write(HeroSpawned);
             writer.Write((byte)HeroBehaviour);
+            Runes.Save(writer);
         }
 
         public SelectInfo ToSelectInfo()

@@ -80,7 +80,10 @@ namespace Server.MirDatabase
                 new BuffInfo { Type = BuffType.Defence, Properties = BuffProperty.None, StackType = BuffStackType.StackDuration },
                 new BuffInfo { Type = BuffType.MagicDefence, Properties = BuffProperty.None, StackType = BuffStackType.StackDuration },
                 new BuffInfo { Type = BuffType.WonderDrug, Properties = BuffProperty.None, StackType = BuffStackType.StackDuration },
-                new BuffInfo { Type = BuffType.Knapsack, Properties = BuffProperty.None, StackType = BuffStackType.StackDuration }
+                new BuffInfo { Type = BuffType.Knapsack, Properties = BuffProperty.None, StackType = BuffStackType.StackDuration },
+
+                //Rune System
+                new BuffInfo { Type = BuffType.Rune, Properties = BuffProperty.RemoveOnExit, StackType = BuffStackType.ResetDuration, Visible = true, Icon = 60 }
             };
 
             return info;

@@ -1396,6 +1396,9 @@ public enum BuffType : byte
     MagicDefence,
     WonderDrug,
     Knapsack,
+
+    //Rune System (append only - never insert into the ranges above)
+    Rune = 216,
 }
 
 [Flags]
@@ -1712,6 +1715,10 @@ public enum ServerPacketIds : short
     GuildTerritoryPage,
     StorageUnlockResult,
     StoragePasswordResult,
+
+    //Rune System
+    RuneList,
+    SetRune,
 }
 
 public enum ClientPacketIds : short
@@ -1876,6 +1883,9 @@ public enum ClientPacketIds : short
     UnlockStorage,
     SetStoragePassword,
     RemoveStoragePassword,
+
+    //Rune System
+    SetRune,
 }
 
 public enum ConquestType : byte

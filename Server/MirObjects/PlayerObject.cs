@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using C = ClientPackets;
 using Server.MirDatabase;
 using Server.MirEnvir;
@@ -228,6 +228,8 @@ namespace Server.MirObjects
             }
 
             if (Level == 0) NewCharacter();
+
+            InitRunes();
 
             if (Info.GuildIndex != -1)
             {
@@ -1706,6 +1708,8 @@ namespace Server.MirObjects
             packet.CreatureSummoned = CreatureSummoned;
 
             Enqueue(packet, c);
+
+            SendRuneInfo();
         }
         private void GetMapInfo(MirConnection c)
         {
@@ -3224,6 +3228,40 @@ namespace Server.MirObjects
                         player.SendMagicInfo(magic);
                         player.RefreshStats();
                         break;
+
+                    // ---- 符文系统调试命令（GM）----
+                    case "RUNE":
+                        if (!IsGM) return;
+                        if (parts.Length < 3)
+                        {
+                            ReceiveChat("用法: @RUNE <技能名> <符文Id>   （0 = 移除符文）", ChatType.Hint);
+                            return;
+                        }
+                        if (!Enum.TryParse(parts[1], true, out Spell runeSpell) || runeSpell == Spell.None)
+                        {
+                            ReceiveChat("未知技能名，例如: @RUNE Fencing 1", ChatType.Hint);
+                            return;
+                        }
+                        if (!ushort.TryParse(parts[2], out ushort runeId))
+                        {
+                            ReceiveChat("符文Id 必须是数字", ChatType.Hint);
+                            return;
+                        }
+                        SetRune(runeSpell, runeId);
+                        ReceiveChat($"符文已设置: {runeSpell} -> {runeId}", ChatType.Hint);
+                        return;
+
+                    case "RUNELIST":
+                        if (!IsGM) return;
+                        if (!Server.RuneSystem.RuneRepository.Any)
+                        {
+                            ReceiveChat("没有载入任何符文定义（检查 Envir/Rune/Runes.json）", ChatType.Hint);
+                            return;
+                        }
+                        foreach (var rune in Server.RuneSystem.RuneRepository.All)
+                            ReceiveChat($"#{rune.Id} [{rune.Spell}] {rune.Name} - {rune.Description}", ChatType.Hint);
+                        ReceiveChat("使用 @RUNE <技能名> <符文Id> 设置符文。", ChatType.Hint);
+                        return;
 
                     case "FIND":
                         if (!IsGM && !SpecialMode.HasFlag(SpecialItemMode.Probe)) return;

@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Drawing;
 ﻿using Server.MirDatabase;
 using Server.MirEnvir;
+using Server.RuneSystem;
 using Server.MirObjects.Monsters;
 using System.Diagnostics.Eventing.Reader;
 using Shared;
@@ -2591,7 +2592,7 @@ namespace Server.MirObjects
                 return 0;
             }
 
-            if (Envir.Random.Next(100) < (attacker.Stats[Stat.CriticalRate] * Settings.CriticalRateWeight))
+            if (Envir.Random.Next(100) < (attacker.Stats[Stat.CriticalRate] * Settings.CriticalRateWeight) || RuneEvents.ForceCritical(attacker))
             {
                 Broadcast(new S.ObjectEffect { ObjectID = ObjectID, Effect = SpellEffect.Critical });
                 damage = Math.Min(int.MaxValue, damage + (int)Math.Floor(damage * (((double)attacker.Stats[Stat.CriticalDamage] / (double)Settings.CriticalDamageWeight) * 10)));
@@ -2676,6 +2677,9 @@ namespace Server.MirObjects
 
                 if (IsAttackTarget(ob) && (ob.Target == null)) ob.Target = this;
             }
+
+            //符文系统：真实造成伤害（普攻与技能统一入口），用于吸血类符文
+            RuneEvents.OnDealtDamage(attacker, this, damage - armour);
 
             BroadcastDamageIndicator(DamageType.Hit, armour - damage);
 

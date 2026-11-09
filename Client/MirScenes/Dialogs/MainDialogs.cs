@@ -1692,8 +1692,15 @@ namespace Client.MirScenes.Dialogs
                     //string key = m.Key > 8 ? string.Format("CTRL F{0}", i) : string.Format("F{0}", m.Key);
 
                     Cells[i - 1].Index = magic.Icon * 2;
-                    Cells[i - 1].Hint = GameLanguage.ClientTextMap.GetLocalization((ClientTextKeys.SkillMpCooldownKey), magic.Name,
+                    var hint = GameLanguage.ClientTextMap.GetLocalization((ClientTextKeys.SkillMpCooldownKey), magic.Name,
                         (magic.BaseCost + (magic.LevelCost * magic.Level)), Functions.PrintTimeSpanFromMilliSeconds(magic.Delay), key);
+
+                    //符文系统：技能栏提示里追加当前符文
+                    var runeName = Client.RuneSystem.RuneLibrary.GetSelectedName(magic.Spell);
+                    if (!string.IsNullOrEmpty(runeName))
+                        hint += Environment.NewLine + "符文：" + runeName;
+
+                    Cells[i - 1].Hint = hint;
 
                     KeyNameLabels[i - 1].Text = "";
                 }
@@ -3275,6 +3282,7 @@ namespace Client.MirScenes.Dialogs
         public ClientMagic Magic;
         public MirImageControl CoolDown;
         public bool HeroMagic;
+        public MirLabel RuneLabel;
 
         string[] Prefixes = new string[] { "", "CTRL", "Shift" };
 
@@ -3394,6 +3402,24 @@ namespace Client.MirScenes.Dialogs
                 NotControl = true,
                 UseOffSet = true,
             };
+
+            //符文入口（符文系统）：点击打开符文选择面板
+            RuneLabel = new MirLabel
+            {
+                Parent = this,
+                Location = new Point(200, 12),
+                Size = new Size(28, 18),
+                DrawFormat = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter,
+                Font = new Font(Settings.FontName, 8F, FontStyle.Bold),
+                ForeColour = Color.FromArgb(255, 255, 210, 120),
+                Text = "符",
+                Visible = false,
+            };
+            RuneLabel.Click += (o, e) =>
+            {
+                if (Magic == null) return;
+                Client.RuneSystem.RuneDialog.Open(Magic);
+            };
         }
 
         public void Update(ClientMagic magic)
@@ -3401,6 +3427,20 @@ namespace Client.MirScenes.Dialogs
             Magic = magic;
 
             NameLabel.Text = Magic.Name;
+
+            //符文系统：只有该技能配置了符文时才显示入口
+            RuneLabel.Visible = !HeroMagic && Client.RuneSystem.RuneLibrary.CanSelectAny(magic.Spell);
+            if (RuneLabel.Visible)
+            {
+                var selectedRune = Client.RuneSystem.RuneLibrary.GetSelected(magic.Spell);
+                RuneLabel.Text = selectedRune == null ? "符" : "符*";
+                RuneLabel.ForeColour = selectedRune == null
+                    ? Color.FromArgb(255, 255, 210, 120)
+                    : Color.FromArgb(255, 140, 255, 160);
+                RuneLabel.Hint = selectedRune == null
+                    ? "点击选择符文"
+                    : string.Format("当前符文：{0}" + Environment.NewLine + "{1}" + Environment.NewLine + "（点击切换）", selectedRune.Name, selectedRune.Description);
+            }
 
             LevelLabel.Text = Magic.Level.ToString();
             switch (Magic.Level)

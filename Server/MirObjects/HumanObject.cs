@@ -1,5 +1,6 @@
-using System.Drawing;
+﻿using System.Drawing;
 ﻿using Server.MirDatabase;
+using Server.RuneSystem;
 using Server.MirEnvir;
 using Server.MirNetwork;
 using Server.MirObjects.Monsters;
@@ -8,7 +9,7 @@ using S = ServerPackets;
 
 namespace Server.MirObjects
 {
-    public class HumanObject : MapObject
+    public partial class HumanObject : MapObject
     {
         public override ObjectType Race
         {
@@ -2973,6 +2974,7 @@ namespace Server.MirObjects
             Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Spell = spell, Level = level });
 
             AttackTime = Envir.Time + AttackSpeed;
+            RuneEvents.OnSwing(this, dir, spell);
             ActionTime = Envir.Time + 550;
             RegenTime = Envir.Time + RegenDelay;
 
@@ -3395,7 +3397,7 @@ namespace Server.MirObjects
                 cost = Stats[Stat.MaxSC] + Stats[Stat.MinSC];
             }
 
-            return cost;
+            return RuneHooks.Cost(magic, cost);
         }
         public virtual MapObject DefaultMagicTarget => this;
         public void Magic(Spell spell, MirDirection dir, uint targetID, Point location, bool spellTargetLock = false)
@@ -3497,8 +3499,9 @@ namespace Server.MirObjects
 
             bool cast = true;
             byte level = magic.Level;
-            switch (spell)
-            {
+            if (!RuneEvents.TryCast(this, magic, target, location, ref targetID))
+                switch (spell)
+                {
                 case Spell.FireBall:
                 case Spell.GreatFireBall:
                 case Spell.FrostCrunch:
@@ -5904,6 +5907,7 @@ namespace Server.MirObjects
         protected void CompleteMagic(IList<object> data)
         {
             UserMagic magic = (UserMagic)data[0];
+            if (RuneEvents.OnMagicComplete(this, magic, data)) return;
             int value;
             MapObject target;
             Point targetLocation;
@@ -7136,6 +7140,7 @@ namespace Server.MirObjects
                 return 0;
             }
 
+
             if (Hidden)
             {
                 RemoveBuff(BuffType.MoonLight);
@@ -7154,7 +7159,7 @@ namespace Server.MirObjects
                 }
             }
 
-            if (Envir.Random.Next(100) < (attacker.Stats[Stat.CriticalRate] * Settings.CriticalRateWeight))
+            if (Envir.Random.Next(100) < (attacker.Stats[Stat.CriticalRate] * Settings.CriticalRateWeight) || RuneEvents.ForceCritical(attacker))
             {
                 CurrentMap.Broadcast(new S.ObjectEffect { ObjectID = ObjectID, Effect = SpellEffect.Critical }, CurrentLocation);
                 damage = Math.Min(int.MaxValue, damage + (int)Math.Floor(damage * (((double)attacker.Stats[Stat.CriticalDamage] / (double)Settings.CriticalDamageWeight) * 10)));
@@ -7211,6 +7216,9 @@ namespace Server.MirObjects
             ActiveReincarnation = false;
 
             CounterAttackCast(GetMagic(Spell.CounterAttack), LastHitter);
+
+            //符文系统：真实造成伤害（已扣护甲/减伤），用于吸血类符文
+            RuneEvents.OnDealtDamage(attacker, this, damage - armour);
 
             Enqueue(new S.Struck { AttackerID = attacker.ObjectID });
             Broadcast(new S.ObjectStruck { ObjectID = ObjectID, AttackerID = attacker.ObjectID, Direction = Direction, Location = CurrentLocation });

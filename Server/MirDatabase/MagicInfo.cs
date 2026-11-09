@@ -1,4 +1,5 @@
 ﻿using Server.MirEnvir;
+using Server.RuneSystem;
 using S = ServerPackets;
 
 namespace Server.MirDatabase
@@ -97,6 +98,9 @@ namespace Server.MirDatabase
 
         public byte Level, Key;
         public ushort Experience;
+
+        /// <summary>当前选择的符文（0 = 无符文）。符文系统唯一落在 UserMagic 上的字段。</summary>
+        public ushort RuneId;
         public bool IsTempSpell;
         public long CastTime;
 
@@ -131,6 +135,9 @@ namespace Server.MirDatabase
 
             if (version < 65) return;
             CastTime = reader.ReadInt64();
+
+            if (version > 117)
+                RuneId = reader.ReadUInt16();
         }
         public void Save(BinaryWriter writer)
         {
@@ -141,6 +148,7 @@ namespace Server.MirDatabase
             writer.Write(Experience);
             writer.Write(IsTempSpell);
             writer.Write(CastTime);
+            writer.Write(RuneId);
         }
 
         public Packet GetInfo(bool hero)
@@ -179,7 +187,7 @@ namespace Server.MirDatabase
 
         public int GetDamage(int DamageBase)
         {
-            return (int)((DamageBase + GetPower()) * GetMultiplier());
+            return RuneHooks.Damage(this, (int)((DamageBase + GetPower()) * GetMultiplier()));
         }
 
         public float GetMultiplier()
@@ -189,7 +197,7 @@ namespace Server.MirDatabase
 
         public int GetPower()
         {
-            return (int)Math.Round((MPower() / 4F) * (Level + 1) + DefPower());
+            return RuneHooks.Power(this, (int)Math.Round((MPower() / 4F) * (Level + 1) + DefPower()));
         }
 
         public int MPower()
@@ -213,12 +221,12 @@ namespace Server.MirDatabase
 
         public int GetPower(int power)
         {
-            return (int)Math.Round(power / 4F * (Level + 1) + DefPower());
+            return RuneHooks.Power(this, (int)Math.Round(power / 4F * (Level + 1) + DefPower()));
         }
 
         public long GetDelay()
         {
-            return Info.DelayBase - (Level * Info.DelayReduction);
+            return RuneHooks.Delay(this, Info.DelayBase - (Level * Info.DelayReduction));
         }
     }
 }

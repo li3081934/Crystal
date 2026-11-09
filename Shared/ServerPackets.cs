@@ -6828,4 +6828,58 @@ namespace ServerPackets
             Info.Save(writer);
         }
     }
+
+    // ---- Rune System ----
+    public sealed class RuneList : Packet
+    {
+        public override short Index { get { return (short)ServerPacketIds.RuneList; } }
+
+        public List<ClientRuneInfo> Runes = new List<ClientRuneInfo>();
+        public List<ClientRuneState> States = new List<ClientRuneState>();
+
+        protected override void ReadPacket(BinaryReader reader)
+        {
+            Runes = new List<ClientRuneInfo>();
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; i++)
+                Runes.Add(new ClientRuneInfo(reader));
+
+            States = new List<ClientRuneState>();
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; i++)
+                States.Add(new ClientRuneState(reader));
+        }
+        protected override void WritePacket(BinaryWriter writer)
+        {
+            writer.Write(Runes.Count);
+            for (int i = 0; i < Runes.Count; i++)
+                Runes[i].Save(writer);
+
+            writer.Write(States.Count);
+            for (int i = 0; i < States.Count; i++)
+                States[i].Save(writer);
+        }
+    }
+
+    public sealed class SetRune : Packet
+    {
+        public override short Index { get { return (short)ServerPacketIds.SetRune; } }
+
+        public uint ObjectID;
+        public Spell Spell;
+        public ushort RuneId;
+
+        protected override void ReadPacket(BinaryReader reader)
+        {
+            ObjectID = reader.ReadUInt32();
+            Spell = (Spell)reader.ReadByte();
+            RuneId = reader.ReadUInt16();
+        }
+        protected override void WritePacket(BinaryWriter writer)
+        {
+            writer.Write(ObjectID);
+            writer.Write((byte)Spell);
+            writer.Write(RuneId);
+        }
+    }
 }

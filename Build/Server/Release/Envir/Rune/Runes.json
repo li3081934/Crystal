@@ -1,0 +1,57 @@
+[
+  {
+    "Id": 1,
+    "Spell": "Fencing",
+    "Slot": 1,
+    "Name": "剑术·疾风",
+    "Description": "攻击时 100% 概率获得「疾风」：攻击速度 +5，持续 5 秒，每次攻击刷新持续时间。",
+    "Icon": 2,
+    "Effect": "BuffOnSwing",
+    "ProcChance": 100,
+    "BuffTypeName": "Rune",
+    "BuffDurationMs": 5000,
+    "BuffStats": {
+      "AttackSpeed": 5
+    },
+    "BehaviorId": "BuffOnSwing"
+  },
+  {
+    "Id": 2,
+    "Spell": "Fencing",
+    "Slot": 2,
+    "Name": "剑术·饮血",
+    "Description": "造成伤害时 100% 概率回复等同伤害 100% 的生命（普通攻击与技能均生效）。",
+    "Icon": 2,
+    "Effect": "HealOnDealtDamage",
+    "ProcChance": 100,
+    "HealPct": 100,
+    "BehaviorId": "LifestealOnDealtDamage"
+  },
+  {
+    "Id": 3,
+    "Spell": "Fencing",
+    "Slot": 3,
+    "Name": "剑术·蓄势",
+    "Description": "攻击时 100% 概率获得「蓄势」：接下来 3 次攻击必定暴击，暴击造成 200% 伤害。",
+    "Icon": 2,
+    "Effect": "GuaranteedCritical",
+    "ProcChance": 100,
+    "BuffTypeName": "Rune",
+    "BuffDurationMs": 60000,
+    "CritCharges": 3,
+    "CritDamagePct": 200,
+    "BehaviorId": "GuaranteedCritOnSwing"
+  },
+  {
+    "Id": 4,
+    "Spell": "Slaying",
+    "Slot": 1,
+    "Name": "攻杀·连斩",
+    "Description": "使用攻杀剑术时 100% 概率立刻再打出一记攻杀剑术，且不额外占用攻击冷却。",
+    "Icon": 6,
+    "Effect": "RepeatCastOnSwing",
+    "ProcChance": 100,
+    "RepeatCount": 1,
+    "BehaviorId": "RepeatCastOnSwing"
+  }
+]

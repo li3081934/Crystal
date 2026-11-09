@@ -241,6 +241,8 @@ public abstract class Packet
                 return new C.TownRevive();
             case (short)ClientPacketIds.SpellToggle:
                 return new C.SpellToggle();
+            case (short)ClientPacketIds.SetRune:
+                return new C.SetRune();
             case (short)ClientPacketIds.ConsignItem:
                 return new C.ConsignItem();
             case (short)ClientPacketIds.MarketSearch:
@@ -690,6 +692,10 @@ public abstract class Packet
                 return new S.ObjectRevived();
             case (short)ServerPacketIds.SpellToggle:
                 return new S.SpellToggle();
+            case (short)ServerPacketIds.RuneList:
+                return new S.RuneList();
+            case (short)ServerPacketIds.SetRune:
+                return new S.SetRune();
             case (short)ServerPacketIds.ObjectHealth:
                 return new S.ObjectHealth();
             case (short)ServerPacketIds.ObjectMana:

@@ -654,7 +654,7 @@ namespace Client.MirScenes.Dialogs
             //StartIndex = 0;
         }
 
-        private void RefreshInterface()
+        public void RefreshInterface()
         {
             int offSet = Actor.Gender == MirGender.Male ? 0 : 1;
 
