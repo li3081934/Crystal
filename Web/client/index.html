@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#120f0c" />
+    <title>Mir2 Web · Phase 0</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: 'Microsoft YaHei', Tahoma, system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: #0b0908; color: #e8ded0; overflow: hidden; }
+      #stage { position: absolute; inset: 0; touch-action: none; }
+      #stage canvas { display: block; image-rendering: pixelated; }
+
+      /* ---------- 登录层 ---------- */
+      #overlay {
+        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        background: radial-gradient(circle at 50% 30%, #2a1f16 0%, #0b0908 70%);
+        z-index: 10;
+      }
+      #overlay.hidden { display: none; }
+      .panel {
+        width: min(92vw, 380px); padding: 22px 22px 18px;
+        background: rgba(24, 18, 14, 0.92);
+        border: 1px solid #4a3a28; border-radius: 10px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+      }
+      .panel h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: 2px; color: #f0c987; }
+      .panel p.sub { margin: 0 0 16px; font-size: 12px; color: #8d7d68; }
+      label { display: block; font-size: 12px; color: #b6a48c; margin: 10px 0 4px; }
+      input {
+        width: 100%; padding: 9px 10px; font-size: 14px;
+        background: #14100c; color: #ecdfcc;
+        border: 1px solid #4a3a28; border-radius: 6px;
+      }
+      input:focus { outline: none; border-color: #c99a4e; }
+      button {
+        width: 100%; margin-top: 16px; padding: 11px; font-size: 15px; letter-spacing: 2px;
+        background: linear-gradient(#8a5f2b, #5e3f1c); color: #ffe9c4;
+        border: 1px solid #c99a4e; border-radius: 6px; cursor: pointer;
+      }
+      button:active { transform: translateY(1px); }
+      #status { margin-top: 12px; font-size: 12px; color: #9ec7a4; min-height: 16px; word-break: break-all; }
+      #log {
+        margin-top: 10px; height: 96px; overflow: auto; font-size: 11px; line-height: 1.5;
+        color: #8b7f6f; background: #0e0b08; border: 1px solid #2c2318; border-radius: 6px; padding: 6px 8px;
+      }
+
+      /* ---------- 游戏内 HUD ---------- */
+      #hud { position: absolute; inset: auto 0 0 0; z-index: 5; padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+      #hud.hidden { display: none; }
+      #hud-info {
+        align-self: flex-start; font-size: 12px; color: #d8c8ab;
+        background: rgba(0, 0, 0, 0.55); border: 1px solid #3a2f22; border-radius: 6px; padding: 4px 8px;
+      }
+      #chat-input {
+        pointer-events: auto; width: min(520px, 70vw); padding: 8px 10px; font-size: 13px;
+        background: rgba(0, 0, 0, 0.6); border: 1px solid #3a2f22; border-radius: 6px; color: #ecdfcc;
+      }
+      #hint {
+        align-self: flex-start; font-size: 11px; color: #7a6d5c;
+        background: rgba(0, 0, 0, 0.4); border-radius: 6px; padding: 3px 8px;
+      }
+
+      /* ---------- HUD 组件 ---------- */
+      #hud-top { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      #hud-root-host { position: absolute; inset: 0; pointer-events: none; }
+
+      #vitals {
+        position: absolute; left: 10px; bottom: 150px; width: 226px;
+        background: rgba(10, 8, 6, 0.72); border: 1px solid #3a2f22; border-radius: 8px;
+        padding: 8px 10px; display: flex; flex-direction: column; gap: 5px;
+        font-size: 11px; color: #d8c8ab; pointer-events: none;
+      }
+      .vital-row { display: flex; align-items: center; gap: 6px; }
+      .vital-label { width: 26px; color: #9d8c74; letter-spacing: 1px; }
+      .vital-bar { flex: 1; height: 9px; background: #241c14; border: 1px solid #4a3a28; border-radius: 5px; overflow: hidden; }
+      .vital-bar i { display: block; height: 100%; width: 0%; transition: width 0.18s linear; }
+      .vital-bar.hp i { background: linear-gradient(#e0574a, #8f2f27); }
+      .vital-bar.mp i { background: linear-gradient(#5c8ee0, #2a4d8f); }
+      .vital-bar.exp i { background: linear-gradient(#d9b445, #8a6b1f); }
+      .vital-num { min-width: 78px; text-align: right; font-variant-numeric: tabular-nums; color: #ecdfcc; }
+
+      #skill-bar {
+        position: absolute; left: 50%; transform: translateX(-50%); bottom: 150px;
+        display: flex; gap: 4px; padding: 6px 8px; pointer-events: none;
+        background: rgba(10, 8, 6, 0.72); border: 1px solid #3a2f22; border-radius: 8px;
+      }
+
+      .panel-win {
+        background: rgba(14, 11, 8, 0.94); border: 1px solid #4a3a28; border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55); padding: 10px;
+      }
+      .panel-win.hidden { display: none; }
+      .panel-title { font-size: 12px; color: #f0c987; letter-spacing: 2px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+      .panel-title small { color: #7a6d5c; letter-spacing: 0; font-size: 10px; }
+
+      #inventory-panel { position: absolute; right: 16px; bottom: 150px; pointer-events: auto; }
+      #equipment-panel { position: absolute; right: 336px; bottom: 150px; pointer-events: auto; }
+      #panel-buttons { position: absolute; right: 16px; bottom: 96px; display: flex; gap: 6px; pointer-events: none; }
+      #panel-buttons button { pointer-events: auto; }
+      #panel-buttons button {
+        width: auto; margin: 0; padding: 6px 10px; font-size: 11px; letter-spacing: 0;
+        background: rgba(10, 8, 6, 0.8); color: #d8c8ab; border: 1px solid #4a3a28; border-radius: 6px;
+      }
+      #inventory-grid { display: grid; grid-template-columns: repeat(6, 44px); gap: 4px; }
+      #equipment-grid { display: grid; grid-template-columns: repeat(4, 44px); gap: 4px; }
+      #equip-stats { margin-top: 8px; font-size: 11px; color: #b6a48c; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; max-height: 150px; overflow: auto; }
+      #equip-stats b { color: #ecdfcc; }
+
+      .slot {
+        position: relative; width: 44px; height: 44px; border-radius: 5px; pointer-events: auto;
+        background: #120e0a; border: 1px solid #3a2f22; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; overflow: hidden;
+      }
+      .slot.empty { opacity: 0.55; }
+      .slot:hover { border-color: #c99a4e; }
+      .slot canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+      .slot-count { position: absolute; right: 2px; bottom: 1px; font-size: 10px; color: #ffe9c4; text-shadow: 0 0 3px #000; }
+      .slot-dura { position: absolute; left: 2px; bottom: 2px; height: 2px; width: 0; background: #6ec46e; border-radius: 2px; }
+      .slot-label { position: absolute; left: 0; right: 0; bottom: 0; font-size: 9px; text-align: center; color: #6d6152; background: rgba(0,0,0,0.45); }
+      .slot-key { position: absolute; left: 2px; top: 0; font-size: 9px; color: #8d7d68; }
+
+      #item-tooltip {
+        position: fixed; z-index: 30; max-width: 240px; pointer-events: none;
+        background: rgba(8, 6, 4, 0.96); border: 1px solid #6a5233; border-radius: 6px;
+        padding: 8px 10px; font-size: 12px; color: #d8c8ab; line-height: 1.5;
+      }
+      #item-tooltip.hidden { display: none; }
+      .tip-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+      .tip-stats { color: #9ec7a4; }
+      .tip-extra { color: #8d7d68; font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <div id="overlay">
+      <div class="panel">
+        <h1>MIR 2 · WEB</h1>
+        <p class="sub">Phase 0 · 浏览器客户端验证</p>
+        <form id="login-form">
+          <label for="account">账号</label>
+          <input id="account" name="account" autocomplete="username" value="webdemo" />
+          <label for="password">密码</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" value="webdemo123" />
+          <label for="gateway">网关地址（默认走当前域名 /ws）</label>
+          <input id="gateway" name="gateway" placeholder="127.0.0.1:8787/ws" />
+          <button type="submit">进 入 游 戏</button>
+        </form>
+        <div id="status"></div>
+        <div id="log"></div>
+      </div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div id="hud-top">
+        <div id="hud-info"></div>
+        <div id="hint">点击 / 触摸地面走路 · 方向键单步 · I 背包 · C 装备 · Enter 聊天</div>
+      </div>
+      <input id="chat-input" placeholder="按 Enter 发送聊天…" />
+      <div id="hud-root-host"></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

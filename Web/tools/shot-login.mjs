@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const outDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'shots');
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
+page.on('pageerror', (e) => console.log('PAGEERROR', e.message));
+await page.goto('http://127.0.0.1:5188/', { waitUntil: 'load' });
+await page.waitForTimeout(1500);
+await page.screenshot({ path: path.join(outDir, '00-login-panel.png') });
+console.log('login shot ok');
+await browser.close();

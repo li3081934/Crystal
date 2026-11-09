@@ -1,0 +1,41 @@
+{
+  "name": "mir2-web",
+  "private": true,
+  "type": "module",
+  "description": "Phase 0 web client for Crystal (Legend of Mir 2): WS bridge + PixiJS renderer",
+  "scripts": {
+    "gen:ids": "node tools/gen-enums.mjs",
+    "bridge": "node bridge/bridge.mjs",
+    "dev": "vite client",
+    "build": "vite build client",
+    "preview": "vite preview client",
+    "smoke": "node --experimental-strip-types tools/smoke.ts",
+    "tiles:render": "node --experimental-strip-types tools/tiles-render.ts",
+    "tiles:static": "node --experimental-strip-types tools/tiles-static.ts",
+    "audit:cells": "node tools/audit-cells.mjs",
+    "trace": "node --experimental-strip-types tools/trace.ts",
+    "probe": "node --experimental-strip-types tools/probe.ts",
+    "shot": "node tools/shot.mjs",
+    "shot:mobile": "node tools/shot-mobile.mjs",
+    "shot:hud": "node tools/shot-hud.mjs",
+    "shot:equip": "node tools/shot-equip.mjs",
+    "shot:two": "node tools/shot-two.mjs",
+    "gen:stats": "node tools/gen-basestats.mjs",
+    "shot:combat": "node tools/shot-combat.mjs",
+    "shot:doors": "node tools/shot-doors.mjs",
+    "diag:slow": "node tools/diag-slow.mjs",
+    "diag:camera": "node tools/diag-camera.mjs",
+    "diag:flicker": "node tools/diag-flicker.mjs"
+  },
+  "dependencies": {
+    "pixi.js": "^8.6.6",
+    "undici": "^8.12.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "playwright": "^1.64.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  }
+}
