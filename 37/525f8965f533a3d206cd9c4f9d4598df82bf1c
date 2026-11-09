@@ -1,0 +1,257 @@
+Web/tools/lamp.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-35
+Web/tools/gen-basestats.mjs
+  s_cbfdc8251a6e5d::t_1cca6c59dde92a 1-74
+Web/.gitignore
+  s_cbfdc8251a6e5d::t_6b0d00a4422f90 4
+  s_47b39d92ee6d3f::t_508ba091abe7b3 5-7
+  s_cbfdc8251a6e5d::t_dfe653446ff11e 1-3
+Web/client/index.html
+  s_cbfdc8251a6e5d::t_dfe653446ff11e 1-66,136-159,164,166-170
+  s_cbfdc8251a6e5d::t_08cc1307533915 67-72,74-75,77-87,90-100,109-114,116-135,160-163,165
+  s_cbfdc8251a6e5d::t_08ee1c8f2201e2 76,89,103-104,115
+  s_cbfdc8251a6e5d::t_3cbd04411bd5d2 73,88,101-102,105-108
+Web/tools/mapq.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-23
+Web/tools/shot-at.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-21
+Web/bridge/bridge.mjs
+  s_cbfdc8251a6e5d::t_69ad884e3552fc 1-12,14-25,29-45,84-104,109-125,129-131,133-134,137,139-140,151-154,160,162-166,187-194,202,206-235,242-377
+  s_cbfdc8251a6e5d::t_d0003265c265df 26-27,105-108,126-128,132,135-136,138,142-150,155-159,161,196-199,203-205,236-241
+  s_cbfdc8251a6e5d::t_bfb6fce1915c6a 28
+  s_cbfdc8251a6e5d::t_e598749968db2c 81-83
+  s_47b39d92ee6d3f::t_9274a2156ac326 13,48-77,169-186
+  s_cbfdc8251a6e5d::t_71926a4371eee9 46-47,78-80,141,167-168,195,200-201
+Web/tools/diag-slow.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-60
+Web/tools/shot-equip.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-40
+Web/client/src/net/socket.ts
+  s_cbfdc8251a6e5d::t_4252ac4b4c6a8d 1-89
+Web/tools/final-shot.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-15
+Web/tools/trace.ts
+  s_cbfdc8251a6e5d::t_4fcac3c09ea84f 1-64
+Web/tools/diag-camera.mjs
+  s_cbfdc8251a6e5d::t_b491d34b3f3556 41-49
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 15
+  s_cbfdc8251a6e5d::t_7b31c4324022a5 22
+  s_cbfdc8251a6e5d::t_cad4cc9ceaadd9 1-14,16-21,23-40,50-57
+Web/tools/shot-hud.mjs
+  s_cbfdc8251a6e5d::t_308b7cca0fbb56 1-20,22-60
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 21
+Web/tools/shot-two.mjs
+  s_cbfdc8251a6e5d::t_6b48dc97ae5a16 1-12,14-38,40
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 13
+  s_cbfdc8251a6e5d::t_8549d2eb7b4f98 39
+Web/client/src/net/bytes.ts
+  s_cbfdc8251a6e5d::t_5d4a8c7077ee1c 1-196
+Web/tools/shot-doors.mjs
+  s_cbfdc8251a6e5d::t_f3c3e1e2b5df3b 47-54,56-63
+  s_cbfdc8251a6e5d::t_7749d42d1e1977 112-115,117-120
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 21
+  s_cbfdc8251a6e5d::t_0dfaca31b8f0e5 1-20,22-46,64-111,116,121-134
+  s_cbfdc8251a6e5d::t_d9b0950d2005cf 55
+Web/tools/diag-resize.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-51
+Web/tools/crop2.mjs
+  s_cbfdc8251a6e5d::t_3a74167cfd629d 2-3,7,15-16,18-20,23-27,29
+  s_47b39d92ee6d3f::t_6777fa1b89b875 1,4-6,8-14,17,21-22,28
+Web/tools/audit-ground.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-36
+Web/tools/audit-cells.mjs
+  s_cbfdc8251a6e5d::t_da9f1bc838b3a3 1-9,11-52,60-67
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 10
+  s_47b39d92ee6d3f::t_3dff25422d96c3 53-59
+Web/tools/gen-enums.mjs
+  s_cbfdc8251a6e5d::t_640652e8c0b984 18
+  s_cbfdc8251a6e5d::t_4273a3babc533b 1-17,19-86
+Web/tools/shot-combat.mjs
+  s_cbfdc8251a6e5d::t_b91422f74229fb 1-25,27-34,36-46,57-63,68-72,82-89,92,115-116,130-151,156-170,173-174
+  s_cbfdc8251a6e5d::t_81e26f8a82b0da 73-81
+  s_cbfdc8251a6e5d::t_34473ad5714c82 93,97-98,104-105,108-110,153-155,171
+  s_cbfdc8251a6e5d::t_a1260c3a14047c 35
+  s_cbfdc8251a6e5d::t_c548989113020f 64-67,117-129
+  s_cbfdc8251a6e5d::t_e8aa02d3d113ac 96,99-103,172
+  s_cbfdc8251a6e5d::t_9b53e39c0a944c 47-56
+  s_cbfdc8251a6e5d::t_d48fd516fc3f71 90-91,94-95,106-107,111-114,152
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 26
+Web/client/vite.config.ts
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-19,31-35
+  s_cbfdc8251a6e5d::t_58afe08b71d05d 20-30
+Web/client/src/game/world.ts
+  s_cbfdc8251a6e5d::t_a4309290ff20b5 1-223
+Web/client/src/net/enums.ts
+  s_cbfdc8251a6e5d::t_b442f985b46ce1 1-1956
+  s_cbfdc8251a6e5d::t_c5086408fbf0d9 1957-2029
+Web/tools/back-sizes.mjs
+  s_cbfdc8251a6e5d::t_d2599a64fc6466 1-25
+Web/client/src/formats/item.ts
+  s_cbfdc8251a6e5d::t_4ab774021b503f 1-289
+Web/client/src/main.ts
+  s_cbfdc8251a6e5d::t_615798cfe9c45e 1-14,16-51,54-81,84-262,275-487,499-590,665,667-731,734-791,793,809-810,812-815,889-907,909-929,945-986,989-1015
+  s_cbfdc8251a6e5d::t_f448f1467a1101 661,663-664,811,841-855
+  s_cbfdc8251a6e5d::t_7161087faf48ff 732-733,792,794-808,1023
+  s_cbfdc8251a6e5d::t_29fd1b2e6290a7 15
+  s_cbfdc8251a6e5d::t_7a1facd66844d9 271-272
+  s_cbfdc8251a6e5d::t_3cbd04411bd5d2 263-270,273-274,488-498
+  s_cbfdc8251a6e5d::t_88908a19d990fc 52-53,82-83,591-660,666,816-840,856-888,908,930-944,987-988
+  s_cbfdc8251a6e5d::t_eff7f3b87fd00b 662
+  s_cbfdc8251a6e5d::t_c7af6e7cc92113 1016-1022,1024
+Web/tools/probe-point.mjs
+  s_cbfdc8251a6e5d::t_9eb32c93f5dda8 1-5,7-12,14-40
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 6
+  s_cbfdc8251a6e5d::t_b68612da271609 13
+Web/client/src/game/basestats.ts
+  s_cbfdc8251a6e5d::t_eaa03431162643 1-80
+Web/client/src/formats/map.ts
+  s_cbfdc8251a6e5d::t_597a47fba7207f 1-415
+Web/package.json
+  s_cbfdc8251a6e5d::t_77997f566e6e2d 25
+  s_cbfdc8251a6e5d::t_dfe653446ff11e 1-12,16-18,29-31,33-41
+  s_47b39d92ee6d3f::t_1253a2ef73146b 13-15
+  s_cbfdc8251a6e5d::t_1d9981c5956cba 19-22
+  s_cbfdc8251a6e5d::t_ec51a245573595 32
+  s_cbfdc8251a6e5d::t_c96c00d935de5b 23
+  s_cbfdc8251a6e5d::t_18443b11aa1ac6 27-28
+  s_cbfdc8251a6e5d::t_0ecbb7365b1dd2 26
+  s_cbfdc8251a6e5d::t_4ca385a1685465 24
+Web/client/src/net/packets.ts
+  s_cbfdc8251a6e5d::t_5460c8642c2dab 209-222,319-321
+  s_cbfdc8251a6e5d::t_e0e7a56066a427 12,91,114-125,198-205,207-208,224-225,346
+  s_cbfdc8251a6e5d::t_5d4a8c7077ee1c 307-310,313
+  s_cbfdc8251a6e5d::t_087ccd07310b9a 311-312
+  s_cbfdc8251a6e5d::t_3cbd04411bd5d2 206,302-305
+  s_cbfdc8251a6e5d::t_12dfd58eb363e6 1-11,13-90,92-113,126-197,226-301,306,314-318,325-345,347
+  s_cbfdc8251a6e5d::t_e6ee2405380cd2 223,322-324
+Web/tools/lib-size.mjs
+  s_cbfdc8251a6e5d::t_272b3ef13e0c74 1-7
+Web/tools/shot.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-75
+Web/tools/dump-tile.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-24
+Web/tools/shot-mobile.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-18
+Web/tools/shot-login.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-12
+Web/client/src/render/renderer.ts
+  s_cbfdc8251a6e5d::t_16c0505c0eebb2 188-190,328-331,493-494
+  s_cbfdc8251a6e5d::t_d4039182e95a1e 285-290,295-302,304-307,309-311,334,991-993,998-999,1051
+  s_cbfdc8251a6e5d::t_ecb8290175004f 603-604,610,626-627,635,638
+  s_cbfdc8251a6e5d::t_492524a2f856b6 121-122,809
+  s_cbfdc8251a6e5d::t_15c42593bf1cbe 1060-1070,1074,1082,1093-1094,1105
+  s_cbfdc8251a6e5d::t_b66d69789f681e 10,173,175,225-230,251-254,312-315,407-409,411-412,441-446
+  s_cbfdc8251a6e5d::t_cb0d0ce2af80e1 496-501,722-723,727,749-750,755,788-789,792
+  s_cbfdc8251a6e5d::t_8982746dd58a3a 88-92,669-672,674,681-683,692,847
+  s_cbfdc8251a6e5d::t_e1f6360f29bd79 69-71,171-172,355-359,361-364,366,368,370-390,393-394,459-460,468
+  s_cbfdc8251a6e5d::t_db223698cc389e 512-520,562-563,565-572,574-576,592-595
+  s_cbfdc8251a6e5d::t_d4bd29f1345122 1-9,11-51,54-55,58-68,72-74,93-114,118-119,123-135,138-148,151,174,176-177,180-187,191-212,214-215,219-222,224,231-250,255-260,262-284,291-294,303,316-327,335-354,369,391-392,396,398-406,413-415,417-421,425,428-429,440,447-455,458,474-476,478-479,482-483,485-492,495,502-506,508-511,521-561,578-584,597-602,605-609,611-625,628-634,636-637,639-663,667-668,689-691,705-715,717-721,724-726,728,732-733,735,739,761-780,782-787,790,793-805,810-814,823,833-846,849-906,925-929,931,934-990,994-997,1000-1049,1053,1055-1059,1071-1073,1075-1081,1083-1092,1095-1104,1106-1187
+  s_cbfdc8251a6e5d::t_f40775b3352267 178-179,261,332-333,573
+  s_cbfdc8251a6e5d::t_af3903ac65e24f 155,159-168,848
+  s_47b39d92ee6d3f::t_bd08c06c644bdb 673,675-680,693
+  s_cbfdc8251a6e5d::t_9d4a6760bd18a6 308
+  s_cbfdc8251a6e5d::t_cfb9248ad89e50 169-170,507,734,742
+  s_cbfdc8251a6e5d::t_36be50fdc4711c 136-137,213,216-218,223
+  s_cbfdc8251a6e5d::t_0efeb4a0353eba 52-53,684-686,688,807
+  s_cbfdc8251a6e5d::t_6ab30a337679b7 815-817,820,907-924,930
+  s_cbfdc8251a6e5d::t_df42997c96f2e6 116-117
+  s_cbfdc8251a6e5d::t_205bff8d3a8a9d 1050,1052
+  s_cbfdc8251a6e5d::t_f7c3c4a0a9341d 818-819,821-822,824-832,932-933
+  s_cbfdc8251a6e5d::t_aadbd576f94b8a 81-82,694-695
+  s_cbfdc8251a6e5d::t_ccd3ec24c441bb 564,577,585-591,596,740-741,743-748,751-753,756,758-760
+  s_cbfdc8251a6e5d::t_e287a97a83d744 56-57,120,687,698-704,716,730-731,781,808
+  s_cbfdc8251a6e5d::t_52adb34721f6f6 736-738
+  s_cbfdc8251a6e5d::t_9ee5978291733a 115,806
+  s_cbfdc8251a6e5d::t_b8ddaee86ff7cd 149-150,360,365,367,395,397,410,664-666
+  s_cbfdc8251a6e5d::t_0fc632168fe5c5 422-424,426-427,430-437,439
+  s_cbfdc8251a6e5d::t_a98b04d8e8f912 75-80,83-87,696-697,729,754,791,1054
+  s_cbfdc8251a6e5d::t_d9259e50049da2 757
+  s_cbfdc8251a6e5d::t_0e61ae433a1322 456-457,461-467,469-473,477,484
+  s_cbfdc8251a6e5d::t_058173caf659ed 152-154,156-158,480-481
+  s_cbfdc8251a6e5d::t_2fdb799f10e83f 416,438
+Web/tools/tiles-render.ts
+  s_47b39d92ee6d3f::t_383353c2108a77 1-172
+Web/tsconfig.json
+  s_cbfdc8251a6e5d::t_d33d411f07b50e 1-12,14-16
+  s_cbfdc8251a6e5d::t_79a30a6089b989 13
+Web/client/src/ui/hud.ts
+  s_cbfdc8251a6e5d::t_90400d0ba991c8 192,255,257
+  s_cbfdc8251a6e5d::t_3cbd04411bd5d2 1-191,193-254,256,258-368
+Web/tools/smoke.ts
+  s_cbfdc8251a6e5d::t_4fcac3c09ea84f 1-103,105-163,165,167,169-194
+  s_cbfdc8251a6e5d::t_84020cb870387c 104,164,166,168
+Web/tools/blend-tiles.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-38
+Web/tools/diag-flicker.mjs
+  s_cbfdc8251a6e5d::t_ab619fbb0c46b6 33-37
+  s_cbfdc8251a6e5d::t_d792be0938ebdb 31
+  s_cbfdc8251a6e5d::t_058173caf659ed 42,82
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 14
+  s_cbfdc8251a6e5d::t_56386a6389f65d 45-60,78-81
+  s_cbfdc8251a6e5d::t_0ffd3cb6318c02 1-13,15-30,32,38-41,43-44,61-77,83-86
+Web/tools/probe-cells.mjs
+  s_cbfdc8251a6e5d::t_ed402ffb60ca57 1-5,7-24,26-42
+  s_cbfdc8251a6e5d::t_56a835b1f1ca36 25
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 6
+Web/tools/check-piece.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 6
+  s_cbfdc8251a6e5d::t_76759e63191aa0 1-5,7-37
+Web/README.md
+  s_cbfdc8251a6e5d::t_a8880c4297f6e3 370-383,389-390
+  s_cbfdc8251a6e5d::t_e2851421685590 57-61,63-67
+  s_47b39d92ee6d3f::t_031c36aebaf11f 444-445
+  s_cbfdc8251a6e5d::t_963da543d72f23 83,239-244,256-257,283-311
+  s_47b39d92ee6d3f::t_03258b87606642 15
+  s_47b39d92ee6d3f::t_df9a8bd1e02352 403-438
+  s_cbfdc8251a6e5d::t_18443b11aa1ac6 84,235-236,313-344
+  s_cbfdc8251a6e5d::t_fbb9cf078436ac 62
+  s_47b39d92ee6d3f::t_22346b8c1c33e4 140,143-145,353,363
+  s_cbfdc8251a6e5d::t_52910c9c0d562e 199,201
+  s_cbfdc8251a6e5d::t_77997f566e6e2d 28-29,82,219,221-234,237-238,245-255,312,345,448-469,482
+  s_cbfdc8251a6e5d::t_5b0a1c861b04b3 258-282
+  s_cbfdc8251a6e5d::t_c355d74e231579 1-10,13-14,16-27,30,33-46,48-50,53,55-56,68-79,85-139,141-142,146-180,189-191,216-218,220,473-481,483-488
+  s_cbfdc8251a6e5d::t_94bc81b3bd6a1a 346-352,354-362,364,366-368,402,439-443,446-447
+  s_cbfdc8251a6e5d::t_2fb2c286acb6f8 384-388
+  s_cbfdc8251a6e5d::t_4ca385a1685465 12,32,81,186-188,205-215,472
+  s_cbfdc8251a6e5d::t_58d4e1739440ea 365,369,391-401
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 47,51-52,54
+  s_cbfdc8251a6e5d::t_c96c00d935de5b 11,31,80,181-185,192-198,200,202-204,470-471
+Web/client/src/game/stats.ts
+  s_cbfdc8251a6e5d::t_a6d94371c3b071 1-146
+Web/client/src/formats/lib.ts
+  s_cbfdc8251a6e5d::t_597a47fba7207f 93-109
+  s_cbfdc8251a6e5d::t_b03b07f43edabc 417-418,438,448
+  s_cbfdc8251a6e5d::t_ad2082bf006466 1-92,110-133,136-366,371-389,395-416,419-425,427-430,432-437,439-447,449-470
+  s_cbfdc8251a6e5d::t_cca67998f0d7ee 426,431
+  s_cbfdc8251a6e5d::t_984fda4c9d198f 134-135,367-370,390-394
+Web/tools/tiles-static.ts
+  s_47b39d92ee6d3f::t_12dbf438fecabc 1-80
+Web/tools/probe-cell-cover.mjs
+  s_cbfdc8251a6e5d::t_aae9f55dd3cc43 1-41
+Web/package-lock.json
+  s_cbfdc8251a6e5d::t_73df452ee6e20d 1-1199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "37525f8965f533a3d206cd9c4f9d4598df82bf1c",
+  "prompts": {},
+  "sessions": {
+    "s_47b39d92ee6d3f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf41-96ad-71bf-a485-e1f326d68793",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_cbfdc8251a6e5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1aa46-b94e-720f-811c-fcec60d20123",
+        "model": "deepseek-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
