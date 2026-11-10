@@ -3,7 +3,7 @@
  * gen-image.mjs — OpenRouter 图片生成 + PNG 主色统计（零依赖，Node 18+）
  *
  * 生成:
- *   node Web/tools/gen-image.mjs --prompt p.txt --out a.png [--size 1024x1024] [--n 1]
+ *   node Web/tools/gen-image.mjs --prompt p.txt --out a.png [--size 1024x1024 | --resolution 2K --aspect-ratio 9:21] [--n 1]
  *        [--ref ref1.png] [--ref ref2.png] [--seed 123] [--background transparent]
  *        [--model tencent/hy-image-v3.5-preview] [--timeout 300000]
  *
@@ -45,6 +45,9 @@ function parseArgs(argv) {
       case '--prompt': out.prompt = next(); break;
       case '--out': out.out = next(); break;
       case '--size': out.size = next(); break;
+      case '--resolution': out.resolution = next(); break;
+      case '--aspect-ratio': out.aspectRatio = next(); break;
+      case '--output-format': out.outputFormat = next(); break;
       case '--n': out.n = Number(next()); break;
       case '--ref': out.refs.push(next()); break;
       case '--seed': out.seed = Number(next()); break;
@@ -91,15 +94,18 @@ async function generate(args) {
   const key = readKey();
   const prompt = resolvePrompt(args.prompt);
   const n = Number.isFinite(args.n) && args.n > 0 ? Math.min(10, Math.floor(args.n)) : 1;
-  const size = args.size || '1024x1024';
+  const size = args.size || null;
   const outPath = args.out || die('缺少 --out');
 
   const body = {
     model: args.model || DEFAULT_MODEL,
     prompt,
     n,
-    size,
   };
+  if (size) body.size = size;
+  if (args.resolution) body.resolution = args.resolution;
+  if (args.aspectRatio) body.aspect_ratio = args.aspectRatio;
+  if (args.outputFormat) body.output_format = args.outputFormat;
   if (args.seed !== undefined && Number.isFinite(args.seed)) body.seed = Math.floor(args.seed);
   if (args.background) body.background = args.background;
   if (args.refs.length) {
@@ -107,7 +113,9 @@ async function generate(args) {
   }
 
   // 不打印 key，也不打印完整 body（参考图 base64 会淹没终端）
-  console.log(`[gen] model=${body.model} size=${size} n=${n} refs=${args.refs.length}` +
+  console.log(`[gen] model=${body.model} ${size ? `size=${size}` : ''}` +
+    `${args.resolution ? ` resolution=${args.resolution}` : ''}${args.aspectRatio ? ` aspect=${args.aspectRatio}` : ''}` +
+    `${args.outputFormat ? ` fmt=${args.outputFormat}` : ''} n=${n} refs=${args.refs.length}` +
     `${body.seed !== undefined ? ` seed=${body.seed}` : ''}${body.background ? ` bg=${body.background}` : ''}`);
 
   const ac = new AbortController();
@@ -171,10 +179,17 @@ async function generate(args) {
       console.error(`[gen] 第 ${i + 1} 张解码后只有 ${buf.length} 字节，疑似坏图`);
       continue;
     }
-    let file = outPath;
+    const mediaType = items[i]?.media_type || '';
+    const realExt = mediaType === 'image/jpeg' ? '.jpg' : mediaType === 'image/webp' ? '.webp' : '.png';
+    let basePath = outPath;
+    if (realExt !== '.png' && !outPath.toLowerCase().endsWith(realExt)) {
+      basePath = outPath.replace(/\.png$/i, realExt);
+      console.log(`[gen] 服务端返回 ${mediaType}，改写为 ${path.basename(basePath)}`);
+    }
+    let file = basePath;
     if (items.length > 1) {
-      const ext = path.extname(outPath);
-      file = path.join(path.dirname(outPath), `${path.basename(outPath, ext)}-${String(i + 1).padStart(2, '0')}${ext}`);
+      const ext = path.extname(basePath);
+      file = path.join(path.dirname(basePath), `${path.basename(basePath, ext)}-${String(i + 1).padStart(2, '0')}${ext}`);
     }
     fs.writeFileSync(file, buf);
     const abs = path.resolve(file);
@@ -188,7 +203,8 @@ async function generate(args) {
   const metaFile = outPath.replace(/\.png$/i, '') + '.json';
   try {
     fs.writeFileSync(metaFile, JSON.stringify({
-      model: body.model, size, n, seed: body.seed ?? null, background: body.background ?? null,
+      model: body.model, size: size ?? null, outputFormat: args.outputFormat ?? null, resolution: args.resolution ?? null, aspectRatio: args.aspectRatio ?? null,
+      n, seed: body.seed ?? null, background: body.background ?? null,
       refs: args.refs.map((f) => path.resolve(f)), prompt, files: written,
       at: new Date().toISOString(),
     }, null, 2));
