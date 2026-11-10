@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Server.MirDatabase;
 using Server.RuneSystem;
@@ -63,6 +63,7 @@ namespace Server.MirObjects
                 magic.RuneId = 0;
                 Info.Runes.Set(spell, 0);
                 Enqueue(new S.SetRune { ObjectID = ObjectID, Spell = spell, RuneId = 0 });
+                KillSkeletonPets(spell);
                 return;
             }
 
@@ -79,10 +80,61 @@ namespace Server.MirObjects
             Info.Runes.Set(spell, runeId);
 
             Enqueue(new S.SetRune { ObjectID = ObjectID, Spell = spell, RuneId = runeId });
+            KillSkeletonPets(spell);
+        }
+
+        /// <summary>
+        /// 换/取召唤类符丈时，场上已存在的骷髅直接解散（杀死），由玩家重新召唤。
+        /// 这样新召唤出来的是完全按新符文生成的一只，不需要处理"换皮/改属性"的中间态；
+        /// 将来新符文也只需要在数据里声明 PetSkin / PetBoonPct，不用再改这段代码。
+        /// </summary>
+        private void KillSkeletonPets(Spell spell)
+        {
+            if (Pets == null || Pets.Count == 0) return;
+            if (spell != Spell.SummonSkeleton) return;
+
+            bool killed = false;
+
+            for (int i = Pets.Count - 1; i >= 0; i--)
+            {
+                var pet = Pets[i];
+                if (pet == null || pet.Dead) continue;
+                if (pet.Info == null || pet.Info.Name != Settings.SkeletonName) continue;
+
+                pet.Die();
+                Pets.RemoveAt(i);
+                killed = true;
+            }
+
+            if (killed)
+                ReceiveChat("符文变动，召唤的骷髅已消散。", ChatType.System);
         }
 
         /// <summary>符文连击的重入保护（防止"再打一次"再触发自己）。</summary>
         internal bool RuneRepeatGuard;
+
+        /// <summary>最近一次挥砍用的技能（供"只对该技能伤害生效"的符文判断）。</summary>
+        internal Spell RuneLastHitSpell;
+        internal long RuneLastHitSpellUntil;
+
+        /// <summary>当前这次伤害是否来自该技能（挥砍后 1 秒内有效）。</summary>
+        public bool IsRuneHitFrom(Spell spell)
+        {
+            if (RuneLastHitSpell != spell) return false;
+            return Server.MirEnvir.Envir.Main.Time <= RuneLastHitSpellUntil;
+        }
+
+        /// <summary>连击符文的待执行时间（0 = 没有待执行的补刀）。</summary>
+        internal long RuneRepeatDueTime;
+        internal MirDirection RuneRepeatDir;
+        internal Spell RuneRepeatSpell;
+        internal ushort RuneRepeatRuneId;
+
+        /// <summary>本次挥砍已掷骰的"纯数值类"符文 Id（0 = 无）。</summary>
+        internal ushort RuneProcRuneId;
+
+        /// <summary>本次挥砍那次掷骰的结果（同一刀的所有目标共用，避免逐目标结果不一致）。</summary>
+        internal bool RuneProcRuneResult;
 
         /// <summary>查找该符文当前的 Buff（Values[0] = 符文Id）。</summary>
         public bool TryGetRuneBuff(ushort runeId, out Buff buff)

@@ -34,13 +34,43 @@ namespace Server.RuneSystem
         {
             if (owner == null || !RuneRepository.Any) return;
 
-            ForEachActiveRuneMask(owner, SwingEffects, (ctx) =>
+            //记录"这一刀用的是什么技能"，供 OnlySpellHit 类符文判断（1 秒内有效）
+            owner.RuneLastHitSpell = usedSpell;
+            owner.RuneLastHitSpellUntil = Envir.Main.Time + 1000;
+
+            ForEachActiveRuneMask(owner, SwingEffects | SwingProcEffects | DealtDamageEffects, (ctx) =>
             {
                 ctx.Direction = dir;
                 ctx.UsedSpell = usedSpell;
                 ctx.Location = owner.CurrentLocation;
-                RuneBehaviorRegistry.Dispatch(ctx, BehaviorEvent.Swing);
+
+                //纯数值类能力位（最大攻击 / 无视防御）：每次出手掷一次骰，同一刀所有目标共用结果
+                if ((ctx.Rune.Effect & SwingProcEffects) != 0)
+                {
+                    RuneEffects.RollSwingProc(ctx);
+
+                    //只有"这一刀确实是该技能"且掷骰成功，才通知客户端着色（例如攻杀·破军 变金黄）
+                    if (ctx.UsedSpell == ctx.Rune.Spell && RuneEffects.IsSwingProcActive(owner, ctx.Rune))
+                        RuneEffects.SendProcVisual(ctx);
+                }
+
+                if ((ctx.Rune.Effect & SwingEffects) != 0)
+                    RuneBehaviorRegistry.Dispatch(ctx, BehaviorEvent.Swing);
+
+                //没有"每次出手掷骰"的符文（例如吸血/连击）：只要这一刀确实是它的技能，就发着色
+                if ((ctx.Rune.Effect & SwingProcEffects) == 0 && ctx.UsedSpell == ctx.Rune.Spell)
+                    RuneEffects.SendProcVisual(ctx);
             });
+        }
+
+        /// <summary>每 tick（HumanObject.Process 里调用）：处理延迟执行的符文补刀。</summary>
+        public static void OnTick(HumanObject owner)
+        {
+            if (owner == null || !RuneRepository.Any) return;
+            if (owner.RuneRepeatDueTime == 0) return;
+            if (Envir.Main.Time < owner.RuneRepeatDueTime) return;
+
+            RuneEffects.ExecuteRepeat(owner);
         }
 
         /// <summary>真正造成伤害时（HumanObject.Attacked 里调用）。</summary>
@@ -115,7 +145,7 @@ namespace Server.RuneSystem
 
             var rune = RuneRepository.Get(magic.RuneId);
             if (rune == null) return false;
-            if (!rune.HasEffect(RuneEffect.BuffOnMagicComplete)) return false;
+            if ((rune.Effect & MagicCompleteEffects) == 0) return false;
 
             var ctx = new RuneContext
             {
@@ -132,11 +162,18 @@ namespace Server.RuneSystem
         /// 遍历角色身上所有"带了符文且拥有指定能力"的技能。
         /// 这样被动技能（如基本剑术）的符文也能在普攻/受击等事件里生效。
         /// </summary>
+        /// <summary>由 RuneHooks 直接读取、但需要按 ProcChance 掷骰的"每次出手"能力位。</summary>
+        private const RuneEffect SwingProcEffects = RuneEffect.MaxAttackOnHit | RuneEffect.IgnoreDefence;
+
         private const RuneEffect SwingEffects =
             RuneEffect.BuffOnSwing | RuneEffect.GuaranteedCritical | RuneEffect.RepeatCastOnSwing;
 
         private const RuneEffect DealtDamageEffects =
-            RuneEffect.BuffOnDealtDamage | RuneEffect.HealOnDealtDamage | RuneEffect.GuaranteedCritical;
+            RuneEffect.BuffOnDealtDamage | RuneEffect.HealOnDealtDamage | RuneEffect.GuaranteedCritical | RuneEffect.DebuffOnHit;
+
+        /// <summary>法术结算（CompleteMagic）阶段会派发的能力位。</summary>
+        private const RuneEffect MagicCompleteEffects =
+            RuneEffect.BuffOnMagicComplete | RuneEffect.DualPoison;
 
         private static void ForEachActiveRune(HumanObject owner, RuneEffect effect, Action<RuneContext> action)
         {

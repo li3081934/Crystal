@@ -372,3 +372,14 @@ FodyWeavers.xsd
 !/Build/Server/Release/Envir/Rune
 /.idea/.idea.Legend of Mir/.idea
 /.idea/config
+
+# 符文换皮用的图库（200-299 为符文皮肤保留段，随代码版本化）
+!/Build/Client
+/Build/Client/*
+!/Build/Client/Release
+/Build/Client/Release/*
+!/Build/Client/Release/Data
+/Build/Client/Release/Data/*
+!/Build/Client/Release/Data/Monster
+/Build/Client/Release/Data/Monster/*
+!/Build/Client/Release/Data/Monster/2*.Lib

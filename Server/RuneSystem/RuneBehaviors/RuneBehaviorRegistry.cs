@@ -13,6 +13,8 @@ namespace Server.RuneSystem
         public const string LifestealOnDealtDamage = "LifestealOnDealtDamage";
         public const string GuaranteedCritOnSwing = "GuaranteedCritOnSwing";
         public const string RepeatCastOnSwing = "RepeatCastOnSwing";
+        public const string DebuffOnHit = "DebuffOnHit";
+        public const string DualPoison = "DualPoison";
 
         private static readonly Dictionary<string, IRuneBehavior> Behaviors =
             new Dictionary<string, IRuneBehavior>(StringComparer.OrdinalIgnoreCase);
@@ -47,12 +49,28 @@ namespace Server.RuneSystem
             }
         }
 
+        /// <summary>
+        /// BehaviorId 支持多个实现，用逗号分隔（"LifestealOnDealtDamage,DebuffOnHit"），
+        /// 这样一个符文可以同时拥有多个能力，而不用为每种组合新写一个行为类。
+        /// </summary>
+        private static string[] SplitIds(string ids)
+        {
+            return string.IsNullOrWhiteSpace(ids)
+                ? Array.Empty<string>()
+                : ids.Split(new[] { ',', ';', '|' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+
         public static bool Knows(RuneInfo rune)
         {
             if (rune == null) return false;
-            if (string.IsNullOrWhiteSpace(rune.BehaviorId)) return true;
 
-            return Behaviors.ContainsKey(rune.BehaviorId);
+            var ids = SplitIds(rune.BehaviorId);
+            if (ids.Length == 0) return true;
+
+            foreach (var id in ids)
+                if (!Behaviors.ContainsKey(id)) return false;
+
+            return true;
         }
 
         public static bool TryGet(string id, out IRuneBehavior behavior)
@@ -67,19 +85,26 @@ namespace Server.RuneSystem
         {
             if (ctx?.Rune == null) return;
 
-            if (string.IsNullOrWhiteSpace(ctx.Rune.BehaviorId))
+            var ids = SplitIds(ctx.Rune.BehaviorId);
+
+            if (ids.Length == 0)
             {
                 if (evt == BehaviorEvent.Swing) ApplyGenericBuff(ctx);
                 return;
             }
 
-            if (!Behaviors.TryGetValue(ctx.Rune.BehaviorId, out var behavior))
+            bool handled = false;
+
+            foreach (var id in ids)
             {
-                if (evt == BehaviorEvent.Swing) ApplyGenericBuff(ctx);
-                return;
+                //未知行为在 RuneRepository.Resolve 加载时已报过一次，这里静默跳过（避免逐刀刷日志）
+                if (!Behaviors.TryGetValue(id, out var behavior)) continue;
+
+                ApplyBehavior(behavior, ctx, evt, data);
+                handled = true;
             }
 
-            ApplyBehavior(behavior, ctx, evt, data);
+            if (!handled && evt == BehaviorEvent.Swing) ApplyGenericBuff(ctx);
         }
 
         /// <summary>返回 true 表示事件被接管。</summary>
@@ -87,15 +112,18 @@ namespace Server.RuneSystem
         {
             if (ctx?.Rune == null) return false;
 
-            if (!string.IsNullOrWhiteSpace(ctx.Rune.BehaviorId) &&
-                Behaviors.TryGetValue(ctx.Rune.BehaviorId, out var behavior))
+            foreach (var id in SplitIds(ctx.Rune.BehaviorId))
             {
+                if (!Behaviors.TryGetValue(id, out var behavior)) continue;
+
                 switch (evt)
                 {
                     case BehaviorEvent.Cast:
-                        return behavior.OnCast(ctx);
+                        if (behavior.OnCast(ctx)) return true;
+                        break;
                     case BehaviorEvent.MagicComplete:
-                        return behavior.OnMagicComplete(ctx, data);
+                        if (behavior.OnMagicComplete(ctx, data)) return true;
+                        break;
                 }
             }
 

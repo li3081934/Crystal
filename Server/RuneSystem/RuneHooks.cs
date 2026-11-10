@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using Server.MirDatabase;
+using Server.MirObjects;
+using Server.MirEnvir;
 
 namespace Server.RuneSystem
 {
@@ -9,6 +11,133 @@ namespace Server.RuneSystem
     /// </summary>
     public static class RuneHooks
     {
+        /// <summary>
+        /// 本次攻击是否强制按"角色最大攻击力"计算（用于 HeadHumanObject.Attack 的 damageBase）。
+        /// 没有对应符文时只多一次 byte 判断。
+        /// </summary>
+        public static void ApplyMaxAttack(HumanObject owner, Spell spell, ref int damageBase)
+        {
+            if (owner == null || !RuneRepository.Any) return;
+
+            var rune = GetActiveRune(owner, spell, RuneEffect.MaxAttackOnHit);
+            if (rune == null) return;
+
+            // 按 ProcChance 掷骰（每次出手一次，结果由 RuneEvents.OnSwing 记录）
+            if (!RuneEffects.IsSwingProcActive(owner, rune)) return;
+
+            damageBase = owner.Stats[Stat.MaxDC];
+        }
+
+        /// <summary>本次攻击是否无视目标防御（护甲归零；GuaranteedHit 时连命中判定一起跳过）。</summary>
+        public static void ApplyIgnoreDefence(HumanObject owner, Spell spell, ref DefenceType defence)
+        {
+            if (owner == null || !RuneRepository.Any) return;
+
+            var rune = GetActiveRune(owner, spell, RuneEffect.IgnoreDefence);
+            if (rune == null) return;
+
+            // 与最大攻击共用同一次掷骰结果
+            if (!RuneEffects.IsSwingProcActive(owner, rune)) return;
+
+            defence = rune.GuaranteedHit ? DefenceType.None : DefenceType.Agility;
+        }
+
+        /// <summary>
+        /// 召唤物增益（符文「召唤·白骨将军」等）：把 Pet*Pct 按召唤物等级累加，
+        /// 直接改这只召唤物的最终属性。只在 MonsterObject.RefreshAll() 末尾被调用，
+        /// 所以"刚召唤出来""升一级""重新登录载入宠物""切换符文"都会自动按当前等级重算。
+        ///
+        /// 没有对应符文时开场几个空判断就返回，不给普通怪物增加任何开销。
+        /// </summary>
+        public static void ApplyPetBoon(MonsterObject pet)
+        {
+            if (pet == null || !RuneRepository.Any) return;
+
+            var master = pet.Master as HumanObject;
+            if (master?.Info == null) return;
+
+            // 只对"召唤骷髅"这个技能召唤出来的那只生效
+            if (pet.Info == null || pet.Info.Name != Settings.SkeletonName)
+            {
+                RuneEffects.SyncPetSkin(pet, 0);
+                return;
+            }
+
+            int stacks = pet.PetLevel + 1;   // 0 级技能召唤出来也按 1 层算
+            if (stacks < 1) stacks = 1;
+
+            var rune = GetActiveRune(master, Spell.SummonSkeleton, RuneEffect.PetBoon);
+            if (rune == null)
+            {
+                RuneEffects.SyncPetSkin(pet, 0);
+                return;
+            }
+
+            ScaleStat(pet, Stat.HP, rune.PetHpPct * stacks);
+            ScaleStat(pet, Stat.MinAC, rune.PetDefencePct * stacks);
+            ScaleStat(pet, Stat.MaxAC, rune.PetDefencePct * stacks);
+            ScaleStat(pet, Stat.MinMAC, rune.PetDefencePct * stacks);
+            ScaleStat(pet, Stat.MaxMAC, rune.PetDefencePct * stacks);
+            ScaleStat(pet, Stat.MinDC, rune.PetDamagePct * stacks);
+            ScaleStat(pet, Stat.MaxDC, rune.PetDamagePct * stacks);
+
+            // 速度：数值是"间隔毫秒"，越小越快，所以按百分比减少，并保持原版 400ms 下限
+            if (rune.PetMoveSpeedPct > 0) pet.MoveSpeed = ShortenDelay(pet.MoveSpeed, rune.PetMoveSpeedPct * stacks);
+            if (rune.PetAttackSpeedPct > 0) pet.AttackSpeed = ShortenDelay((ushort)Math.Min(pet.AttackSpeed, ushort.MaxValue), rune.PetAttackSpeedPct * stacks);
+
+            // 换皮：贴图由数据指定，客户端只负责按编号切图库
+            RuneEffects.SyncPetSkin(pet, rune.PetSkin);
+        }
+
+        /// <summary>按百分比提升某个属性（pct 为已乘过层数的总百分比）。</summary>
+        private static void ScaleStat(MonsterObject pet, Stat stat, int pct)
+        {
+            if (pct == 0) return;
+
+            int value = pet.Stats[stat];
+            if (value == 0) return;
+
+            long scaled = (long)value * (100 + pct) / 100;
+            if (scaled < 1) scaled = 1;
+            if (scaled > int.MaxValue) scaled = int.MaxValue;
+
+            pet.Stats[stat] = (int)scaled;
+        }
+
+        /// <summary>把"间隔毫秒"缩短 pct%（= 提速），并保持 400ms 下限。</summary>
+        private static ushort ShortenDelay(ushort delay, int pct)
+        {
+            if (pct <= 0) return delay;
+
+            if (pct >= 100) pct = 99;
+
+            long scaled = (long)delay * (100 - pct) / 100;
+            if (scaled < 400) scaled = 400;
+            if (scaled > ushort.MaxValue) scaled = ushort.MaxValue;
+
+            return (ushort)scaled;
+        }
+
+        /// <summary>找到该角色身上"当前技能 + 指定能力位"的生效符文。</summary>
+        private static RuneInfo GetActiveRune(HumanObject owner, Spell spell, RuneEffect effect)
+        {
+            var magics = owner.Info?.Magics;
+            if (magics == null || magics.Count == 0) return null;
+
+            for (int i = 0; i < magics.Count; i++)
+            {
+                var magic = magics[i];
+                if (magic.RuneId == 0 || magic.Spell != spell) continue;
+
+                var rune = RuneRepository.Get(magic.RuneId);
+                if (rune == null || !rune.Valid || !rune.HasEffect(effect)) continue;
+
+                return rune;
+            }
+
+            return null;
+        }
+
         /// <summary>技能伤害（UserMagic.GetDamage）。</summary>
         public static int Damage(UserMagic magic, int value)
         {

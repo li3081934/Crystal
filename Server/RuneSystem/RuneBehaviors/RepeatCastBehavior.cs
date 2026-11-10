@@ -1,4 +1,5 @@
 ﻿using System;
+using Server.MirEnvir;
 
 namespace Server.RuneSystem
 {
@@ -32,41 +33,21 @@ namespace Server.RuneSystem
             if (owner.RuneRepeatGuard) return;
             if (owner.Dead) return;
 
-            int times = Math.Max(1, ctx.Rune.RepeatCount);
-            MirDirection dir = ctx.Direction;
-            Spell spell = ctx.UsedSpell;
+            owner.RuneRepeatDir = ctx.Direction;
+            owner.RuneRepeatSpell = ctx.UsedSpell;
+            owner.RuneRepeatRuneId = ctx.Rune.Id;
 
-            owner.RuneRepeatGuard = true;
+            int delay = Math.Max(0, ctx.Rune.RepeatDelayMs);
 
-            try
+            if (delay == 0)
             {
-                for (int i = 0; i < times; i++)
-                {
-                    long atkCd = owner.AttackTime;
-                    long actionCd = owner.ActionTime;
-
-                    // 攻杀剑术的"就绪"标记由原版逻辑消耗，这里重新置上，保证第二刀仍然是攻杀
-                    if (spell == Spell.Slaying) owner.Slaying = true;
-
-                    owner.AttackTime = 0;
-                    owner.ActionTime = 0;
-
-                    try
-                    {
-                        owner.Attack(dir, spell);
-                    }
-                    finally
-                    {
-                        // 恢复成"只算一次攻击"的冷却
-                        owner.AttackTime = Math.Max(owner.AttackTime, atkCd);
-                        owner.ActionTime = Math.Max(owner.ActionTime, actionCd);
-                    }
-                }
+                RuneEffects.ExecuteRepeat(owner);   // 同 tick 立即补刀（旧行为）
+                return;
             }
-            finally
-            {
-                owner.RuneRepeatGuard = false;
-            }
+
+            // 延迟补刀：由 RuneEvents.OnTick 在到期那一帧执行，
+            // 这样两刀之间有间隔，客户端也能把两次动画分开播。
+            owner.RuneRepeatDueTime = Envir.Main.Time + delay;
         }
     }
 }

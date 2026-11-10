@@ -2383,6 +2383,9 @@ namespace ServerPackets
         public byte Level;
         public byte Type;
 
+        /// <summary>符文连击等场景：把这一刀也发给攻击者本人，让本人客户端补播一次攻击动画。</summary>
+        public bool SelfBroadcast;
+
         protected override void ReadPacket(BinaryReader reader)
         {
             ObjectID = reader.ReadUInt32();
@@ -2391,6 +2394,7 @@ namespace ServerPackets
             Spell = (Spell)reader.ReadByte();
             Level = reader.ReadByte();
             Type = reader.ReadByte();
+            SelfBroadcast = reader.ReadBoolean();
         }
 
         protected override void WritePacket(BinaryWriter writer)
@@ -2402,6 +2406,7 @@ namespace ServerPackets
             writer.Write((byte)Spell);
             writer.Write(Level);
             writer.Write(Type);
+            writer.Write(SelfBroadcast);
         }
     }
     public sealed class Struck : Packet
@@ -6858,6 +6863,61 @@ namespace ServerPackets
             writer.Write(States.Count);
             for (int i = 0; i < States.Count; i++)
                 States[i].Save(writer);
+        }
+    }
+
+    /// <summary>符文"本次生效"的表现通知（客户端据此给技能/角色着色、或补播一次攻击动画）。</summary>
+    public sealed class RuneProc : Packet
+    {
+        public override short Index { get { return (short)ServerPacketIds.RuneProc; } }
+
+        public uint ObjectID;
+        public Spell Spell;
+        public ushort RuneId;
+        public int TintArgb;
+        public int TintMs;
+        public bool TintBody = true;
+
+        protected override void ReadPacket(BinaryReader reader)
+        {
+            ObjectID = reader.ReadUInt32();
+            Spell = (Spell)reader.ReadByte();
+            RuneId = reader.ReadUInt16();
+            TintArgb = reader.ReadInt32();
+            TintMs = reader.ReadInt32();
+            TintBody = reader.ReadBoolean();
+        }
+        protected override void WritePacket(BinaryWriter writer)
+        {
+            writer.Write(ObjectID);
+            writer.Write((byte)Spell);
+            writer.Write(RuneId);
+            writer.Write(TintArgb);
+            writer.Write(TintMs);
+            writer.Write(TintBody);
+        }
+    }
+
+    /// <summary>
+    /// 符文换皮：把某个对象（目前只有召唤物）改成用另一套图库绘制。
+    /// Skin 是 Data\Monster 下的图库编号（对应 {000}.Lib），0 表示恢复原贴图。
+    /// </summary>
+    public sealed class PetSkin : Packet
+    {
+        public override short Index { get { return (short)ServerPacketIds.PetSkin; } }
+
+        public uint ObjectID;
+        public ushort Skin;
+
+        protected override void ReadPacket(BinaryReader reader)
+        {
+            ObjectID = reader.ReadUInt32();
+            Skin = reader.ReadUInt16();
+        }
+        protected override void WritePacket(BinaryWriter writer)
+        {
+            writer.Write(ObjectID);
+            writer.Write(Skin);
         }
     }
 

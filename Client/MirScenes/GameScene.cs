@@ -1726,6 +1726,12 @@ namespace Client.MirScenes
                 case (short)ServerPacketIds.SetRune:
                     RuneLibrary.OnSetRune((S.SetRune)p);
                     break;
+                case (short)ServerPacketIds.RuneProc:
+                    RuneVisuals.OnRuneProc((S.RuneProc)p);
+                    break;
+                case (short)ServerPacketIds.PetSkin:
+                    RuneVisuals.OnPetSkin((S.PetSkin)p);
+                    break;
                 case (short)ServerPacketIds.ObjectHealth:
                     ObjectHealth((S.ObjectHealth)p);
                     break;
@@ -3347,11 +3353,16 @@ namespace Client.MirScenes
 
             mob = new MonsterObject(p.ObjectID);
             mob.Load(p, false);
+
+            // 换皮状态可能比怪物实体先到（离开视野再回来），按 ObjectID 还原
+            ushort skin = RuneVisuals.GetPetSkin(p.ObjectID);
+            if (skin != 0) mob.ApplyRuneSkin(skin);
         }
 
         private void ObjectAttack(S.ObjectAttack p)
         {
-            if (p.ObjectID == User.ObjectID && !Observing) return;
+            //符文连击（SelfBroadcast）会把自己的补刀也发回本人，用于补播一次攻击动画
+            if (p.ObjectID == User.ObjectID && !Observing && !p.SelfBroadcast) return;
 
             QueuedAction action = null;
 
@@ -3399,6 +3410,11 @@ namespace Client.MirScenes
                 }
                 action.Params.Add(p.Spell);
                 action.Params.Add(p.Level);
+
+                //本人补刀：追加第 3 个参数表示"纯表现挥砍"（不重发 C.Attack、不占本地冷却）
+                if (p.SelfBroadcast && ob == User)
+                    action.Params.Add(true);
+
                 ob.ActionFeed.Add(action);
             }
         }

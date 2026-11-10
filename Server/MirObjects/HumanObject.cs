@@ -257,6 +257,8 @@ namespace Server.MirObjects
         {
             if ((Race == ObjectType.Player && Connection == null) || Node == null || Info == null) return;
 
+            RuneEvents.OnTick(this);
+
             if (CellTime + 700 < Envir.Time) _stepCounter = 0;
 
             if (Sneaking) CheckSneakRadius();
@@ -2982,6 +2984,7 @@ namespace Server.MirObjects
 
             //damabeBase = the original damage from your gear (+ bonus from moonlight and darkbody)
             int damageBase = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+            RuneHooks.ApplyMaxAttack(this, spell, ref damageBase);
             //damageFinal = the damage you're gonna do with skills added
             int damageFinal;
 
@@ -3201,6 +3204,7 @@ namespace Server.MirObjects
                 }
 
                 //if (ob.Attacked(this, damage, defence) <= 0) break;
+                RuneHooks.ApplyIgnoreDefence(this, spell, ref defence);
                 action = new DelayedAction(DelayedType.Damage, Envir.Time + 300, ob, damageFinal, defence, true);
                 ActionList.Add(action);
                 break;

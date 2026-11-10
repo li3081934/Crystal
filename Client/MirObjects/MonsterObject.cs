@@ -339,6 +339,42 @@ namespace Client.MirObjects
             return Name.EndsWith(string.Format("({0})", User.Name)) || MirScenes.Dialogs.GroupDialog.GroupList.Contains(name);
         }
 
+        /// <summary>
+        /// 符文换皮：改用 Data\Monster\{skin:000}.Lib 绘制（skin = 0 恢复原图库）。
+        /// 只在符文声明了 PetSkin 时由服务端下发 PetSkin 包触发；
+        /// 新图库需要和原怪物帧表一致（本项目的换皮库是从 022.Lib 整体换色得到的，帧表完全一致）。
+        /// </summary>
+        public void ApplyRuneSkin(ushort skin)
+        {
+            if (skin != 0)
+            {
+                if (skin >= Libraries.Monsters.Length || Libraries.Monsters[skin] == null) return;
+
+                if (_skinOriginal == null) _skinOriginal = BodyLibrary;
+                BodyLibrary = Libraries.Monsters[skin];
+            }
+            else
+            {
+                BodyLibrary = _skinOriginal ?? BodyLibrary;
+                _skinOriginal = null;
+            }
+
+            if (BodyLibrary == null) return;
+
+            Frames = BodyLibrary.Frames ?? FrameSet.DefaultMonster;
+
+            if (!Frames.TryGetValue(CurrentAction, out Frame))
+                Frames.TryGetValue(MirAction.Standing, out Frame);
+
+            if (Frame != null)
+                DrawFrame = Frame.Start + (Frame.OffSet * (byte)Direction) + FrameIndex;
+
+            try { GameScene.Scene?.MapControl?.Redraw(); } catch { }
+        }
+
+        /// <summary>换皮前的原图库（用于取消符文时恢复）。</summary>
+        private MLibrary _skinOriginal;
+
         public override void Process()
         {
             bool update = CMain.Time >= NextMotion || GameScene.CanMove;

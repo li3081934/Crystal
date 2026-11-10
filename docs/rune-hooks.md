@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 服务端（9 个文件 / 18 行）
+## 1. 服务端（10 个文件 / 22 行）
 
 | # | 文件 | 行 | 改动 |
 |---|---|---|---|
@@ -20,6 +20,9 @@
 | S6 | 同上 | 7221 | `RuneEvents.OnDealtDamage(attacker, this, damage - armour);`（真实造成伤害 · 受害者是人类） |
 | S6c | `Server/MirObjects/HumanObject.cs` | 7162 | 暴击判定追加 `|| RuneEvents.ForceCritical(attacker)`（必暴符文） |
 | S6d | `Server/MirObjects/MonsterObject.cs` | 2595 | 同上（受害者是怪物时） |
+| S6g | `Server/MirObjects/HumanObject.cs`（`Process` 开头） | `RuneEvents.OnTick(this);`（符文心跳，用于延迟补刀等定时效果） |
+| S6e | `Server/MirObjects/HumanObject.cs` | 2985 | `RuneHooks.ApplyMaxAttack(this, spell, ref damageBase);`（按最大攻击力计算） |
+| S6f | 同上 | 3205 | `RuneHooks.ApplyIgnoreDefence(this, spell, ref defence);`（无视目标防御） |
 | S6b | `Server/MirObjects/MonsterObject.cs` | 2682 | `RuneEvents.OnDealtDamage(attacker, this, damage - armour);`（真实造成伤害 · 受害者是怪物）；外加 `using Server.RuneSystem;` 一行 |
 | S7 | `Server/MirDatabase/MagicInfo.cs` | 103 / 140 / 151 | `UserMagic.RuneId` 字段 + 存档读写（`version > 117` 守卫） |
 | S8 | 同上 | 190 / 200 / 224 / 229 | `GetDamage` / `GetPower` ×2 / `GetDelay` 各包一层 `RuneHooks.*` |
@@ -30,15 +33,16 @@
 | S13 | `Server/MirObjects/PlayerObject.cs` | 232 / 1712 | `InitRunes()`（登录校验）/ `SendRuneInfo()`（下发符文表） |
 | S14 | 同上 | 3233 | GM 调试命令 `@RUNE` / `@RUNELIST`（纯调试，可删） |
 | S15 | `Server/MirDatabase/BuffInfo.cs` | 86 | `BuffType.Rune` 的 BuffInfo（**所有符文 Buff 共用**） |
+| S16 | `Server/MirObjects/MonsterObject.cs`（`RefreshAll` 末尾） | `RuneHooks.ApplyPetBoon(this);`（召唤物增益：按宠物等级重算属性，`RefreshBase` 会先重置，天然幂等） |
 
 ## 2. Shared（5 个文件）
 
 | # | 文件 | 改动 |
 |---|---|---|
 | H1 | `Shared/Enums.cs:1401` | `BuffType.Rune = 216`（**追加在末尾空段，绝不插中间**：玩家 Buff 会存进角色存档） |
-| H2 | `Shared/Enums.cs:1720-1721 / 1888` | `ServerPacketIds.RuneList/SetRune`、`ClientPacketIds.SetRune`（追加在枚举末尾） |
-| H3 | `Shared/ClientPackets.cs` / `ServerPackets.cs` | 3 个新包（纯新增，不动老包结构） |
-| H4 | `Shared/Packet.cs:244-245 / 695-698` | 3 行包注册 |
+| H2 | `Shared/Enums.cs` | `ServerPacketIds.RuneList/SetRune/RuneProc`、`ClientPacketIds.SetRune`（追加在枚举末尾） |
+| H3 | `Shared/ClientPackets.cs` / `ServerPackets.cs` | 4 个新包（纯新增，不动老包结构） |
+| H4 | `Shared/Packet.cs` | 4 行包注册 |
 | H5 | `Shared/Data/RuneData.cs` | 新文件：`ClientRuneInfo` / `ClientRuneState` |
 
 ## 3. 客户端（5 个文件）
@@ -50,12 +54,17 @@
 | C3 | 同上（`SkillBarDialog.Update`） | 技能栏提示追加「符文：xxx」 |
 | C4 | `Client/MirScenes/Dialogs/BuffDialog.cs:345 / 468` | `BuffType.Rune` 的图标 / 描述分支（**所有符文 Buff 共用一条分支**） |
 | C5 | `Client/MirScenes/Dialogs/CharacterDialog.cs:657` | `RefreshInterface()` 由 `private` 改 `public`（符文切换后刷新界面） |
+| C6 | `Client/MirObjects/MapObject.cs`（`ApplyDrawColour`） | 末尾 `return RuneVisuals.Apply(this, drawColour);`（符文着色，1 行） |
+| C7 | `Client/MirObjects/PlayerObject.cs`（`MirAction.Attack1` 的 `Spell.Slaying` 特效） | 绘制颜色由 `Color.White` 改成 `RuneVisuals.Apply(this, Color.White)`（攻杀挥砍特效跟着变色，1 行） |
+| C8 | `Client/MirScenes/GameScene.cs`（`ObjectAttack`） | 允许 `SelfBroadcast` 的包作用于本人 + 给补刀动作打"纯表现"标记（~5 行） |
+| C9 | `Client/MirObjects/PlayerObject.cs`（`SetAction` 的 `Attack1`） | 读到"纯表现"标记时只取 Spell/SpellLevel 后 return，不发 `C.Attack`、不刷新本地攻击冷却（~7 行） |
+| C10 | `Client/MirObjects/MapObject.cs`（`ApplyDrawColour` 末尾） | `RuneVisuals.Apply(this, drawColour, body: true)`（本体着色，1 行） |
 
 ## 4. 新增模块（不受限制，可自由扩展）
 
 ```
 Server/RuneSystem/                  ← 全部业务逻辑（数据 / 存档 / 门面 / 行为插件）
-Client/RuneSystem/                  ← 符文面板 + 客户端缓存
+Client/RuneSystem/                  ← 符文面板 + 客户端缓存 + 着色表现（RuneVisuals）
 Envir/Rune/Runes.json               ← 符文数据（策划改这里，不用编译）
 Tools/RuneTestTool/                 ← 离线建号 + 协议级冒烟测试
 ```
@@ -72,4 +81,6 @@ grep -rn "RuneRepository\|RuneBook\|IRuneBehavior" Server --include=*.cs | grep 
 
 1. **纯数值 / 上 Buff 类符文** → 只改 `Envir/Rune/Runes.json`。
 2. **新机制** → 在 `Server/RuneSystem/RuneBehaviors/` 新增一个实现 `IRuneBehavior` 的文件（反射自动注册），`Runes.json` 里用 `BehaviorId` 引用。
+   `BehaviorId` 支持逗号分隔多个（如 `"LifestealOnDealtDamage,DebuffOnHit"`），能力位组合不需要新写行为类。
+   注意：**新增 `RuneEffect` 能力位必须同时加进 `RuneEvents` 里对应的掩码**（`SwingEffects` / `SwingProcEffects` / `DealtDamageEffects`），否则永不触发。
 3. **需要新战斗时机**（死亡时、受击时…）→ 才允许在 `HumanObject` 加 1 行 `RuneEvents.OnXxx(...)`，并更新本清单第 1 节。

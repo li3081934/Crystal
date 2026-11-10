@@ -64,6 +64,7 @@ namespace Client.MirObjects
 
         public Spell Spell;
         public byte SpellLevel;
+
         public bool Cast;
         public uint TargetID;
         public List<uint> SecondaryTargetIDs;
@@ -1355,6 +1356,16 @@ namespace Client.MirObjects
                             break;
                         case MirAction.Attack1:
                         case MirAction.MountAttack:
+
+                            //符文连击补刀：参数带第 3 个 true 表示"纯表现挥砍"
+                            //只播动画与特效，不发 C.Attack、不刷新 AttackTime
+                            if (action != null && action.Params != null && action.Params.Count >= 3 &&
+                                action.Params[2] is bool visualOnly && visualOnly)
+                            {
+                                Spell = (Spell)action.Params[0];
+                                SpellLevel = (byte)action.Params[1];
+                                break;
+                            }
 
                             if (!RidingMount)
                             {
@@ -4954,7 +4965,7 @@ namespace Client.MirObjects
                     switch (Spell)
                     {
                         case Spell.Slaying:
-                            Libraries.Magic.DrawBlend(1820 + ((int)Direction * 10) + SpellLevel * 90 + FrameIndex, DrawLocation, Color.White, true, 0.7F);
+                            Libraries.Magic.DrawBlend(1820 + ((int)Direction * 10) + SpellLevel * 90 + FrameIndex, DrawLocation, Client.RuneSystem.RuneVisuals.Apply(this, Color.White, false), true, 0.7F);
                             break;
                         case Spell.DoubleSlash:
                             Libraries.Magic2.DrawBlend(1960 + ((int)Direction * 10) + FrameIndex, DrawLocation, Color.White, true, 0.7F);

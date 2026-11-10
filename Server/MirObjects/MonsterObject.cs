@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 ﻿using Server.MirDatabase;
 using Server.MirEnvir;
@@ -610,6 +610,12 @@ namespace Server.MirObjects
         public byte PetLevel;
         public uint PetExperience;
         public byte MaxPetLevel;
+
+        /// <summary>
+        /// 符文换皮：当前已经下发给客户端的图库编号（0 = 原贴图）。
+        /// 只是缓存，用来避免每次 RefreshAll 都重复广播 S.PetSkin。
+        /// </summary>
+        internal ushort RuneSkin;
         public long TameTime;
         public bool DieNextTurn;
 
@@ -831,6 +837,8 @@ namespace Server.MirObjects
             if (AttackSpeed < 400) AttackSpeed = 400;
 
             RefreshBuffs();
+
+            RuneHooks.ApplyPetBoon(this);
         }
 
         protected virtual void RefreshBuffs()

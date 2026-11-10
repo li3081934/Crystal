@@ -1719,6 +1719,8 @@ public enum ServerPacketIds : short
     //Rune System
     RuneList,
     SetRune,
+    RuneProc,
+    PetSkin,
 }
 
 public enum ClientPacketIds : short

@@ -696,6 +696,10 @@ public abstract class Packet
                 return new S.RuneList();
             case (short)ServerPacketIds.SetRune:
                 return new S.SetRune();
+            case (short)ServerPacketIds.RuneProc:
+                return new S.RuneProc();
+            case (short)ServerPacketIds.PetSkin:
+                return new S.PetSkin();
             case (short)ServerPacketIds.ObjectHealth:
                 return new S.ObjectHealth();
             case (short)ServerPacketIds.ObjectMana:

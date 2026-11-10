@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -99,6 +99,9 @@ namespace Server.RuneSystem
             rune.Valid = true;
             rune.ResolvedBuffStats = new Stats();
 
+            ResolveTint(rune);
+            ResolveDebuff(rune);
+
             bool needsBuff = rune.HasEffect(RuneEffect.BuffOnSwing)
                              || rune.HasEffect(RuneEffect.BuffOnDealtDamage)
                              || rune.HasEffect(RuneEffect.BuffOnMagicComplete)
@@ -145,7 +148,9 @@ namespace Server.RuneSystem
                                  || rune.HasEffect(RuneEffect.BuffOnMagicComplete)
                                  || rune.HasEffect(RuneEffect.HealOnDealtDamage)
                                  || rune.HasEffect(RuneEffect.GuaranteedCritical)
-                                 || rune.HasEffect(RuneEffect.RepeatCastOnSwing);
+                                 || rune.HasEffect(RuneEffect.RepeatCastOnSwing)
+                                 || rune.HasEffect(RuneEffect.DebuffOnHit)
+                                 || rune.HasEffect(RuneEffect.DualPoison);
 
             bool hasNumeric = rune.DamagePct != 0 || rune.DamageFlat != 0 || rune.CostPct != 0
                               || rune.CooldownPct != 0 || rune.PowerPct != 0 || rune.PowerFlat != 0;
@@ -155,6 +160,45 @@ namespace Server.RuneSystem
                 rune.Valid = hasNumeric;
                 MessageQueue.Instance.Enqueue($"[Rune] {rune.Name}: 找不到行为实现 \"{rune.BehaviorId}\"，该符文暂时不可选。");
             }
+        }
+
+        /// <summary>解析 DebuffType（PoisonType 名称）。</summary>
+        private static void ResolveDebuff(RuneInfo rune)
+        {
+            rune.ResolvedDebuffType = PoisonType.None;
+
+            if (rune.DebuffTickSpeed < 100) rune.DebuffTickSpeed = 100;
+
+            if (string.IsNullOrWhiteSpace(rune.DebuffType)) return;
+
+            if (Enum.TryParse(rune.DebuffType, true, out PoisonType type) && Enum.IsDefined(typeof(PoisonType), type))
+            {
+                rune.ResolvedDebuffType = type;
+                return;
+            }
+
+            MessageQueue.Instance.Enqueue($"[Rune] {rune.Name}: 未知 DebuffType \"{rune.DebuffType}\"，该符文不会施加异常状态。");
+        }
+
+        /// <summary>解析 TintColor（"#RRGGBB" / "#AARRGGBB" / 十进制 ARGB）。</summary>
+        private static void ResolveTint(RuneInfo rune)
+        {
+            rune.ResolvedTintArgb = 0;
+
+            if (string.IsNullOrWhiteSpace(rune.TintColor) || rune.TintMs <= 0) return;
+
+            string text = rune.TintColor.Trim().TrimStart('#');
+
+            if (!int.TryParse(text, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int value))
+            {
+                MessageQueue.Instance.Enqueue($"[Rune] {rune.Name}: TintColor \"{rune.TintColor}\" 解析失败，忽略着色。");
+                return;
+            }
+
+            if (text.Length <= 6)
+                value |= unchecked((int)0xFF000000); // 补不透明 alpha
+
+            rune.ResolvedTintArgb = value;
         }
 
         public static RuneInfo Get(ushort id)
@@ -233,7 +277,91 @@ namespace Server.RuneSystem
                     Effect = RuneEffect.RepeatCastOnSwing,
                     ProcChance = 100,
                     RepeatCount = 1,
+                    RepeatDelayMs = 350,
                     BehaviorId = RuneBehaviorRegistry.RepeatCastOnSwing,
+                },
+                new RuneInfo
+                {
+                    Id = 5,
+                    Spell = Spell.Slaying,
+                    Slot = 2,
+                    Name = "攻杀·破军",
+                    Description = "本次攻杀按角色最大攻击力计算，并无视目标防御（AC）。",
+                    Icon = 6,
+                    NeedMagicLevel = 0,
+                    Effect = RuneEffect.MaxAttackOnHit | RuneEffect.IgnoreDefence,
+                    ProcChance = 100,
+                    TintColor = "#FFD24A",
+                    TintMs = 400,
+                },
+                new RuneInfo
+                {
+                    Id = 6,
+                    Spell = Spell.Slaying,
+                    Slot = 3,
+                    Name = "攻杀·血饮",
+                    Description = "攻杀命中时回复等同伤害 100% 的生命，并撕裂伤口造成流血（每秒 30% 伤害，持续 5 秒），刀光转为赤红。",
+                    Icon = 2,
+                    NeedMagicLevel = 0,
+                    Effect = RuneEffect.HealOnDealtDamage | RuneEffect.DebuffOnHit,
+                    ProcChance = 100,
+                    HealPct = 100,
+                    RequireSpellHit = true,
+                    TintColor = "#FF3A3A",
+                    TintMs = 450,
+                    TintBody = false,
+                    DebuffType = "Bleeding",
+                    DebuffDuration = 5,
+                    DebuffTickSpeed = 1000,
+                    DebuffValuePct = 30,
+                    BehaviorId = RuneBehaviorRegistry.LifestealOnDealtDamage + "," + RuneBehaviorRegistry.DebuffOnHit,
+                },
+                new RuneInfo
+                {
+                    Id = 7,
+                    Spell = Spell.Thrusting,
+                    Slot = 1,
+                    Name = "刺杀·震魄",
+                    Description = "刺杀剑气贯穿的第一个目标之后的第 2 个目标，会被震晕 2 秒（无法移动与攻击，并承受额外 50% 伤害）。",
+                    Icon = 2,
+                    Effect = RuneEffect.DebuffOnHit,
+                    ProcChance = 100,
+                    RequireSpellHit = true,
+                    RequireSecondTarget = true,
+                    DebuffType = "Stun",
+                    DebuffDuration = 2,
+                    DebuffTickSpeed = 1000,
+                    DebuffValue = 1,
+                    BehaviorId = RuneBehaviorRegistry.DebuffOnHit,
+                },
+                new RuneInfo
+                {
+                    Id = 8,
+                    Spell = Spell.Poisoning,
+                    Slot = 1,
+                    Name = "施毒·双生",
+                    Description = "施放施毒术时，无论携带的是绿毒还是红毒，目标都会同时中上绿毒与红毒。",
+                    Icon = 2,
+                    Effect = RuneEffect.DualPoison,
+                    ProcChance = 100,
+                    BehaviorId = RuneBehaviorRegistry.DualPoison,
+                },
+                new RuneInfo
+                {
+                    Id = 9,
+                    Spell = Spell.SummonSkeleton,
+                    Slot = 1,
+                    Name = "召唤·白骨将军",
+                    Description = "召唤出的骷髅按自身等级强化：生命 +25%、防御 +20%、攻击 +15%、移速与攻速各 +8%（每提升 1 级累加一次；7 级时为 生命 +200%、防御 +160%、攻击 +120%、速度 +64%）。",
+                    Icon = 2,
+                    Effect = RuneEffect.PetBoon,
+                    ProcChance = 100,
+                    PetHpPct = 25,
+                    PetDefencePct = 20,
+                    PetDamagePct = 15,
+                    PetMoveSpeedPct = 8,
+                    PetAttackSpeedPct = 8,
+                    PetSkin = 200,
                 },
             };
         }

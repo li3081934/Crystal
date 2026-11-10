@@ -22,6 +22,9 @@ namespace Server.RuneSystem
             if (ctx.Owner.Dead) return;
             if (ctx.Rune.HealPct <= 0) return;
 
+            //RequireSpellHit：只在"符文所属技能"打出的伤害上吸血（例如攻杀·血饮）
+            if (ctx.Rune.RequireSpellHit && !ctx.Owner.IsRuneHitFrom(ctx.Rune.Spell)) return;
+
             if (!RuneEffects.TryProc(ctx.Rune)) return;
 
             int heal = (int)Math.Round(damage * (ctx.Rune.HealPct / 100f));

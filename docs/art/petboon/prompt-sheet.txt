@@ -1,0 +1,23 @@
+In-place sprite sheet edit. The reference image is a 4x4 grid (1024x1024) of 16 pixel-art frames of a small skeleton warrior from the 16-bit MMORPG Mir2: rows = 4 facing directions, columns = 4 idle frames.
+
+TASK: repaint every sprite in place, keeping the identical grid, the identical number of sprites, the identical positions, foot lines, sizes and poses. This is a costume-and-weapon upgrade of the SAME character, not a new character.
+
+Keep exactly as they are:
+- the 4x4 layout and cell size, the empty magenta margins around each sprite
+- each sprite's silhouette, pose, facing direction, limb and rib positions, canvas alignment
+- DELETE the dark hatched ground shadow entirely: below each sprite must be pure flat magenta like the rest of the background (no shadow, no rubble, no stain, no dark smudge on the background)
+- the crisp 16-bit hand-drawn pixel-art look: hard pixels, no anti-aliasing, no blur, no photo texture, limited palette, strong single-light highlights and dark outlines
+
+Change only:
+- armour: add ornate dark-iron pauldrons with rivets, a plated iron helmet with a narrow T-shaped eye slit and small bone horns, iron vambraces and greaves, a tattered crimson waist cloth and a bone-spike belt
+- weapon: replace the brass mace with a bone-bladed glaive (long dark haft, pale bone blade), held in the same hand and same angle as the mace
+- colours: aged ivory bone, dark gunmetal iron, dull crimson cloth, faint cold green glow only inside the eye slits
+
+Style: chunky 16-bit pixel art with clearly visible square pixels, a limited 24-colour palette, hard-edged shading, no anti-aliasing, no soft gradients, no glow bloom, no photographic or 3D-render look.
+
+Constraints:
+- background must stay perfectly flat pure magenta #FF00FF (255,0,255), unchanged, filling all empty space
+- never use magenta in the sprites; no magenta tints, no magenta outline, no pink highlights
+- no grid lines, no borders, no labels, no numbers, no text, no watermark, no extra sprites, no background scenery
+- do not zoom, crop, rotate, mirror or reposition any sprite
+- output exactly the same 1024x1024 layout

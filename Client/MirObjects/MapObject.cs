@@ -336,7 +336,9 @@ namespace Client.MirObjects
                 drawColour = Color.White;
                 DXManager.SetGrayscale(true);
             }
-            return drawColour;
+
+            //符文着色（攻杀·破军 等）：没有生效时原样返回
+            return Client.RuneSystem.RuneVisuals.Apply(this, drawColour, true);
         }
 
         public virtual Missile CreateProjectile(int baseIndex, MLibrary library, bool blend, int count, int interval, int skip, int lightDistance = 6, bool direction16 = true, Color? lightColour = null, uint targetID = 0)

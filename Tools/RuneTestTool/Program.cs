@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using Server.MirDatabase;
@@ -46,7 +46,12 @@ namespace RuneTestTool
                 string expect = options.GetValueOrDefault("expect", "buff");
                 bool crit = options.ContainsKey("crit");
                 bool repeat = options.ContainsKey("repeat");
-                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat);
+                bool maxatk = options.ContainsKey("maxatk");
+                bool onlySpell = options.ContainsKey("onlyspell");
+                bool stun = options.ContainsKey("stun");
+                bool dual = options.ContainsKey("dual");
+                bool pet = options.ContainsKey("pet");
+                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet);
             }
 
             string dir = options.GetValueOrDefault("dir");
@@ -92,6 +97,55 @@ namespace RuneTestTool
                 // 需要世界库里的 MagicInfoList 才能创建 UserMagic
                 Console.WriteLine("载入世界库（只读，不保存）...");
                 envir.LoadDB();
+            }
+
+            // 调试用：按关键字搜物品（例如 --searchitems 毒），方便测试脚本找物品名
+            if (options.TryGetValue("searchitems", out string itemKeyword))
+            {
+                string kw = itemKeyword ?? string.Empty;
+                int found = 0;
+
+                foreach (var info in envir.ItemInfoList)
+                {
+                    bool byType = kw.StartsWith("type:");
+                    ItemType wantType = ItemType.Nothing;
+
+                    if (byType)
+                    {
+                        if (!Enum.TryParse(kw.Substring(5), true, out wantType)) continue;
+                        if (info.Type != wantType) continue;
+                    }
+                    else if (!string.IsNullOrEmpty(kw) &&
+                        (info.Name?.IndexOf(kw, StringComparison.OrdinalIgnoreCase) < 0) &&
+                        (info.FriendlyName?.IndexOf(kw, StringComparison.OrdinalIgnoreCase) < 0))
+                        continue;
+
+                    Console.WriteLine($"#{info.Index} {info.Name} / {info.FriendlyName} type={info.Type} shape={info.Shape} stack={info.StackSize} reqLevel={info.RequiredAmount}");
+                    found++;
+                }
+
+                Console.WriteLine($"匹配 {found} 条");
+                return 0;
+            }
+
+            // 调试用：按关键字搜怪物（例如 --searchmonsters 骷髅），输出 Lib 文件名用的 Image 索引
+            if (options.TryGetValue("searchmonsters", out string mobKeyword))
+            {
+                string kw = mobKeyword ?? string.Empty;
+                int found = 0;
+
+                foreach (var info in envir.MonsterInfoList)
+                {
+                    if (!string.IsNullOrEmpty(kw) &&
+                        (info.Name?.IndexOf(kw, StringComparison.OrdinalIgnoreCase) < 0))
+                        continue;
+
+                    Console.WriteLine($"#{info.Index} {info.Name} Image={info.Image} -> {(Monster)info.Image} AI={(int)info.AI} level={info.Level}");
+                    found++;
+                }
+
+                Console.WriteLine($"匹配 {found} 条");
+                return 0;
             }
 
             // 角色存档里存着 Buff（按 BuffType 反序列化），必须先把 BuffInfo 表准备好
