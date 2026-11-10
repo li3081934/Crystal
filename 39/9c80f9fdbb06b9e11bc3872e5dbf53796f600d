@@ -1,0 +1,28 @@
+docs/art/petboon/src-078/layout.json
+  s_220f379c12fa5d::t_7ffa14da5461fc 1-16,18-384,386-928,930-1472,1474-1664,1666-2560,2562-2664,2666-3552
+  s_220f379c12fa5d::t_8fd48330c9ec19 17,385,929,1473,1665,2561,2665
+Web/tools/export-sheet.mjs
+  s_220f379c12fa5d::t_809c1ec5c93566 1-17,19-138,140-147,153,155-162,176-187,189-190
+  s_220f379c12fa5d::t_7ffa14da5461fc 18,188
+  s_220f379c12fa5d::t_8fd48330c9ec19 139,148-152,154,163-175
+docs/art/petboon/README.md
+  s_220f379c12fa5d::t_2cb4ac753d44d4 63-70
+docs/art/petboon/src-078/README.md
+  s_220f379c12fa5d::t_14d0d06c2235c6 1-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "399c80f9fdbb06b9e11bc3872e5dbf53796f600d",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
