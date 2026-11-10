@@ -1,0 +1,255 @@
+Client/MirObjects/MonsterObject.cs
+  s_220f379c12fa5d::t_f2642c66a2d802 342-377
+Server/RuneSystem/RuneBehaviors/RuneBehaviorRegistry.cs
+  s_220f379c12fa5d::t_c5f6bf93ea7829 17
+  s_220f379c12fa5d::t_0cdf05e79c6280 100-101
+  s_220f379c12fa5d::t_74024d0ca9525c 16,52-62,67-73,88-90,96-98,102-104,107,115,117-118,122-123,125-126
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_181f9405e7d9b0 1,32-38,91-128,135-139,143-145,160-175,184-189
+  s_220f379c12fa5d::t_080b7801b14e0c 129-134
+Server/MirObjects/HumanObject.cs
+  s_220f379c12fa5d::t_7a655529c91b31 260-261,2987,3207
+Server/RuneSystem/RuneBehaviors/DualPoisonBehavior.cs
+  s_220f379c12fa5d::t_eeb9f5a642a5d4 3
+  s_220f379c12fa5d::t_89800456a622cd 1-2,4-82
+Server/RuneSystem/RuneBehaviors/LifestealBehavior.cs
+  s_220f379c12fa5d::t_b4e149a1c45407 25-27
+Server/RuneSystem/HumanObject.RuneExt.cs
+  s_220f379c12fa5d::t_f6bf40614ebe0d 66,83,87-89,91,94,96-98,102-106,108-110
+  s_220f379c12fa5d::t_66371d4b0b4fb0 1,84-86,90,92-93,95,99-101,107,116-138
+Web/tools/montage-lib.mjs
+  s_220f379c12fa5d::t_5a72133ee62ed2 1-129
+Web/tools/lib.mjs
+  s_220f379c12fa5d::t_7e75f9ca1fba1d 87
+  s_220f379c12fa5d::t_aecad8437f05cf 1-86,88-147
+docs/art/petboon/hero-03.json
+  s_338a1c3849f4cf::t_0cccba30d6ba0c 1-15
+Server/MirObjects/MonsterObject.cs
+  s_220f379c12fa5d::t_181f9405e7d9b0 1,840-841
+  s_220f379c12fa5d::t_4f598af81708b0 613-618
+Tools/RuneTestTool/Program.cs
+  s_220f379c12fa5d::t_537316d2d3c83a 110-118
+  s_220f379c12fa5d::t_126f9fd55f053d 104,106,109,121,124-125,127-129,131-139,141-142,144-150
+  s_220f379c12fa5d::t_dee992599fb478 140
+  s_220f379c12fa5d::t_7d255565296a25 52
+  s_220f379c12fa5d::t_82e886e6ae34e3 1,49-51
+  s_220f379c12fa5d::t_ce142ca15a81d0 53-54
+  s_220f379c12fa5d::t_805f13afba245c 143
+  s_220f379c12fa5d::t_479309aa3baf54 102-103,105,107-108,119-120,122-123,126,130
+docs/art/petboon/README.md
+  s_338a1c3849f4cf::t_34d60be855deb4 2,4,6,13,15-16,33-34,36,42,44,50,52
+  s_220f379c12fa5d::t_7531a984726256 56-62
+  s_220f379c12fa5d::t_d5ba43f69851b0 1,3,5,7-12,14,17-32,35,37-41,43,45-49,51,53-55
+docs/art/petboon/hero-02.txt
+  s_338a1c3849f4cf::t_0238a59f81ab72 1-13
+Web/tools/sheet-from-lib.mjs
+  s_220f379c12fa5d::t_761db56f07b52b 1-93
+Web/tools/png.mjs
+  s_220f379c12fa5d::t_d34af9c8eac462 1-163
+docs/art/petboon/hero-01.txt
+  s_338a1c3849f4cf::t_c46ad1b960eaae 2,4,6-8,10-12,14
+  s_338a1c3849f4cf::t_7f056a451860c8 1,3,9,13,15
+  s_338a1c3849f4cf::t_366747925f5063 5
+Client/MirObjects/PlayerObject.cs
+  s_220f379c12fa5d::t_cdda1846eab08a 1360-1363,1365-1366
+  s_220f379c12fa5d::t_0ecedf8a26292e 1369
+  s_220f379c12fa5d::t_232883d0d64b21 4968
+  s_220f379c12fa5d::t_b69912cc8d2f20 67,1364,1367-1368
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_db887586e75af7 23-25,43-45,57-61,67,84-85
+  s_220f379c12fa5d::t_f92880dfcf0982 11,36
+Client/MirObjects/MapObject.cs
+  s_220f379c12fa5d::t_4681d9d58fead9 341
+  s_220f379c12fa5d::t_0ecedf8a26292e 339-340
+Server/RuneSystem/RuneBehaviors/RepeatCastBehavior.cs
+  s_220f379c12fa5d::t_528cac0e0c5099 36-38,40,42,44-45,47-50
+  s_220f379c12fa5d::t_13a81d8f276f51 2
+Server/RuneSystem/RuneBehaviors/DebuffOnHitBehavior.cs
+  s_220f379c12fa5d::t_fedd632e847c5e 2
+  s_220f379c12fa5d::t_c2ec0f779d175a 1,4-19,21-37,41-70,85-86
+  s_220f379c12fa5d::t_f9584b361ddd2e 3
+  s_220f379c12fa5d::t_2fbfdef62b7d65 84
+  s_220f379c12fa5d::t_0f3749066d4bd8 20,38-40,71-83
+docs/art/petboon/hero-03.txt
+  s_338a1c3849f4cf::t_e90d55c738fd79 1-11
+docs/art/petboon/prompt-sheet.txt
+  s_220f379c12fa5d::t_bce757a7041436 1-7,9-14,17-23
+  s_220f379c12fa5d::t_280944f1376033 8,15-16
+Client/MirScenes/GameScene.cs
+  s_220f379c12fa5d::t_0ecedf8a26292e 1729-1731
+  s_220f379c12fa5d::t_62106bc76d28dd 1732-1734,3356-3359
+  s_220f379c12fa5d::t_cdda1846eab08a 3414,3416
+  s_220f379c12fa5d::t_b69912cc8d2f20 3364-3365,3413,3415,3417
+Web/tools/recolor-lib.mjs
+  s_220f379c12fa5d::t_345d6c78d08874 1-174
+docs/art/petboon/palette.txt
+  s_338a1c3849f4cf::t_40ace6592e1902 29,32
+  s_338a1c3849f4cf::t_d5ae640c408c87 86
+  s_338a1c3849f4cf::t_ed5a4d17155166 1-28,30-31,33-85,87
+Web/tools/sheet-to-lib.mjs
+  s_220f379c12fa5d::t_f3c8fb7e67a11a 23,32,147,180-181,272-276
+  s_220f379c12fa5d::t_19aadcba69f01e 97-99
+  s_220f379c12fa5d::t_32e0eba022ede2 217-233,236-238,241,250-257,261-262,269
+  s_220f379c12fa5d::t_7511001752b062 31,95,129-139,249
+  s_220f379c12fa5d::t_9c2262644b0741 57-62,90,92-93,279-280
+  s_220f379c12fa5d::t_d9253ce864f523 150-151,153-160,169,172-175
+  s_220f379c12fa5d::t_1edc5f17e60553 1-22,24-30,33-56,63-89,91,94,96,100-128,140-146,148-149,152,161-168,170-171,176-179,182-216,234-235,239-240,242-248,258-260,263-268,270-271,277-278
+.gitignore
+  s_220f379c12fa5d::t_8cea6685e10012 375-376,378-385
+  s_220f379c12fa5d::t_f56477fe4be4a7 377
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_181f9405e7d9b0 349-363,365
+  s_220f379c12fa5d::t_bbe55374e3f52f 364
+  s_220f379c12fa5d::t_3345e45be90702 1,102-104,151-153,165-203,280,283-348
+Server/RuneSystem/RuneEffects.cs
+  s_220f379c12fa5d::t_b4e149a1c45407 112
+  s_220f379c12fa5d::t_0e1decf5d1bf8e 128-144
+  s_220f379c12fa5d::t_884fac08fb3833 3
+  s_220f379c12fa5d::t_ade0921f75450b 23-34,119,121-127
+  s_220f379c12fa5d::t_5dcd8d34fe634b 120
+  s_220f379c12fa5d::t_286c8b1ab5d24b 85-86
+  s_220f379c12fa5d::t_c48ea64e775989 35,97-111,113-118
+  s_220f379c12fa5d::t_528cac0e0c5099 36-84,87-96
+Web/tools/gen-image.mjs
+  s_338a1c3849f4cf::t_2c9c04139a205c 305-306,313,319,322,324-325,327-351,353-358,360,362-363
+  s_338a1c3849f4cf::t_8dd0a41c5a5326 1-304,307-312,314-318,320-321,323,326,352,359,361,364-386
+docs/art/petboon/hero-01.json
+  s_338a1c3849f4cf::t_6ac225ffaf6808 1-4,6-7,9,11,13,15
+  s_338a1c3849f4cf::t_2c6eaa4127f558 5,10,14
+  s_338a1c3849f4cf::t_5690c7d4e448d5 8,12
+Shared/ServerPackets.cs
+  s_220f379c12fa5d::t_58a1c7276d9fa9 2386-2388,2397,2409,6869-6878,6880-6887,6889-6896
+  s_220f379c12fa5d::t_b4e149a1c45407 6879,6888,6897
+  s_220f379c12fa5d::t_506dc5333236a6 6898-6900
+  s_220f379c12fa5d::t_912b967d731a37 6901-6923
+docs/art/petboon/hero-02.json
+  s_338a1c3849f4cf::t_a7a3aab12a2848 1-15
+docs/debuff机制调研.md
+  s_220f379c12fa5d::t_74b5c7be062b03 1-299
+  s_220f379c12fa5d::t_f63083493d614e 305-314
+  s_220f379c12fa5d::t_e80e5765eb9de5 300-304
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_6a47ecd579688e 68-69,85-86
+  s_338a1c3849f4cf::t_3fd6e454e24a0c 60-64,70-74,87-89
+  s_220f379c12fa5d::t_6db5340a6b2b0d 56
+  s_220f379c12fa5d::t_181f9405e7d9b0 1,3-4,14-55,57-59,65-67,75-84,90-140
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_59a86762e8b224 132-133,135
+  s_220f379c12fa5d::t_e25707e4331a0c 107-117
+  s_220f379c12fa5d::t_7541a87ef5a14b 55-89
+  s_220f379c12fa5d::t_c5a6d1509f49b4 90-106
+  s_220f379c12fa5d::t_330e566f5de636 118-131
+Client/RuneSystem/RuneVisuals.cs
+  s_220f379c12fa5d::t_89f68c3af9aae7 46-54
+  s_220f379c12fa5d::t_4681d9d58fead9 59,68-69,82-83,89,92
+  s_220f379c12fa5d::t_92008095356c0e 1-10,12-14,18-23,31-32,40-44,56-58,60-67,70-80,85-88,91,93-98,100,104,116,118-119,123,128,134-138,140-142
+  s_220f379c12fa5d::t_27ea9cd1805bb3 115
+  s_220f379c12fa5d::t_e052d84d4a4f5d 139
+  s_9a5b23dc9fe816::t_b8b825f5ff6b03 11,15-17,24-30,33-39,45,55,81,84,90,99,101-103,105-114,117,120-122,124-127,129-133
+Web/tools/dump-lib.mjs
+  s_220f379c12fa5d::t_4a03a017ec7748 1-140
+docs/art/petboon/hero-04.txt
+  s_338a1c3849f4cf::t_df5c2c86f65db2 3,5,7,9,11
+  s_338a1c3849f4cf::t_2558b2a85e86eb 1-2,4,6,8,10,12-13
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_38ac469580fd45 554-555,1117-1235
+  s_220f379c12fa5d::t_013c4fa3de9f4e 952-1055
+  s_220f379c12fa5d::t_e80e5765eb9de5 552-553,1056-1116
+  s_220f379c12fa5d::t_74b5c7be062b03 543,548-551,558-559,688-951
+  s_220f379c12fa5d::t_f92880dfcf0982 556-557,1243-1355
+  s_220f379c12fa5d::t_1a2daebd1bcf2a 1236-1242
+  s_220f379c12fa5d::t_10524687c81950 1356-1375
+Server/RuneSystem/RuneEvents.cs
+  s_220f379c12fa5d::t_528cac0e0c5099 66-75
+  s_220f379c12fa5d::t_2b5f2e6835a2a4 172
+  s_220f379c12fa5d::t_9a009b40548211 148,173-176
+  s_220f379c12fa5d::t_1fc2a39086a761 41
+  s_220f379c12fa5d::t_222f62bd0b1b92 52-53
+  s_220f379c12fa5d::t_ade0921f75450b 46-48,50,56-58,165-167
+  s_220f379c12fa5d::t_c48ea64e775989 49,51,54-55
+  s_220f379c12fa5d::t_b4e149a1c45407 37-40,59-62
+Shared/Enums.cs
+  s_220f379c12fa5d::t_e9c312fc45595a 1723
+  s_220f379c12fa5d::t_506dc5333236a6 1722
+docs/art/petboon/sheet-dirs.txt
+  s_338a1c3849f4cf::t_eea04d0f9b0748 1-9
+Web/tools/pack-lib.mjs
+  s_220f379c12fa5d::t_166063af878feb 1-57
+Shared/Packet.cs
+  s_220f379c12fa5d::t_506dc5333236a6 699-700
+  s_220f379c12fa5d::t_682e96252a19bb 701-702
+docs/art/petboon/recolor.json
+  s_220f379c12fa5d::t_0256feb13127c8 2,5-8,11-14,18,22-26,30
+  s_220f379c12fa5d::t_e6adacf3ef9d12 1,3-4,9-10,15-17,19-21,27-29,31
+docs/art/petboon/hero-04.json
+  s_338a1c3849f4cf::t_8360000b6264a2 1-4,6-9,11-13,15
+  s_338a1c3849f4cf::t_9d72bd61851cfd 5,10,14
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_5d4978e5e2dc76 270-274
+  s_220f379c12fa5d::t_e181de0e1102ee 1,145,149,151-152,155,157-158,509-513,518-519,521-523,525,527-536,538-546,548,551,553-558,560-563,565,568-606,608,614-710,712-713,717-737,739,746-778,780-797,801,1144-1145,1153-1156,1158,1174-1175,1177-1180,1182-1183,1186-1187,1189-1193,1196-1197,1199-1205,1221,1235-1239,1272-1424,1447-1448
+  s_220f379c12fa5d::t_10f7bd79c19931 480
+  s_220f379c12fa5d::t_7b92a59cfc96eb 514-517,610-612
+  s_220f379c12fa5d::t_89d1a2ffd62ef5 738
+  s_220f379c12fa5d::t_c8224932415d60 714-716
+  s_220f379c12fa5d::t_3c62a8beb7b38a 298
+  s_220f379c12fa5d::t_710b670fe69bb2 243,245,249-257,260,278-280,283-284,286-289,292-293,297,299-300,302,304,307-308,310,313-314,316-319,322-324,326,329-332,334,337-338,341-356,358-359,362-376,378-384,387-390
+  s_220f379c12fa5d::t_3a60cab40fa01d 195,201-210
+  s_220f379c12fa5d::t_ce142ca15a81d0 17,88-91,160,165-171,179,181-184,188-192,194,212-213,239-241
+  s_220f379c12fa5d::t_559243578fa19d 141-144,146-148,150,153-154,156,159,161,163-164,172-178,180,214-215,217-220,222,226,231-236
+  s_220f379c12fa5d::t_2bfed75a017097 613
+  s_220f379c12fa5d::t_49b96f25f50d4b 109-140
+  s_220f379c12fa5d::t_46c99ad65abe0e 1512
+  s_220f379c12fa5d::t_83e43c668633ad 407,411
+  s_220f379c12fa5d::t_b57262b3150f9b 244,246-248,258-259,261-269,275-277,281-282,285,290-291,294-296,301,303,305-306,309,311-312,315,320-321,325,327-328,333,335-336,339-340
+  s_220f379c12fa5d::t_99f0fe691ea31d 450
+  s_220f379c12fa5d::t_7e90c8d8f45c51 740-745,779,1425-1446
+  s_220f379c12fa5d::t_82e886e6ae34e3 93-99
+  s_10efd37d7b83e8::t_b137dddb270b5c 238
+  s_220f379c12fa5d::t_52e99e2d52a130 185-187,196-200,211,228-229
+  s_220f379c12fa5d::t_2b556a5843fe54 423-424,426,428-429,431-440
+  s_220f379c12fa5d::t_8eb412d99c0104 242,391-406,409-410,412-422,425,427,430,441-449,451-479,481-502,505-508,1513-1531
+  s_220f379c12fa5d::t_6a47ecd579688e 216,227,230,237
+  s_220f379c12fa5d::t_7a8cbc3d14c674 87,92
+docs/art/petboon/sheet-dirs.json
+  s_338a1c3849f4cf::t_3fd6e454e24a0c 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "40050969f0cfe204676e6f34a3a7bdd806e8802d",
+  "prompts": {},
+  "sessions": {
+    "s_10efd37d7b83e8": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1c442-9540-746d-bff2-0a72a08d1966",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_338a1c3849f4cf": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1c47c-7bee-75dd-87d0-50d0054376bd",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_9a5b23dc9fe816": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed0e24ed4ffebfw4VPGLWzDUgp",
+        "model": "unknown"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
