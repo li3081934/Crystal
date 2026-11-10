@@ -1,0 +1,34 @@
+Web/tools/gen-image.mjs
+  s_220f379c12fa5d::t_ffe0b85a23cdfb 50,108,117-118,182-189,191-192,206
+  s_220f379c12fa5d::t_7567d308db58a8 6,48-49,97,105-107,116,207
+Web/tools/resize-png.mjs
+  s_220f379c12fa5d::t_550f1ba81a739b 29
+  s_220f379c12fa5d::t_7a81b0a0fb08b9 1-28,30-93
+docs/art/petboon/prompt-078-stand.txt
+  s_220f379c12fa5d::t_801c83505d249e 9-18
+  s_220f379c12fa5d::t_51f0b2f0d03efb 1-2,4-8,19-21
+  s_220f379c12fa5d::t_0701ceb5c5d8f3 3,22
+Web/tools/make-sheet-prompt.mjs
+  s_220f379c12fa5d::t_30354d1d9361e7 1-38,49-58
+  s_220f379c12fa5d::t_801c83505d249e 39-48
+docs/art/petboon/gen-078/hy-stand-v4.json
+  s_220f379c12fa5d::t_3bdc6be5966475 1-18
+docs/art/petboon/prompt-078-stand-flux.txt
+  s_220f379c12fa5d::t_75ab4949c4b763 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b6df4a1daf0704b6c61067ba689d96e654c3c77c",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
