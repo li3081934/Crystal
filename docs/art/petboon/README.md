@@ -60,3 +60,11 @@ cp /tmp/022-b.Lib Build/Client/Release/Data/Monster/200.Lib
 - 当前「召唤·白骨将军」用 `Data/Monster/200.Lib`，服务端在 `Runes.json` 里用 `"PetSkin": 200` 指定
 - 新增皮肤：Lib 放进 `Build/Client/Release/Data/Monster/`，改对应符文的 `PetSkin`；`.gitignore` 已放行 `2*.Lib`
 - **换 / 取消符文会让旧骷髅直接死亡**（`HumanObject.RuneExt.cs` 的 `KillSkeletonPets`），玩家重新召唤即可，所以皮肤只需要保证"召唤那一刻"的样子
+
+## 重要更正：目标图库是 078，不是 022
+
+- `Monster.BoneFamiliar = 78` → 道士「召唤骷髅」用的是 `Data/Monster/078.Lib`（骨架 + 镰刀，尺寸约 68x76）
+- `022.Lib` 是野外骷髅**怪物**（金属头盔 + 钉头锤，尺寸约 76x96），比例与装备都不同，**不能拿来做宠物皮肤**
+- 正式的"可编辑精灵表"已导出到 `docs/art/petboon/src-078/`（站/走/砍/受击/死亡/尸体，8 方向，3 倍放大），见该目录的 `README.md`
+- 当前 `200.Lib` = `078.Lib` 的整体冷色重绘**占位**（234 帧全改），只用于验证换皮链路
+- 早先基于 `022.Lib` 生成的那批图（`sheet-*`、`hero-*`、`preview-standing.png`）仅作历史留档
