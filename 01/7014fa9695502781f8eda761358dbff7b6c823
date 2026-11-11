@@ -1,0 +1,151 @@
+Server/RuneSystem/RuneEvents.cs
+  s_220f379c12fa5d::t_412c40007074e6 71-75
+  s_220f379c12fa5d::t_ba4a7dc2ef2ae7 178-179
+Web/tools/frames-to-sheet.mjs
+  s_10efd37d7b83e8::t_77f57358dfb070 13,51-57,65-70
+  s_10efd37d7b83e8::t_664b97e1f115ad 206-208,210,223
+  s_10efd37d7b83e8::t_1e4a74cc03be81 1-12,14-50,58-64,71-179,184-187,194-195,199,235,239-278
+  s_10efd37d7b83e8::t_83c7e6c1deb668 233-234,237
+  s_10efd37d7b83e8::t_d285cc6d1df3af 180-183,188-193,196-198,200-205,209,211-222,224-232,236,238
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_b262bc0550e301 184-195
+  s_220f379c12fa5d::t_da93ee85778ce5 145-156
+  s_220f379c12fa5d::t_0c707de6b6a4c1 157-170
+  s_220f379c12fa5d::t_7460fd212fef3e 196-209
+  s_220f379c12fa5d::t_1603de4aa9e2f9 171-183
+  s_220f379c12fa5d::t_e36716ae6e4f0c 210-214,217-225,227-229
+  s_220f379c12fa5d::t_e5fc51143a6f98 215-216,226
+  s_220f379c12fa5d::t_bbc95bae68f9de 133
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_73227cc4be998f 562-563,1570-1702
+  s_220f379c12fa5d::t_ac42476bf2b905 560-561,1483-1568
+  s_220f379c12fa5d::t_cde7fdd71dcadb 570-571,1827-1876
+  s_220f379c12fa5d::t_72aaa788974df0 568-569,1877-1961
+  s_220f379c12fa5d::t_f30546da90a78a 566-567,1765-1826,1962
+  s_220f379c12fa5d::t_f72869ceeebfbd 564-565,1703-1764
+  s_220f379c12fa5d::t_375de2d2ea07eb 1569
+Server/RuneSystem/RunePendingCast.cs
+  s_220f379c12fa5d::t_7cb604523afc2f 1-32
+Server/RuneSystem/RuneBehaviors/RuneBehaviorRegistry.cs
+  s_220f379c12fa5d::t_67848284a10e32 19
+  s_220f379c12fa5d::t_d978c6b723c6e8 18
+Client/MirGraphics/MLibrary.cs
+  s_220f379c12fa5d::t_44244bdb1b7e18 1128-1171
+Web/tools/render-8dir.py
+  s_220f379c12fa5d::t_d2803e69c36601 1-546,551-649
+  s_10efd37d7b83e8::t_82935fb513260c 547-550
+Server/RuneSystem/RuneBehaviors/DebuffOnHitBehavior.cs
+  s_220f379c12fa5d::t_4a9f91ac0afd75 2,32-34,36-50,52-56,58-61,99
+  s_220f379c12fa5d::t_1bd40b877640bb 35,51,57,66-68
+Server/RuneSystem/RuneBehaviors/DoubleCastBehavior.cs
+  s_220f379c12fa5d::t_300e5d1ca89c6a 1-49
+Server/RuneSystem/RuneEffects.cs
+  s_220f379c12fa5d::t_3b97d4a603df1b 35-103,113-135
+  s_220f379c12fa5d::t_1603de4aa9e2f9 104-112
+Server/MirObjects/PlayerObject.cs
+  s_220f379c12fa5d::t_a4a97830a510ac 3053-3071
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_33c53bd0633406 43-45,158-162
+  s_220f379c12fa5d::t_67848284a10e32 49-51,170-176
+  s_220f379c12fa5d::t_0ee2b73568ab1c 52-54,149-150
+  s_10efd37d7b83e8::t_a1054373d98dad 46-48,163-169,177-180
+  s_220f379c12fa5d::t_740b93991964f5 151,181
+Tools/RuneTestTool/Program.cs
+  s_220f379c12fa5d::t_b96add58a8294b 62
+  s_220f379c12fa5d::t_454f3f6ce03cfa 57
+  s_220f379c12fa5d::t_7460fd212fef3e 59
+  s_220f379c12fa5d::t_403f8cd4801e74 143-144,149-151
+  s_220f379c12fa5d::t_9828cfa3eec760 56
+  s_220f379c12fa5d::t_f4dcda2fee81c6 155
+  s_220f379c12fa5d::t_37dd5813875290 60-61
+  s_220f379c12fa5d::t_a84813bfcc2f35 58
+  s_220f379c12fa5d::t_0551dc8a1f79ed 55
+Server/RuneSystem/HumanObject.RuneExt.cs
+  s_220f379c12fa5d::t_ba4a7dc2ef2ae7 189
+  s_220f379c12fa5d::t_3b97d4a603df1b 127-129
+  s_220f379c12fa5d::t_2e773e7e7753c7 188
+Client/MirObjects/PlayerObject.cs
+  s_220f379c12fa5d::t_14af71b5e73d89 3040,3049
+  s_220f379c12fa5d::t_44244bdb1b7e18 66-67,1113,1526-1537,3026,3047-3048
+  s_220f379c12fa5d::t_c7fe1092c3b497 1513-1521,1523,1525,1538
+  s_220f379c12fa5d::t_95cb813885bb23 68-81
+  s_220f379c12fa5d::t_bf42dbf9a27910 1522,1524
+  s_220f379c12fa5d::t_c3fc7dea2f5459 82-94,1774,3025,3028,3030
+Web/tools/preview-compare.mjs
+  s_10efd37d7b83e8::t_2b3ebcd659fa36 1-136
+Web/tools/3d-build-lib.mjs
+  s_10efd37d7b83e8::t_e892b91b2ca3a6 79-81
+  s_10efd37d7b83e8::t_d9ba087c191f2e 1-34,42-78,82-103,106-112
+  s_10efd37d7b83e8::t_8a480152348afa 35,37,39,41
+  s_10efd37d7b83e8::t_92b0114354e0ed 36,38,40,104-105
+Server/MirObjects/HumanObject.cs
+  s_220f379c12fa5d::t_2e773e7e7753c7 3787
+  s_220f379c12fa5d::t_33c53bd0633406 6077-6079,6086
+  s_220f379c12fa5d::t_0ee2b73568ab1c 4103
+Web/tools/sheet-to-lib.mjs
+  s_10efd37d7b83e8::t_fa503edbbbd3e1 63-68,176-177,179-198
+  s_10efd37d7b83e8::t_e34063e8c2979d 178
+  s_10efd37d7b83e8::t_4d59c6fa9b37d2 60-62
+  s_10efd37d7b83e8::t_1f90050291686e 23
+  s_10efd37d7b83e8::t_4ce0485841a0c0 24,29,38-39,151-175,199-221,285,368
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_33c53bd0633406 236-251
+  s_220f379c12fa5d::t_0ee2b73568ab1c 92-117,235
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_ded37c3928a054 38
+  s_220f379c12fa5d::t_21b1ef82c2e99b 39
+  s_220f379c12fa5d::t_f72869ceeebfbd 52,66-67
+  s_220f379c12fa5d::t_f30546da90a78a 11,40
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_db7a72ef8d961d 1215-1499,1501-1787,1890
+  s_220f379c12fa5d::t_5cf7dfda08e549 1500
+  s_220f379c12fa5d::t_a84813bfcc2f35 17,122-126,130,1788-1889
+Server/RuneSystem/RuneBehaviors/AreaOnHitBehavior.cs
+  s_220f379c12fa5d::t_a94efb1ed41f30 1-2,4-7,9-72
+  s_220f379c12fa5d::t_7db9f84cfb0105 3
+Shared/Data/RuneData.cs
+  s_220f379c12fa5d::t_ba4a7dc2ef2ae7 18-19,33,46
+  s_220f379c12fa5d::t_3299a3d127b69b 16-17,32,45
+Client/MirScenes/GameScene.cs
+  s_220f379c12fa5d::t_44244bdb1b7e18 4725
+  s_220f379c12fa5d::t_c7fe1092c3b497 4726-4727
+Client/MirObjects/Effect.cs
+  s_220f379c12fa5d::t_44d73500c9f556 27-28,134,136
+  s_220f379c12fa5d::t_44244bdb1b7e18 25-26
+Shared/ServerPackets.cs
+  s_220f379c12fa5d::t_fafe61e0a424ea 3488-3489,3505,3529
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_7460fd212fef3e 434-435,456-467
+  s_220f379c12fa5d::t_0b9443b3f9f0ca 436-438,441-448,450-455
+  s_220f379c12fa5d::t_2e773e7e7753c7 393-406,421
+  s_220f379c12fa5d::t_1838e098952799 154-155,407-420
+  s_220f379c12fa5d::t_33c53bd0633406 380-392
+  s_220f379c12fa5d::t_79c402ba79ced6 366
+  s_220f379c12fa5d::t_9deb05988379ec 153
+  s_220f379c12fa5d::t_b262bc0550e301 422-433
+  s_220f379c12fa5d::t_e5fc51143a6f98 439-440,449
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "017014fa9695502781f8eda761358dbff7b6c823",
+  "prompts": {},
+  "sessions": {
+    "s_10efd37d7b83e8": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1c442-9540-746d-bff2-0a72a08d1966",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
