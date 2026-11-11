@@ -30,22 +30,22 @@
 
 ```bash
 # 站立（动作 0）
-node Web/tools/sheet-to-lib.mjs 078.Lib action00-stand-d0-7.png 200.Lib 0 0 \
-     --cell <layout.cellW> --key FF00FF --quantize 24
+node Web/tools/sheet-to-lib.mjs 078.Lib action00-stand-d0-7.png 2000.Lib 0 0 \
+     --fresh --fitx --cellw <layout.cellW> --cellh <layout.cellH> --key FF00FF --quantize 24
 
 # 走路（动作 1）必须基于上一步的输出继续叠加，动作 9/18/21/22 同理
-node Web/tools/sheet-to-lib.mjs 200.Lib action01-walk-d0-7.png 200.Lib 1 0 \
-     --cell <layout.cellW> --key FF00FF --quantize 24
+node Web/tools/sheet-to-lib.mjs 2000.Lib action01-walk-d0-7.png 2000.Lib 1 0 \
+     --fresh --fitx --cellw <layout.cellW> --cellh <layout.cellH> --key FF00FF --quantize 24
 ```
 
 要点：
 
-- `--cell` 填该动作的格子边长（`layout.json` 里的 `cellW`，正方形时 `cellW == cellH`）
+- `--cellw/--cellh` 填该动作的格子宽高（`layout.json` 里的 `cellW` / `cellH`）
 - 第 2 个参数（参考 Lib）传上一步的输出，逐动作叠加；第一次用 `078.Lib`
-- 工具会按"参考帧精灵高度 / 新格子精灵高度"自动缩放、底部对齐、保留原版地面阴影
-- 换皮编号：`200~299` 保留给符文皮肤，当前 `Runes.json` 里「召唤·白骨将军」用 `"PetSkin": 200`
+- `--fresh`：不保留参考帧旧像素（模型输出的角色是完整的，旧阴影层一并丢掉）；`--fitx`：X 方向贴合原帧宽度（模型画的骷髅偏瘦）
+- 换皮编号：`2000~2999` 保留给符文皮肤，当前 `Runes.json` 里「召唤·白骨将军」用 `"PetSkin": 2000`
 
-## 当前 200.Lib 状态
+## 当前 2000.Lib 状态
 
-`Build/Client/Release/Data/Monster/200.Lib` 目前是 **078.Lib 的整体冷色重绘占位**（骨白 + 冷铁色阶，234 帧全改），
-用来验证"符文生效 → 换皮包 → 客户端切图库"链路，等你的正式美术替换。
+`Build/Client/Release/Data/Monster/2000.Lib` 是定稿版「白骨将军」：六个动作 234 帧全部换成暗铁盔甲 + 骨角铁盔 + 金色长斧，
+墨迹尺寸与原版逐帧对齐（见 `docs/art/petboon/README.md` 的实测表）。

@@ -361,7 +361,7 @@ namespace Server.RuneSystem
                     PetDamagePct = 15,
                     PetMoveSpeedPct = 8,
                     PetAttackSpeedPct = 8,
-                    PetSkin = 200,
+                    PetSkin = 2000,
                 },
             };
         }

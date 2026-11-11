@@ -1,97 +1,91 @@
 # 白骨将军（召唤骷髅符文皮肤）美术流程
 
-目标：符文「召唤·白骨将军」生效时，把宠物骷髅换成"披甲持骨刃"的版本，风格与原版 16-bit 手绘一致。
+目标：符文「召唤·白骨将军」生效时，把宠物骷髅（`Monster.BoneFamiliar = 78` → `Data/Monster/078.Lib`）
+换成"暗铁盔甲 + 骨角铁盔 + 金色长斧"的版本，风格与原版 16-bit 手绘一致。
 
-## 工具链（全部零依赖 node 脚本，`Web/tools/`）
+## 编号约定
+
+- **`2000~2999` 保留给「符文皮肤」**，绝不覆盖官方图库（官方怪物是 `000~199`）
+- 当前「召唤·白骨将军」用 **`Data/Monster/2000.Lib`**，服务端在 `Runes.json` 里用 `"PetSkin": 2000` 指定
+- 客户端 `MonsterObject.ApplyRuneSkin(skin)` 会切到 `Libraries.Monsters[skin]`；`0` 表示恢复原贴图
+- 新增皮肤：Lib 丢进 `Build/Client/Release/Data/Monster/`，改对应符文的 `PetSkin` 即可，客户端无需重新编译
+- `.gitignore` 已放行 `2*.Lib`，皮肤文件会随仓库走
+
+## 工具链（`Web/tools/`，零依赖，只用 Node 内置 zlib）
 
 | 脚本 | 作用 |
 |---|---|
-| `sheet-from-lib.mjs` | 把 `022.Lib`（原版骷髅）某个动作的若干方向拼成网格精灵表 PNG（行=方向，列=帧，格子默认 256px，背景铺纯洋红 `#FF00FF`） |
-| `gen-image.mjs` | 调 OpenRouter `tencent/hy-image-v3.5-preview`，`--ref` 把精灵表当 `input_references` 传进去做"原位改画" |
-| `sheet-to-lib.mjs` | 把生成结果按格子切回来：抠洋红/紫边 → 按参考帧精灵高度缩放（面积平均）→ 底部对齐贴回参考帧画布 → 保留原阴影与帧表。会自动跳过尺寸异常（模型偶尔放大一格）的格子 |
-| `dump-lib.mjs` / `montage-lib.mjs` / `pack-lib.mjs` / `recolor-lib.mjs` | 导帧、总览图、把 PNG 帧打包成 Lib、整体换色 |
+| `export-sheet.mjs` | Lib → 每个动作一张精灵表 PNG（行=8 方向，列=帧，洋红底，3 倍最近邻放大）+ `layout.json` |
+| `gen-image.mjs` | 调 OpenRouter 出图，支持 `--ref`（多张 `input_references`）、`--proxy`、`--resolution/--aspect-ratio` |
+| `make-sheet-prompt.mjs` | 按动作/行列/尺寸生成提示词；`--color` 追加盔甲/斧子固定色值，`--design-ref` 声明"设定图 + 底图"两张参考的分工 |
+| `make-sheet-prompt` + `design-ref` | 用定稿站立图拼出装备设定图（8 个方向视角） |
+| `resize-png.mjs` | 把模型输出缩回原表尺寸（`box` 面积平均 / `nearest`） |
+| `sheet-to-lib.mjs` | 精灵表 → Lib：抠洋红/紫边 → 按参考帧缩放 → 贴回参考帧画布；`--fresh` 丢掉旧像素、`--fitx` X 方向贴合原宽、`--cellw/--cellh` 支持非正方形格 |
+| `dump-lib.mjs` / `montage-lib.mjs` / `pack-lib.mjs` / `recolor-lib.mjs` / `sheet-from-lib.mjs` | 导帧、总览图、PNG→Lib、整体换色、Lib 动作表 |
 
-## 实际操作
+## 最终管线（078 → 2000.Lib）
 
 ```bash
-# 1. 导出原版骷髅"站立"动作的 4 个方向（行=方向，列=4 帧）
-node Web/tools/sheet-from-lib.mjs Build/Client/Release/Data/Monster/022.Lib 0 0 4 /tmp/sheet-0-3.png 256 '#FF00FF'
-node Web/tools/sheet-from-lib.mjs Build/Client/Release/Data/Monster/022.Lib 0 4 4 /tmp/sheet-4-7.png 256 '#FF00FF'
+# 1) 导出原版底图（每个动作一张：8 行方向 × N 列帧）
+node Web/tools/export-sheet.mjs Build/Client/Release/Data/Monster/078.Lib docs/art/petboon/src-078 --scale 3 --pad 8
 
-# 2. 交给模型原位改画（提示词见 prompt-sheet.txt）
-node Web/tools/gen-image.mjs --prompt docs/art/petboon/prompt-sheet.txt --ref /tmp/sheet-0-3.png \
-     --out /tmp/gen-0-3.png --size 1024x1024 --n 1 --seed 90210
+# 2) 定稿站立造型（产物：gen-078/muse-stand-v6.webp）
+node Web/tools/make-sheet-prompt.mjs --color --w 928 --h 2144 --cols 4 --frames "4 帧" --action "站立" \
+  --out docs/art/petboon/prompt-078-stand-color.txt
+node Web/tools/gen-image.mjs --model meta/muse-image --proxy "<代理>" \
+  --prompt docs/art/petboon/prompt-078-stand-color.txt \
+  --ref docs/art/petboon/src-078/action00-stand-d0-7.png \
+  --out docs/art/petboon/gen-078/muse-stand-v6.webp
 
-# 3. 切回 Lib（第二半要基于第一半的结果继续叠加）
-node Web/tools/sheet-to-lib.mjs Build/Client/Release/Data/Monster/022.Lib /tmp/gen-0-3.png \
-     /tmp/022-a.Lib 0 0 --cell 256 --posterize 12 --quantize 24
-node Web/tools/sheet-to-lib.mjs /tmp/022-a.Lib /tmp/gen-4-7.png \
-     /tmp/022-b.Lib 0 4 --cell 256 --posterize 12 --quantize 24
+# 3) 用定稿站立图拼装备设定图（8 方向视角，产物：gen-078/design-ref.png）
+#    脚本见 docs/art/petboon/README 历史段；也可以直接用 PIL 每行取第 1 帧拼 2×4
 
-# 4. 装进客户端（编号 = RuneInfo.PetSkin，当前 200）
-cp /tmp/022-b.Lib Build/Client/Release/Data/Monster/200.Lib
+# 4) 逐动作生成：两张参考图 = 设定图 + 该动作原版表
+for k in walk attack struck die corpse; do
+  node Web/tools/make-sheet-prompt.mjs --color --design-ref \
+    --w <原表宽> --h <原表高> --cols <列数> --frames "<n> 帧" --action "<动作名>" \
+    --out docs/art/petboon/prompt-078-$k-ref.txt
+  node Web/tools/gen-image.mjs --model meta/muse-image --proxy "<代理>" \
+    --prompt docs/art/petboon/prompt-078-$k-ref.txt \
+    --ref docs/art/petboon/gen-078/design-ref.png \
+    --ref docs/art/petboon/src-078/action<xx>-$k-d0-7.png \
+    --out docs/art/petboon/gen-078/muse-$k-ref-v1.png
+  node Web/tools/resize-png.mjs docs/art/petboon/gen-078/muse-$k-ref-v1.png /tmp/$k.png <原表宽>x<原表高>
+done
+
+# 5) 切回 Lib（按 站立0 → 走路1 → 攻击9 → 受击18 → 死亡21 → 尸体22 串联，最后一份即成品）
+node Web/tools/sheet-to-lib.mjs Build/Client/Release/Data/Monster/078.Lib docs/art/petboon/gen-078/muse-stand-v6.png /tmp/s1.Lib 0 0 \
+  --fresh --fitx --cellw 260 --cellh 300 --posterize 6 --quantize 24
+node Web/tools/sheet-to-lib.mjs /tmp/s1.Lib /tmp/walk.png   /tmp/s2.Lib 1  0 --fresh --fitx --cellw 256 --cellh 280 --posterize 6 --quantize 24
+node Web/tools/sheet-to-lib.mjs /tmp/s2.Lib /tmp/attack.png /tmp/s3.Lib 9  0 --fresh --fitx --cellw 376 --cellh 340 --posterize 6 --quantize 24
+node Web/tools/sheet-to-lib.mjs /tmp/s3.Lib /tmp/struck.png /tmp/s4.Lib 18 0 --fresh --fitx --cellw 268 --cellh 280 --posterize 6 --quantize 24
+node Web/tools/sheet-to-lib.mjs /tmp/s4.Lib /tmp/die.png    /tmp/s5.Lib 21 0 --fresh --fitx --cellw 292 --cellh 268 --posterize 6 --quantize 24
+node Web/tools/sheet-to-lib.mjs /tmp/s5.Lib /tmp/corpse.png /tmp/s6.Lib 22 0 --fresh --fitx --cellw 256 --cellh 184 --posterize 6 --quantize 24
+
+# 6) 安装（客户端不用重编，纯数据）
+cp /tmp/s6.Lib Build/Client/Release/Data/Monster/2000.Lib
 ```
 
-## 提示词要点（`prompt-sheet.txt`）
+## 提示词要点（`prompt-078-*-ref.txt`）
 
-- 强调"同一个角色的换装"，保持 4×4 网格、格子尺寸、朝向、姿势、脚线
-- **必须删掉原图的地面投影**（否则模型会把它画成洋红色杂物），阴影由工具从原帧保留
-- 背景必须是纯洋红 `#FF00FF`，精灵里不许出现洋红
-- 风格词：chunky 16-bit pixel art、可见像素块、24 色、硬边、无抗锯齿/无渐变/无 3D 感
-- 换装内容：暗铁护肩+铆钉、带骨角的铁盔（T 形眼缝）、护臂护胫、破损猩红腰布、骨刺腰带；武器换成骨刃长刀（握持手与角度不变）
+- 两张参考图的分工必须写死：**第 1 张只作装备造型/配色参考，第 2 张才是底图**
+- 只做加法：在原像素上叠头盔/护肩、镰刀改金；禁止重绘、改画风、改比例、改姿势、移动位置、改像素颗粒
+- 逐行方向映射（第 1 行 = 正上 … 第 8 行 = 左上），且头盔遮挡关系必须随方向变化
+- **必须删掉原图的地面投影**（模型会把它画成洋红杂物）；背景纯洋红 `#FF00FF`，精灵内不许出现洋红
+- 颜色一致性（`--color` 追加的第 10/11 条）：盔甲 `#1E2430` / 高光 `#3A4354` / 阴影 `#0C0F14`；斧刃 `#D8A32A`、柄 `#4A2E1A`；骨骼 `#D9CFB4`/`#9A8F76`
+- 模型选择：`meta/muse-image` 颜色一致性最好（输出 webp，尺寸随参考图）；`tencent/hy-image-v3.5-preview` 次之；
+  `black-forest-labs/flux-3-image*` 会无视参考图自由发挥，且对"逐行面部描述"触发内容审核（400）
 
-## 抠色与对齐的关键点
+## 实测结果（2026-11-11）
 
-- 洋红判定：三通道距离 < 阈值，或 `min(r,b) - g > 55`（模型混出的粉边）
-- 紫边判定：`min(r,b) - g > 28`（模型为了让精灵与洋红背景分开会描一圈紫边）
-- 缩放：按"参考帧精灵高度 / 新格子精灵高度"，再面积平均下采样，避免糊
-- 画布：新精灵比原画布宽时向外扩，并同步修正帧的 `x/y`，保证脚底位置不动
-- 颜色量化：`--quantize 24` 压成 24 级，视觉上更接近原版
+| 动作 | 原版墨迹 | 新图墨迹 |
+|---|---|---|
+| 站立 | 56x74 | 56x74 |
+| 走路 | 55x81 | 55x81 |
+| 攻击 | 86x87 | 86x87 |
+| 受击 | 82x61 | 82x61 |
+| 死亡 | 90x71 | 76x71 |
 
-## 现状
-
-- `Build/Client/Release/Data/Monster/200.Lib` = 站立 8 方向全部替换（188 帧里 32 帧换新，其余动作仍是原版骷髅）
-- 站立第 7 方向第 2 帧因模型把精灵放大异常被跳过，已用同方向第 1 帧顶替，避免闪烁
-- 待做：走路（action 1，6 帧 × 8 方向）、攻击（action 9）、受击/死亡（18/21）也用同一流程替换，否则换方向移动时会掉回原版造型
-
-## 图库编号与仓库
-
-- 皮肤 Lib 编号 **200~299 留给符文皮肤**，不要覆盖原版怪物图库（`000~199`）
-- 当前「召唤·白骨将军」用 `Data/Monster/200.Lib`，服务端在 `Runes.json` 里用 `"PetSkin": 200` 指定
-- 新增皮肤：Lib 放进 `Build/Client/Release/Data/Monster/`，改对应符文的 `PetSkin`；`.gitignore` 已放行 `2*.Lib`
-- **换 / 取消符文会让旧骷髅直接死亡**（`HumanObject.RuneExt.cs` 的 `KillSkeletonPets`），玩家重新召唤即可，所以皮肤只需要保证"召唤那一刻"的样子
-
-## 重要更正：目标图库是 078，不是 022
-
-- `Monster.BoneFamiliar = 78` → 道士「召唤骷髅」用的是 `Data/Monster/078.Lib`（骨架 + 镰刀，尺寸约 68x76）
-- `022.Lib` 是野外骷髅**怪物**（金属头盔 + 钉头锤，尺寸约 76x96），比例与装备都不同，**不能拿来做宠物皮肤**
-- 正式的"可编辑精灵表"已导出到 `docs/art/petboon/src-078/`（站/走/砍/受击/死亡/尸体，8 方向，3 倍放大），见该目录的 `README.md`
-- 当前 `200.Lib` = `078.Lib` 的整体冷色重绘**占位**（234 帧全改），只用于验证换皮链路
-- 早先基于 `022.Lib` 生成的那批图（`sheet-*`、`hero-*`、`preview-standing.png`）仅作历史留档
-
-## 最终管线（078 → 200.Lib，2026-11-11）
-
-1. **导出原版底图**：`node Web/tools/export-sheet.mjs Build/Client/Release/Data/Monster/078.Lib docs/art/petboon/src-078 --scale 3 --pad 8`
-   → 每个动作一张 8 行（方向）× N 列（帧）的洋红底精灵表。
-2. **定稿站立造型**：用 `gen-image.mjs`（`meta/muse-image` + 代理）以 `src-078/action00-stand-d0-7.png` 为底图生成，
-   提示词见 `prompt-078-stand-color.txt`（含第 10/11 条"盔甲/斧子颜色一致性"）。定稿结果 `gen-078/muse-stand-v6.webp`。
-3. **做装备设定图**：从定稿站立表每行取第 1 帧拼成 `gen-078/design-ref.png`（8 个方向视角）。
-4. **逐动作生成**（两张参考图：设定图 + 该动作的原版表）：
-   ```bash
-   node Web/tools/make-sheet-prompt.mjs --color --design-ref --w <宽> --h <高> --cols <列> --frames "<n> 帧" --action "<动作名>" --out docs/art/petboon/prompt-078-<动作>-ref.txt
-   node Web/tools/gen-image.mjs --model meta/muse-image --proxy "<proxy>" \
-     --prompt docs/art/petboon/prompt-078-<动作>-ref.txt \
-     --ref docs/art/petboon/gen-078/design-ref.png \
-     --ref docs/art/petboon/src-078/action<xx>-<动作>-d0-7.png \
-     --out docs/art/petboon/gen-078/muse-<动作>-ref-v1.png
-   node Web/tools/resize-png.mjs <生成图> <缩放图> <原表宽>x<原表高>
-   ```
-5. **切回 Lib**（必须 `--fresh` 丢掉旧像素、`--fitx` 让 X 方向贴合原帧宽度）：
-   ```bash
-   node Web/tools/sheet-to-lib.mjs <上一步 Lib> <缩放图> <输出 Lib> <actionId> 0 \
-     --fresh --fitx --cellw <格宽> --cellh <格高> --posterize 6 --quantize 24
-   ```
-   动作按 `站立0 → 走路1 → 攻击9 → 受击18 → 死亡21 → 尸体22` 顺序串联，最后一份就是 `200.Lib`。
-6. **安装**：`cp <最终 Lib> Build/Client/Release/Data/Monster/200.Lib`，客户端无需重新编译（数据文件）。
-
-命中率与时序：`meta/muse-image` 只接受采样参数，尺寸完全由参考图决定；生成后会返回 webp，需先转 png 再缩放。
+- 234 帧全部替换，无阴影残留、无洋红残留；`--fitx` 让轮廓宽度与原版一致
+- 协议回归 `dotnet run --project Tools/RuneTestTool -- --smoke --account testtao --spell SummonSkeleton --rune 9 --pet` 全绿
+- **换 / 取消符文会让旧骷髅当场死亡**（`HumanObject.RuneExt.cs` 的 `KillSkeletonPets`），玩家重新召唤即可

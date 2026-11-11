@@ -183,7 +183,7 @@ namespace RuneTestTool
             }
             Console.WriteLine("  ✓ 选择符文后旧骷髅被解散，需要重新召唤");
 
-            // 3) 重新召唤：应该收到换皮包 200
+            // 3) 重新召唤：应该收到换皮包 2000（符文皮肤保留 2000~2999）
             foreach (byte level in new byte[] { 7, 0 })
             {
                 Send(stream, new C.Chat { Message = $"@RECALLMOB BoneFamiliar 1 {level}" });
@@ -209,9 +209,9 @@ namespace RuneTestTool
                     Console.WriteLine("  × 没收到换皮包（S.PetSkin）");
                     return 1;
                 }
-                if (skin.Skin != 200)
+                if (skin.Skin != 2000)
                 {
-                    Console.WriteLine($"  × 换皮图库不对，期望 200，实际 {skin.Skin}");
+                    Console.WriteLine($"  × 换皮图库不对，期望 2000，实际 {skin.Skin}");
                     return 1;
                 }
                 Console.WriteLine("  ✓ 换皮包正确");
