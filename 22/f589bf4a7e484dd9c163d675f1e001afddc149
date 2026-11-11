@@ -1,0 +1,94 @@
+docs/art/petboon/gen-078/muse-stand-v5.json
+  s_220f379c12fa5d::t_47c2bb705b58ea 1-18
+Web/tools/sheet-to-lib.mjs
+  s_220f379c12fa5d::t_74e71c2f72d4ab 23,37,207-216
+  s_220f379c12fa5d::t_7577b7b0c8d282 27,29,86-87,95-96,163
+  s_220f379c12fa5d::t_931611560d8740 28,169-186
+  s_220f379c12fa5d::t_8b3c4456702293 30-31,51-52,67-69
+  s_220f379c12fa5d::t_c7a6301f1767dc 260-266
+docs/art/petboon/prompt-078-die-ref.txt
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-32
+docs/art/petboon/prompt-078-stand-color.txt
+  s_220f379c12fa5d::t_c824bc83552205 1-28
+docs/art/petboon/gen-078/anchorA-v1.json
+  s_220f379c12fa5d::t_891dbca40c14db 1-18
+docs/art/petboon/src-078/all-actions.json
+  s_220f379c12fa5d::t_9c3293d0310fe5 1-212
+docs/art/petboon/gen-078/muse-walk-ref-v1.json
+  s_220f379c12fa5d::t_a73945a4da5010 1-19
+docs/art/petboon/gen-078/muse-stand-v6.json
+  s_220f379c12fa5d::t_c824bc83552205 1-18
+docs/art/petboon/src-078/anchorA.json
+  s_220f379c12fa5d::t_d82bb071b1a124 1-71
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_e38b6a0cff0c23 158-160,162
+  s_220f379c12fa5d::t_fda82e31cd894d 141-144
+Web/tools/split-big-sheet.mjs
+  s_220f379c12fa5d::t_137898864ef337 1-38,41-72
+  s_220f379c12fa5d::t_5713cf107bfc29 39-40
+docs/art/petboon/gen-078/muse-walk-v1.json
+  s_220f379c12fa5d::t_ba48656bec4d0a 1-18
+Web/tools/make-sheet-prompt.mjs
+  s_220f379c12fa5d::t_ae5a64e10f11e1 24,32-43
+  s_220f379c12fa5d::t_3c61e8d4c2094b 66
+  s_220f379c12fa5d::t_ba48656bec4d0a 23,67-79
+docs/art/petboon/gen-078/muse-corpse-ref-v1.json
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-19
+docs/art/petboon/gen-078/muse-all-v1.json
+  s_220f379c12fa5d::t_3b55cdfd1e8108 1-18
+docs/art/petboon/prompt-078-struck-ref.txt
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-32
+docs/art/petboon/gen-078/muse-die-ref-v1.json
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-19
+Web/tools/gen-image.mjs
+  s_220f379c12fa5d::t_5c9cbd7fd9fa66 21,52,120,127-137,139-156,161-162
+docs/art/petboon/prompt-078-attack-ref.txt
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-32
+Web/tools/make-all-actions-prompt.mjs
+  s_220f379c12fa5d::t_fd6a5cffe06545 1-18,22-33,38-54
+  s_220f379c12fa5d::t_891dbca40c14db 19-21,34-37
+docs/art/petboon/prompt-078-walk.txt
+  s_220f379c12fa5d::t_ba48656bec4d0a 1-28
+Web/tools/combine-lib-sheet.mjs
+  s_220f379c12fa5d::t_c3667965a1810b 1-44,46-64,66-101
+  s_220f379c12fa5d::t_9c3293d0310fe5 45,65
+docs/art/petboon/gen-078/muse-attack-ref-v1.json
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-19
+docs/art/petboon/gen-078/muse-struck-ref-v1.json
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-19
+docs/art/petboon/prompt-078-all.txt
+  s_220f379c12fa5d::t_3b55cdfd1e8108 1-19
+Web/tools/compose-actions.mjs
+  s_220f379c12fa5d::t_5291b85320c0a7 72-84
+  s_220f379c12fa5d::t_441fb2604d7c82 1-71,85-105
+docs/art/petboon/prompt-078-walk-ref.txt
+  s_220f379c12fa5d::t_3c61e8d4c2094b 1-32
+docs/art/petboon/prompt-078-corpse-ref.txt
+  s_220f379c12fa5d::t_e9b34ccf5f0991 1-32
+docs/art/petboon/prompt-anchorA.txt
+  s_220f379c12fa5d::t_891dbca40c14db 1-20
+docs/art/petboon/README.md
+  s_220f379c12fa5d::t_3ce91cf9d160f7 71-97
+docs/art/petboon/prompt-078-stand.txt
+  s_220f379c12fa5d::t_df3ede1c8fb1e9 22
+docs/art/petboon/prompt-anchorB.txt
+  s_220f379c12fa5d::t_3b631dcc53153a 1-20
+docs/art/petboon/src-078/anchorB.json
+  s_220f379c12fa5d::t_1e58370c41f822 1-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "22f589bf4a7e484dd9c163d675f1e001afddc149",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
