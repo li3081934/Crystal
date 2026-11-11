@@ -1,0 +1,71 @@
+{
+  "width": 2000,
+  "height": 1760,
+  "cellW": 200,
+  "cellH": 220,
+  "rows": 8,
+  "columns": [
+    {
+      "key": "stand",
+      "frame": 0
+    },
+    {
+      "key": "stand",
+      "frame": 1
+    },
+    {
+      "key": "stand",
+      "frame": 2
+    },
+    {
+      "key": "stand",
+      "frame": 3
+    },
+    {
+      "key": "walk",
+      "frame": 0
+    },
+    {
+      "key": "walk",
+      "frame": 1
+    },
+    {
+      "key": "walk",
+      "frame": 2
+    },
+    {
+      "key": "walk",
+      "frame": 3
+    },
+    {
+      "key": "walk",
+      "frame": 4
+    },
+    {
+      "key": "walk",
+      "frame": 5
+    }
+  ],
+  "actions": {
+    "stand": {
+      "action": 0,
+      "name": "站立",
+      "start": 0,
+      "count": 4,
+      "skip": 0,
+      "colStart": 0,
+      "colCount": 4,
+      "source": "docs/art/petboon/gen-078/muse-stand-v6.png"
+    },
+    "walk": {
+      "action": 1,
+      "name": "走路",
+      "start": 0,
+      "count": 6,
+      "skip": 0,
+      "colStart": 4,
+      "colCount": 6,
+      "source": "docs/art/petboon/src-078/action01-walk-d0-7.png"
+    }
+  }
+}

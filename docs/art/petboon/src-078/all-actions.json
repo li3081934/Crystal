@@ -1,0 +1,212 @@
+{
+  "source": "Build/Client/Release/Data/Monster/078.Lib",
+  "width": 3248,
+  "height": 992,
+  "cellW": 112,
+  "cellH": 124,
+  "scale": 1,
+  "rows": 8,
+  "columns": [
+    {
+      "key": "stand",
+      "action": 0,
+      "frame": 0
+    },
+    {
+      "key": "stand",
+      "action": 0,
+      "frame": 1
+    },
+    {
+      "key": "stand",
+      "action": 0,
+      "frame": 2
+    },
+    {
+      "key": "stand",
+      "action": 0,
+      "frame": 3
+    },
+    {
+      "key": "walk",
+      "action": 1,
+      "frame": 0
+    },
+    {
+      "key": "walk",
+      "action": 1,
+      "frame": 1
+    },
+    {
+      "key": "walk",
+      "action": 1,
+      "frame": 2
+    },
+    {
+      "key": "walk",
+      "action": 1,
+      "frame": 3
+    },
+    {
+      "key": "walk",
+      "action": 1,
+      "frame": 4
+    },
+    {
+      "key": "walk",
+      "action": 1,
+      "frame": 5
+    },
+    {
+      "key": "attack",
+      "action": 9,
+      "frame": 0
+    },
+    {
+      "key": "attack",
+      "action": 9,
+      "frame": 1
+    },
+    {
+      "key": "attack",
+      "action": 9,
+      "frame": 2
+    },
+    {
+      "key": "attack",
+      "action": 9,
+      "frame": 3
+    },
+    {
+      "key": "attack",
+      "action": 9,
+      "frame": 4
+    },
+    {
+      "key": "attack",
+      "action": 9,
+      "frame": 5
+    },
+    {
+      "key": "struck",
+      "action": 18,
+      "frame": 0
+    },
+    {
+      "key": "struck",
+      "action": 18,
+      "frame": 1
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 0
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 1
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 2
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 3
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 4
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 5
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 6
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 7
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 8
+    },
+    {
+      "key": "die",
+      "action": 21,
+      "frame": 9
+    },
+    {
+      "key": "corpse",
+      "action": 22,
+      "frame": 0
+    }
+  ],
+  "actions": {
+    "stand": {
+      "action": 0,
+      "name": "站立",
+      "start": 0,
+      "count": 4,
+      "skip": 0,
+      "colStart": 0,
+      "colCount": 4
+    },
+    "walk": {
+      "action": 1,
+      "name": "走路",
+      "start": 32,
+      "count": 6,
+      "skip": 0,
+      "colStart": 4,
+      "colCount": 6
+    },
+    "attack": {
+      "action": 9,
+      "name": "攻击",
+      "start": 80,
+      "count": 6,
+      "skip": 0,
+      "colStart": 10,
+      "colCount": 6
+    },
+    "struck": {
+      "action": 18,
+      "name": "受击",
+      "start": 128,
+      "count": 2,
+      "skip": 0,
+      "colStart": 16,
+      "colCount": 2
+    },
+    "die": {
+      "action": 21,
+      "name": "死亡",
+      "start": 144,
+      "count": 10,
+      "skip": 0,
+      "colStart": 18,
+      "colCount": 10
+    },
+    "corpse": {
+      "action": 22,
+      "name": "尸体",
+      "start": 153,
+      "count": 1,
+      "skip": 9,
+      "colStart": 28,
+      "colCount": 1
+    }
+  }
+}

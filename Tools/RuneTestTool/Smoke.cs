@@ -138,6 +138,10 @@ namespace RuneTestTool
             Send(stream, new C.Chat { Message = $"@GIVESKILL {spell} 3" });
             Drain(stream, buffer, 800);
 
+            // 0) 先把符文清掉（角色存档可能还留着上次测试选的符文）
+            Send(stream, new C.SetRune { Spell = spell, RuneId = 0 });
+            Drain(stream, buffer, 800);
+
             // 1) 先在没有符文的情况下召一只：不应该有换皮包
             Send(stream, new C.Chat { Message = "@CLEARMOB" });
             Drain(stream, buffer, 300);
@@ -151,9 +155,11 @@ namespace RuneTestTool
                 return 1;
             }
             Console.WriteLine($"无符文召唤：{plainPet.Name} (ObjectID={plainPet.ObjectID})");
-            if (plain.OfType<S.PetSkin>().Any())
+            // 服务端在"无符文"时也会主动下发 Skin=0 的清除包（防止旧贴图残留），所以只拦 Skin != 0 的情况
+            var straySkin = plain.OfType<S.PetSkin>().FirstOrDefault(x => x.Skin != 0);
+            if (straySkin != null)
             {
-                Console.WriteLine("  × 没有符文却收到了换皮包");
+                Console.WriteLine($"  × 没有符文却收到了换皮包（Skin={straySkin.Skin}）");
                 return 1;
             }
             Console.WriteLine("  ✓ 无符文：没有换皮包（用原版贴图）");

@@ -68,3 +68,30 @@ cp /tmp/022-b.Lib Build/Client/Release/Data/Monster/200.Lib
 - 正式的"可编辑精灵表"已导出到 `docs/art/petboon/src-078/`（站/走/砍/受击/死亡/尸体，8 方向，3 倍放大），见该目录的 `README.md`
 - 当前 `200.Lib` = `078.Lib` 的整体冷色重绘**占位**（234 帧全改），只用于验证换皮链路
 - 早先基于 `022.Lib` 生成的那批图（`sheet-*`、`hero-*`、`preview-standing.png`）仅作历史留档
+
+## 最终管线（078 → 200.Lib，2026-11-11）
+
+1. **导出原版底图**：`node Web/tools/export-sheet.mjs Build/Client/Release/Data/Monster/078.Lib docs/art/petboon/src-078 --scale 3 --pad 8`
+   → 每个动作一张 8 行（方向）× N 列（帧）的洋红底精灵表。
+2. **定稿站立造型**：用 `gen-image.mjs`（`meta/muse-image` + 代理）以 `src-078/action00-stand-d0-7.png` 为底图生成，
+   提示词见 `prompt-078-stand-color.txt`（含第 10/11 条"盔甲/斧子颜色一致性"）。定稿结果 `gen-078/muse-stand-v6.webp`。
+3. **做装备设定图**：从定稿站立表每行取第 1 帧拼成 `gen-078/design-ref.png`（8 个方向视角）。
+4. **逐动作生成**（两张参考图：设定图 + 该动作的原版表）：
+   ```bash
+   node Web/tools/make-sheet-prompt.mjs --color --design-ref --w <宽> --h <高> --cols <列> --frames "<n> 帧" --action "<动作名>" --out docs/art/petboon/prompt-078-<动作>-ref.txt
+   node Web/tools/gen-image.mjs --model meta/muse-image --proxy "<proxy>" \
+     --prompt docs/art/petboon/prompt-078-<动作>-ref.txt \
+     --ref docs/art/petboon/gen-078/design-ref.png \
+     --ref docs/art/petboon/src-078/action<xx>-<动作>-d0-7.png \
+     --out docs/art/petboon/gen-078/muse-<动作>-ref-v1.png
+   node Web/tools/resize-png.mjs <生成图> <缩放图> <原表宽>x<原表高>
+   ```
+5. **切回 Lib**（必须 `--fresh` 丢掉旧像素、`--fitx` 让 X 方向贴合原帧宽度）：
+   ```bash
+   node Web/tools/sheet-to-lib.mjs <上一步 Lib> <缩放图> <输出 Lib> <actionId> 0 \
+     --fresh --fitx --cellw <格宽> --cellh <格高> --posterize 6 --quantize 24
+   ```
+   动作按 `站立0 → 走路1 → 攻击9 → 受击18 → 死亡21 → 尸体22` 顺序串联，最后一份就是 `200.Lib`。
+6. **安装**：`cp <最终 Lib> Build/Client/Release/Data/Monster/200.Lib`，客户端无需重新编译（数据文件）。
+
+命中率与时序：`meta/muse-image` 只接受采样参数，尺寸完全由参考图决定；生成后会返回 webp，需先转 png 再缩放。

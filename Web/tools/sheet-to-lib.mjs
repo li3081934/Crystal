@@ -20,16 +20,21 @@ import { decodePng, encodePng, hexToRgb } from './png.mjs';
 
 const args = process.argv.slice(2);
 const positional = [];
-const opt = { cell: 256, key: 'FF00FF', posterize: 0, threshold: 90, quantize: 0, scale: 0, debug: null };
+const opt = { fitx: false, uniform: false, fresh: false, cell: 256, cellW: 0, cellH: 0, key: 'FF00FF', posterize: 0, threshold: 90, quantize: 0, scale: 0, debug: null };
 
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
-  if (a === '--cell') opt.cell = Number(args[++i]);
+  if (a === '--fresh') opt.fresh = true;
+  else if (a === '--uniform') opt.uniform = true;
+  else if (a === '--cell') opt.cell = Number(args[++i]);
+  else if (a === '--cellw') opt.cellW = Number(args[++i]);
+  else if (a === '--cellh') opt.cellH = Number(args[++i]);
   else if (a === '--key') opt.key = args[++i];
   else if (a === '--posterize') opt.posterize = Number(args[++i]);
   else if (a === '--threshold') opt.threshold = Number(args[++i]);
   else if (a === '--quantize') opt.quantize = Number(args[++i]);
   else if (a === '--scale') opt.scale = Number(args[++i]);
+  else if (a === '--fitx') opt.fitx = true;
   else if (a === '--debug') opt.debug = args[++i];
   else positional.push(a);
 }
@@ -43,6 +48,8 @@ if (!refFile || !sheetFile || !outFile) {
 const action = Number(actionArg ?? 0);
 const dirStart = Number(dirStartArg ?? 0);
 const cell = opt.cell;
+const cellW = opt.cellW || cell;
+const cellH = opt.cellH || cell;
 const key = hexToRgb(opt.key);
 
 const refLib = readLib(refFile);
@@ -57,9 +64,9 @@ const sheet = decodePng(fs.readFileSync(sheetFile));
 const sheetW = sheet.w;
 const sheetH = sheet.h;
 const sheetPx = sheet.rgba;
-const cols = Math.floor(sheetW / cell);
-const rows = Math.floor(sheetH / cell);
-console.log(`精灵表 ${sheetW}x${sheetH} → ${cols} 列 x ${rows} 行（每格 ${cell}px）`);
+const cols = Math.floor(sheetW / cellW);
+const rows = Math.floor(sheetH / cellH);
+console.log(`精灵表 ${sheetW}x${sheetH} → ${cols} 列 x ${rows} 行（每格 ${cellW}x${cellH}px）`);
 
 const images = [];
 for (let i = 0; i < refLib.count; i++) images.push(readImage(refLib, i));
@@ -76,6 +83,8 @@ function toLibImage(src) {
     shadow: src.shadow,
     bgra: Buffer.from(src.bgra),
   };
+  // --fresh：不要参考帧的原像素（只借用画布尺寸与对齐），直接给一张全透明帧
+  if (opt.fresh) frame.bgra.fill(0);
 }
 
 /** 抠色 + 外框 */
@@ -83,8 +92,8 @@ function cellSprite(cx, cy) {
   const pixels = [];
   let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
 
-  for (let y = 0; y < cell; y++) {
-    for (let x = 0; x < cell; x++) {
+  for (let y = 0; y < cellH; y++) {
+    for (let x = 0; x < cellW; x++) {
       const gx = cx + x;
       const gy = cy + y;
       if (gx >= sheetW || gy >= sheetH) continue;
@@ -151,10 +160,28 @@ const debugDir = opt.debug;
 const cells = [];
 for (let r = 0; r < rows; r++) {
   const row = [];
-  for (let c = 0; c < cols; c++) row.push(cellSprite(c * cell, r * cell));
+  for (let c = 0; c < cols; c++) row.push(cellSprite(c * cellW, r * cellH));
   const heights = row.filter(Boolean).map((s) => s.h).sort((a, b) => a - b);
   const median = heights.length ? heights[Math.floor(heights.length / 2)] : 0;
   cells.push({ row, median });
+}
+
+// --uniform：整张表用同一个缩放系数（取所有格子的中位数），避免不同动作/方向之间角色忽大忽小
+let uniformScale = 0;
+if (opt.uniform) {
+  const all = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const sp = cells[r].row[c];
+      if (!sp) continue;
+      const idx = frame.start + (dirStart + r) * stride + c;
+      if (idx < 0 || idx >= refLib.count || !images[idx]) continue;
+      all.push(refBounds(images[idx]).h / sp.h);
+    }
+  }
+  all.sort((a, b) => a - b);
+  uniformScale = all.length ? all[Math.floor(all.length / 2)] : 0;
+  console.log(`  统一缩放系数 ${uniformScale.toFixed(3)}（${all.length} 格）`);
 }
 
 for (let r = 0; r < rows; r++) {
@@ -177,10 +204,16 @@ for (let r = 0; r < rows; r++) {
     }
 
     const rb = refBounds(src);
-    const scale = opt.scale > 0 ? opt.scale : rb.h / sprite.h;
-    scales.push(scale);
-    const dw = Math.max(1, Math.round(sprite.w * scale));
-    const dh = Math.max(1, Math.round(sprite.h * scale));
+    const scaleY = opt.scale > 0 ? opt.scale : (uniformScale > 0 ? uniformScale : rb.h / sprite.h);
+    // --fitx：X 方向单独拟合原帧宽度（模型画的骷髅普遍偏瘦），限制在 Y 缩放的 0.75~1.6 倍
+    let scaleX = scaleY;
+    if (opt.fitx) {
+      const fit = rb.w / sprite.w;
+      scaleX = Math.min(scaleY * 1.6, Math.max(scaleY * 0.75, fit));
+    }
+    scales.push(scaleY);
+    const dw = Math.max(1, Math.round(sprite.w * scaleX));
+    const dh = Math.max(1, Math.round(sprite.h * scaleY));
 
     // 面积平均下采样：先把源像素装桶，再按目标像素覆盖的源面积加权
     const out = Buffer.alloc(dw * dh * 4);
@@ -224,11 +257,13 @@ for (let r = 0; r < rows; r++) {
 
     const canvas = Buffer.alloc(nw * nh * 4);
 
-    // 先把原帧（含阴影）平移到新画布上
-    for (let y = 0; y < src.h; y++) {
-      const srow = y * src.w * 4;
-      const drow = ((y - top) * nw + (0 - left)) * 4;
-      src.bgra.copy(canvas, drow, srow, srow + src.w * 4);
+    // 先把原帧（含阴影）平移到新画布上；--fresh 时不要原像素（新美术自带完整角色，不保留旧的阴影层）
+    if (!opt.fresh) {
+      for (let y = 0; y < src.h; y++) {
+        const srow = y * src.w * 4;
+        const drow = ((y - top) * nw + (0 - left)) * 4;
+        src.bgra.copy(canvas, drow, srow, srow + src.w * 4);
+      }
     }
 
     for (let y = 0; y < dh; y++) {

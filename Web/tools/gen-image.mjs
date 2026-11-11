@@ -18,6 +18,7 @@
  * key 只从 C:/Users/lijs8/.pi/agent/auth.json 的 openrouter.key 读取，绝不打印。
  */
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
@@ -48,6 +49,7 @@ function parseArgs(argv) {
       case '--resolution': out.resolution = next(); break;
       case '--aspect-ratio': out.aspectRatio = next(); break;
       case '--output-format': out.outputFormat = next(); break;
+      case '--proxy': out.proxy = next(); break;
       case '--n': out.n = Number(next()); break;
       case '--ref': out.refs.push(next()); break;
       case '--seed': out.seed = Number(next()); break;
@@ -115,33 +117,49 @@ async function generate(args) {
   // 不打印 key，也不打印完整 body（参考图 base64 会淹没终端）
   console.log(`[gen] model=${body.model} ${size ? `size=${size}` : ''}` +
     `${args.resolution ? ` resolution=${args.resolution}` : ''}${args.aspectRatio ? ` aspect=${args.aspectRatio}` : ''}` +
-    `${args.outputFormat ? ` fmt=${args.outputFormat}` : ''} n=${n} refs=${args.refs.length}` +
+    `${args.outputFormat ? ` fmt=${args.outputFormat}` : ''}${args.proxy ? ' proxy=on' : ''} n=${n} refs=${args.refs.length}` +
     `${body.seed !== undefined ? ` seed=${body.seed}` : ''}${body.background ? ` bg=${body.background}` : ''}`);
 
   const ac = new AbortController();
   const timeout = Number.isFinite(args.timeout) && args.timeout > 0 ? args.timeout : 300000;
   const timer = setTimeout(() => ac.abort(new Error(`请求超时 ${timeout}ms`)), timeout);
 
-  let res;
+  const payload = JSON.stringify(body);
+  const headers = {
+    Authorization: `Bearer ${key}`,
+    'Content-Type': 'application/json',
+    'HTTP-Referer': 'https://github.com/mir2-local',
+    'X-Title': 'mir2-petboon-art',
+  };
+
+  let ok;
+  let statusText;
+  let text;
   try {
-    res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://github.com/mir2-local',
-        'X-Title': 'mir2-petboon-art',
-      },
-      body: JSON.stringify(body),
-      signal: ac.signal,
-    });
+    if (args.proxy) {
+      // Node 内置 fetch 不走系统代理，这里用 curl 走 HTTP 代理（-x）
+      const out = execFileSync('curl', [
+        '-sS', '--max-time', String(Math.floor(timeout / 1000)),
+        '-x', args.proxy,
+        '-X', 'POST', ENDPOINT,
+        ...Object.entries(headers).flatMap(([k, v]) => ['-H', `${k}: ${v}`]),
+        '--data-binary', '@-',
+      ], { input: payload, maxBuffer: 256 * 1024 * 1024, encoding: 'utf8' });
+      ok = true;
+      statusText = 'via proxy';
+      text = out;
+    } else {
+      const res = await fetch(ENDPOINT, { method: 'POST', headers, body: payload, signal: ac.signal });
+      ok = res.ok;
+      statusText = `${res.status} ${res.statusText}`;
+      text = await res.text();
+    }
   } finally {
     clearTimeout(timer);
   }
 
-  const text = await res.text();
-  if (!res.ok) {
-    console.error(`[gen] HTTP ${res.status} ${res.statusText}`);
+  if (!ok) {
+    console.error(`[gen] HTTP ${statusText}`);
     try {
       console.error(JSON.stringify(JSON.parse(text), null, 2));
     } catch {
