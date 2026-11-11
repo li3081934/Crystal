@@ -1,0 +1,29 @@
+docs/art/petboon/src-078/README.md
+  s_220f379c12fa5d::t_7f185ddb904caa 33-34,37-38,43,45-46,48,50-51
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_c6a57dd105f10a 186,212,214
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_6ca9c1e04cfa1f 133
+docs/art/petboon/README.md
+  s_220f379c12fa5d::t_a2f1f86ae85f76 3-4,6-14,18-24,26,29-66,69-91
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_04412507252dde 1372
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_6ca9c1e04cfa1f 364
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e4211692b079c6da37e7c1233c5f28c37188c852",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
