@@ -52,7 +52,14 @@ namespace RuneTestTool
                 bool dual = options.ContainsKey("dual");
                 bool pet = options.ContainsKey("pet");
                 bool extraPet = options.ContainsKey("extrapet");
-                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet);
+                bool greenDot = options.ContainsKey("green");
+                bool splash = options.ContainsKey("splash");
+                bool doubleCast = options.ContainsKey("double");
+                bool boltBleed = options.ContainsKey("boltbleed");
+                string doubleMob = options.GetValueOrDefault("doublemob", "Scorpion");
+                bool tame = options.ContainsKey("tame");
+                string tameMonster = options.GetValueOrDefault("tamemob", "Hen");
+                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet, greenDot, splash, doubleCast, tame, tameMonster, doubleMob, boltBleed);
             }
 
             string dir = options.GetValueOrDefault("dir");
@@ -133,15 +140,19 @@ namespace RuneTestTool
             if (options.TryGetValue("searchmonsters", out string mobKeyword))
             {
                 string kw = mobKeyword ?? string.Empty;
+                bool all = kw == "all" || kw == "*";
+                bool tameOnly = kw == "tameable";
                 int found = 0;
 
                 foreach (var info in envir.MonsterInfoList)
                 {
-                    if (!string.IsNullOrEmpty(kw) &&
+                    if (tameOnly && (!info.CanTame || info.IsBoss)) continue;
+
+                    if (!all && !tameOnly && !string.IsNullOrEmpty(kw) &&
                         (info.Name?.IndexOf(kw, StringComparison.OrdinalIgnoreCase) < 0))
                         continue;
 
-                    Console.WriteLine($"#{info.Index} {info.Name} Image={info.Image} -> {(Monster)info.Image} AI={(int)info.AI} level={info.Level}");
+                    Console.WriteLine($"#{info.Index} {info.Name} Image={info.Image} -> {(Monster)info.Image} AI={(int)info.AI} level={info.Level} hp={(info.Stats != null ? info.Stats[Stat.HP] : 0)} tame={info.CanTame} boss={info.IsBoss}");
                     found++;
                 }
 

@@ -89,6 +89,32 @@ namespace Server.RuneSystem
             RuneEffects.SyncPetSkin(pet, rune.PetSkin);
         }
 
+        /// <summary>
+        /// 诱惑之光驯服成功时改写宠物等级：技能等级 + PetLevelBonus。
+        /// 原版驯服出来的宠物是 0 级（MaxPetLevel = 1 + 技能等级 * 2），这里把两者一起抬上去。
+        /// </summary>
+        public static void ApplyTameLevel(HumanObject owner, MonsterObject pet, UserMagic magic)
+        {
+            if (owner == null || pet == null || magic == null || !RuneRepository.Any) return;
+
+            var rune = GetActiveRune(owner, magic.Spell, RuneEffect.TameLevel);
+            if (rune == null) return;
+
+            int level = magic.Level + Math.Max(0, rune.PetLevelBonus);
+            if (level <= 0) return;
+            if (level > byte.MaxValue) level = byte.MaxValue;
+
+            pet.PetLevel = (byte)level;
+
+            // 原版 MaxPetLevel 是 (1 + 技能等级 * 2)，可能比新等级还低，先抬到新等级
+            if (pet.MaxPetLevel < pet.PetLevel) pet.MaxPetLevel = pet.PetLevel;
+
+            pet.RefreshAll();
+
+            if (pet.HP > pet.Stats[Stat.HP]) pet.HP = pet.Stats[Stat.HP];
+            pet.BroadcastHealthChange();
+        }
+
         /// <summary>按百分比提升某个属性（pct 为已乘过层数的总百分比）。</summary>
         private static void ScaleStat(MonsterObject pet, Stat stat, int pct)
         {
@@ -204,6 +230,23 @@ namespace Server.RuneSystem
 
             int result = (int)Math.Round(value * (1f + rune.CostPct / 100f));
             return result < 0 ? 0 : result;
+        }
+
+        /// <summary>
+        /// 毒伤（符文「施毒·蚀骨」等）：把毒每 tick 的伤害按 PoisonValuePct 放大。
+        /// 只改这一层"每次掉多少血"，毒的总时长、tick 间隔、抗性与覆盖规则完全保持原版。
+        /// </summary>
+        public static int PoisonValue(UserMagic magic, PoisonType type, int value)
+        {
+            if (magic == null || magic.RuneId == 0 || !RuneRepository.Any) return value;
+
+            var rune = RuneRepository.Get(magic.RuneId);
+            if (rune == null || !rune.Valid || !rune.HasEffect(RuneEffect.PoisonValueUp)) return value;
+            if (rune.PoisonValuePct == 0) return value;
+            if (rune.ResolvedDebuffType != PoisonType.None && rune.ResolvedDebuffType != type) return value;
+
+            int result = (int)Math.Round(value * (1f + rune.PoisonValuePct / 100f));
+            return result < 1 ? 1 : result;
         }
 
         /// <summary>

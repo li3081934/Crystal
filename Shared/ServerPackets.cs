@@ -3485,6 +3485,8 @@ namespace ServerPackets
         public bool Cast;
         public byte Level;
         public bool SelfBroadcast = false;
+        /// <summary>施法者该技能当前选中的符文（0 = 无符文）；客户端据此调整特效强度（例如爆炸动画放大）。</summary>
+        public ushort RuneId;
         public List<uint> SecondaryTargetIDs = new List<uint>();
 
         protected override void ReadPacket(BinaryReader reader)
@@ -3500,6 +3502,7 @@ namespace ServerPackets
             Cast = reader.ReadBoolean();
             Level = reader.ReadByte();
             SelfBroadcast = reader.ReadBoolean();
+            RuneId = reader.ReadUInt16();
 
             var count = reader.ReadInt32();
             SecondaryTargetIDs = new List<uint>();
@@ -3523,6 +3526,7 @@ namespace ServerPackets
             writer.Write(Cast);
             writer.Write(Level);
             writer.Write(SelfBroadcast);
+            writer.Write(RuneId);
 
             writer.Write(SecondaryTargetIDs.Count);
             foreach (var targetID in SecondaryTargetIDs)

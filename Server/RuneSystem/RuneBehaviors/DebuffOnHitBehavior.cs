@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using Server.MirObjects;
 
@@ -28,15 +29,43 @@ namespace Server.RuneSystem
             if (ctx?.Owner == null || ctx.Rune == null || ctx.Target == null) return;
             if (ctx.Owner.Dead || ctx.Target.Dead) return;
 
+            //RequireSecondTarget：只给"额外目标"挂状态（例如刺杀剑气打到的第 2 格目标）
+            if (ctx.Rune.RequireSecondTarget && !IsSecondTarget(ctx)) return;
+
+            ApplyDebuff(ctx, ctx.Target, damage, false);
+        }
+
+        /// <summary>
+        /// 法术（灵魂火符/雷电术这类走 CompleteMagic 的技能）命中时挂状态。
+        /// data 与原技能结算同源：data[1] = 伤害，data[2] = 目标。
+        /// </summary>
+        public bool OnMagicComplete(RuneContext ctx, IList<object> data)
+        {
+            if (ctx?.Owner == null || ctx.Rune == null || data == null || data.Count < 3) return false;
+            if (ctx.UsedSpell != ctx.Rune.Spell) return false;
+            if (!(data[2] is MapObject target) || target.Dead) return false;
+            if (ctx.Rune.RequireSecondTarget) return false;   //法术没有"第 2 格"概念
+
+            int damage = data[1] is int raw ? raw : 0;
+
+            ApplyDebuff(ctx, target, damage, true);
+
+            return false;   //不接管技能结算，本体伤害照常
+        }
+
+        /// <summary>两个触发点共用的挂状态逻辑。</summary>
+        private static void ApplyDebuff(RuneContext ctx, MapObject target, int damage, bool fromSpell)
+        {
+            if (target == null || target.Dead) return;
+            if (ctx.Owner.Dead) return;
+
             PoisonType type = ctx.Rune.ResolvedDebuffType;
             if (type == PoisonType.None) return;
             if (ctx.Rune.DebuffDuration <= 0) return;
 
-            //RequireSpellHit：只让"符文所属技能"打出的伤害附带异常（例如攻杀·血饮）
-            if (ctx.Rune.RequireSpellHit && !ctx.Owner.IsRuneHitFrom(ctx.Rune.Spell)) return;
-
-            //RequireSecondTarget：只给"额外目标"挂状态（例如刺杀剑气打到的第 2 格目标）
-            if (ctx.Rune.RequireSecondTarget && !IsSecondTarget(ctx)) return;
+            //RequireSpellHit：只让"符文所属技能"打出的伤害附带异常（例如攻杀·血饮 / 雷电术）。
+            //法术路径已经用 ctx.UsedSpell == ctx.Rune.Spell 校验过，所以只对近战路径做挥砍标记判定。
+            if (!fromSpell && ctx.Rune.RequireSpellHit && !ctx.Owner.IsRuneHitFrom(ctx.Rune.Spell)) return;
 
             if (!RuneEffects.TryProc(ctx.Rune)) return;
 
@@ -67,7 +96,7 @@ namespace Server.RuneSystem
                 TickTime = ctx.Time + Math.Max(100, ctx.Rune.DebuffTickSpeed),
             };
 
-            ctx.Target.ApplyPoison(poison, ctx.Owner);
+            target.ApplyPoison(poison, ctx.Owner);
         }
 
         /// <summary>

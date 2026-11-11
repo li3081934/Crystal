@@ -4722,6 +4722,9 @@ namespace Client.MirScenes
                 action.Params.Add(p.Cast);
                 action.Params.Add(p.Level);
                 action.Params.Add(p.SecondaryTargetIDs);
+                action.Params.Add(p.RuneId);
+                //服务端"补发"的法术（例如符文双发的第二张符）：只给本人播动画，绝不能再发 C.Magic
+                action.Params.Add(p.SelfBroadcast && p.ObjectID == User.ObjectID);
 
                 ob.ActionFeed.Add(action);
             }

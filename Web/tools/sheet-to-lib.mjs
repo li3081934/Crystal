@@ -20,11 +20,13 @@ import { decodePng, encodePng, hexToRgb } from './png.mjs';
 
 const args = process.argv.slice(2);
 const positional = [];
-const opt = { fitx: false, uniform: false, fresh: false, cell: 256, cellW: 0, cellH: 0, key: 'FF00FF', posterize: 0, threshold: 90, quantize: 0, scale: 0, debug: null };
+let PALETTE_SIZE = 40;
+const opt = { fitx: false, uniform: false, fresh: false, keepAll: false, cell: 256, cellW: 0, cellH: 0, key: 'FF00FF', posterize: 0, threshold: 90, quantize: 0, scale: 0, debug: null, palette: null };
 
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === '--fresh') opt.fresh = true;
+  else if (a === '--keep-all') opt.keepAll = true;
   else if (a === '--uniform') opt.uniform = true;
   else if (a === '--cell') opt.cell = Number(args[++i]);
   else if (a === '--cellw') opt.cellW = Number(args[++i]);
@@ -33,6 +35,8 @@ for (let i = 0; i < args.length; i++) {
   else if (a === '--posterize') opt.posterize = Number(args[++i]);
   else if (a === '--threshold') opt.threshold = Number(args[++i]);
   else if (a === '--quantize') opt.quantize = Number(args[++i]);
+  else if (a === '--palette-from') opt.palette = args[++i];
+  else if (a === '--palette-size') PALETTE_SIZE = Number(args[++i]);
   else if (a === '--scale') opt.scale = Number(args[++i]);
   else if (a === '--fitx') opt.fitx = true;
   else if (a === '--debug') opt.debug = args[++i];
@@ -53,6 +57,15 @@ const cellH = opt.cellH || cell;
 const key = hexToRgb(opt.key);
 
 const refLib = readLib(refFile);
+
+// ---- 调色板吸附（必须在 refLib 之后构建）----
+const OPT_PALETTE = opt.palette ? buildPalette(readLib(opt.palette), PALETTE_SIZE) : null;
+// 参考 Lib 的调色板里没有金/绿这类原版没有的颜色，直接用会把它们吸附成骨色 → 再把源表的主色补进调色板
+if (OPT_PALETTE) {
+  const sheetPng = decodePng(fs.readFileSync(sheetFile));
+  const added = augmentPalette(OPT_PALETTE, sheetPng, 12, 68);
+  console.log('调色板: ' + OPT_PALETTE.length + ' 色（' + (OPT_PALETTE.length - added) + ' 取自 ' + opt.palette + '，' + added + ' 取自源表新增色）');
+}
 const frame = refLib.frames.find((f) => f.action === action);
 if (!frame) {
   console.error(`参考 Lib 里没有动作 ${action}`);
@@ -135,6 +148,77 @@ function refBounds(img) {
   return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
 }
 
+/** 从原版 Lib 里统计出它的调色板（跳过阴影色 #100808），新像素吸附上去就能"同色系" */
+function buildPalette(lib, maxColors) {
+  const hist = new Map();
+  const frames = Math.min(lib.count, 300);
+  for (let i = 0; i < frames; i++) {
+    const img = readImage(lib, i);
+    if (!img) continue;
+    for (let p = 0; p < img.w * img.h; p++) {
+      const a = img.bgra[p * 4 + 3];
+      if (a < 200) continue;
+      const b = img.bgra[p * 4], g = img.bgra[p * 4 + 1], r = img.bgra[p * 4 + 2];
+      if (b <= 40 && g <= 30 && r <= 40) continue;          // 棋盘阴影
+      const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+      const e = hist.get(key);
+      if (e) { e.n++; e.r += r; e.g += g; e.b += b; }
+      else hist.set(key, { n: 1, r, g, b });
+    }
+  }
+  return [...hist.values()]
+    .sort((a, b) => b.n - a.n)
+    .slice(0, maxColors)
+    .map((e) => [Math.round(e.r / e.n), Math.round(e.g / e.n), Math.round(e.b / e.n)]);
+}
+
+/** 把画布上每个像素换成调色板里最接近的颜色（按人眼权重加权距离） */
+function augmentPalette(palette, img, maxAdd, minDist) {
+  const hist = new Map();
+  for (let p = 0; p < img.w * img.h; p++) {
+    const a = img.rgba[p * 4 + 3];
+    if (a < 200) continue;
+    const r = img.rgba[p * 4], g = img.rgba[p * 4 + 1], b = img.rgba[p * 4 + 2];
+    if (r > 200 && g < 90 && b > 200) continue;              // 洋红底
+    const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+    const e = hist.get(key);
+    if (e) { e.n++; e.r += r; e.g += g; e.b += b; }
+    else hist.set(key, { n: 1, r, g, b });
+  }
+  const list = [...hist.values()].sort((a, b) => b.n - a.n).map((e) => [Math.round(e.r / e.n), Math.round(e.g / e.n), Math.round(e.b / e.n)]);
+  let added = 0;
+  for (const c of list) {
+    if (added >= maxAdd) break;
+    const near = palette.some((p) => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) < minDist);
+    if (near) continue;
+    palette.push(c); added++;
+  }
+  return added;
+}
+
+function snapToPalette(canvas, palette) {
+  if (!palette || !palette.length) return;
+  const cache = new Map();
+  for (let i = 0; i < canvas.length; i += 4) {
+    if (canvas[i + 3] < 8) continue;
+    const b = canvas[i], g = canvas[i + 1], r = canvas[i + 2];
+    const key = (r << 16) | (g << 8) | b;
+    let best = cache.get(key);
+    if (!best) {
+      let bestD = Infinity;
+      for (const [pr, pg, pb] of palette) {
+        const dr = (r - pr) * 0.9, dg = (g - pg) * 1.2, db = (b - pb) * 0.8;
+        const d = dr * dr + dg * dg + db * db;
+        if (d < bestD) { bestD = d; best = [pr, pg, pb]; }
+      }
+      cache.set(key, best);
+    }
+    canvas[i] = best[2];
+    canvas[i + 1] = best[1];
+    canvas[i + 2] = best[0];
+  }
+}
+
 function quantizeCanvas(canvas, colors) {
   if (!colors || colors <= 0) return;
   const step = 255 / (colors - 1);
@@ -198,7 +282,7 @@ for (let r = 0; r < rows; r++) {
       console.log(`  跳过 ${index}（第 ${c} 列第 ${r} 行：整格都是背景色）`);
       continue;
     }
-    if (cells[r].median > 0 && Math.abs(sprite.h - cells[r].median) / cells[r].median > 0.25) {
+    if (!opt.keepAll && cells[r].median > 0 && Math.abs(sprite.h - cells[r].median) / cells[r].median > 0.25) {
       console.log(`  跳过 ${index}（第 ${c} 列第 ${r} 行：精灵高度 ${sprite.h} 与同行中位数 ${cells[r].median} 差异过大，保留原图）`);
       continue;
     }
@@ -281,6 +365,7 @@ for (let r = 0; r < rows; r++) {
       }
     }
 
+    snapToPalette(canvas, OPT_PALETTE);
     quantizeCanvas(canvas, opt.quantize);
     images[index] = {
       ...toLibImage(src),

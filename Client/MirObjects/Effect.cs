@@ -22,6 +22,10 @@ namespace Client.MirObjects
 
         public bool Blend = true;
         public float Rate = 1F;
+        /// <summary>绘制缩放倍数（1 = 原版）。符文可以把它当"特效放大"用。</summary>
+        public float Scale = 1F;
+        /// <summary>顶点调制色（Color.White = 原版配色）。符文可以把它当"特效换色"用。</summary>
+        public Color Tint = Color.White;
         public Point DrawLocation;
         public Point DrawOffset = Point.Empty;
         public bool Repeat;
@@ -127,9 +131,9 @@ namespace Client.MirObjects
 
 
             if (Blend)
-                Library.DrawBlend(BaseIndex + CurrentFrame, DrawLocation, Color.White, true, Rate);
+                Library.DrawBlend(BaseIndex + CurrentFrame, DrawLocation, Tint, true, Rate, Scale);
             else
-                Library.Draw(BaseIndex + CurrentFrame, DrawLocation, Color.White, true);
+                Library.Draw(BaseIndex + CurrentFrame, DrawLocation, Tint, true);
         }
 
         public void Clear()

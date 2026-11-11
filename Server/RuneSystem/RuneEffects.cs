@@ -33,6 +33,107 @@ namespace Server.RuneSystem
         }
 
         /// <summary>
+        /// 双发类符文：登记 CastCount-1 次"补发"。
+        /// 每发都比上一发晚 CastDelayMs（默认 600ms，够客户端播完一次施法动作，
+        /// 否则第二段动作会打断第一段、导致第一张符根本没飞出去）。
+        /// </summary>
+        internal static void ScheduleExtraCasts(HumanObject owner, RuneInfo rune, MapObject target, int damage)
+        {
+            if (owner == null || rune == null || target == null) return;
+
+            int count = Math.Max(0, Math.Min(4, rune.CastCount - 1));
+            if (count <= 0) return;
+
+            int delay = Math.Max(200, rune.CastDelayMs);
+            long now = Envir.Main.Time;
+
+            for (int i = 0; i < count; i++)
+            {
+                owner.RunePendingCasts.Add(new RunePendingCast
+                {
+                    DueTime = now + (delay * (i + 1)),
+                    Spell = rune.Spell,
+                    TargetId = target.ObjectID,
+                    TargetLocation = target.CurrentLocation,
+                    Damage = damage,
+                    RuneId = rune.Id,
+                });
+            }
+        }
+
+        /// <summary>到期执行所有待补发的法术（RuneEvents.OnTick 每帧调用）。</summary>
+        internal static void ExecutePendingCasts(HumanObject owner)
+        {
+            if (owner == null || owner.RunePendingCasts.Count == 0) return;
+
+            long now = Envir.Main.Time;
+
+            for (int i = owner.RunePendingCasts.Count - 1; i >= 0; i--)
+            {
+                var cast = owner.RunePendingCasts[i];
+                if (now < cast.DueTime) continue;
+
+                owner.RunePendingCasts.RemoveAt(i);
+                FirePendingCast(owner, cast);
+            }
+        }
+
+        /// <summary>补发一次法术：先发表现（客户端播施法动作 → 生成投射物），再结算伤害。</summary>
+        private static void FirePendingCast(HumanObject owner, RunePendingCast cast)
+        {
+            if (owner == null || cast == null) return;
+            if (owner.Dead || owner.CurrentMap == null) return;
+
+            var magic = owner.GetMagic(cast.Spell);
+            if (magic == null) return;
+
+            //别人看：普通广播（Broadcast 不会发给自己）
+            owner.Broadcast(new ServerPackets.ObjectMagic
+            {
+                ObjectID = owner.ObjectID,
+                Direction = owner.Direction,
+                Location = owner.CurrentLocation,
+                Spell = cast.Spell,
+                TargetID = cast.TargetId,
+                Target = cast.TargetLocation,
+                Cast = true,
+                Level = magic.Level,
+                RuneId = cast.RuneId,
+            });
+
+            //客户端把"上一次施法"的输入锁设成 2.5 秒；这里先送一份自己的坐标
+            //（位置/朝向没变时客户端只做 MapControl.NextAction = 0，不会有副作用），
+            //否则第二段施法动画会被那个锁挡掉，第二张符就不可能出现在画面上。
+            owner.Enqueue(new ServerPackets.UserLocation
+            {
+                Location = owner.CurrentLocation,
+                Direction = owner.Direction,
+            });
+
+            //自己看：单独投递一份，客户端凭 SelfBroadcast 只播动画、不再发 C.Magic
+            owner.Enqueue(new ServerPackets.ObjectMagic
+            {
+                ObjectID = owner.ObjectID,
+                Direction = owner.Direction,
+                Location = owner.CurrentLocation,
+                Spell = cast.Spell,
+                TargetID = cast.TargetId,
+                Target = cast.TargetLocation,
+                Cast = true,
+                Level = magic.Level,
+                RuneId = cast.RuneId,
+                SelfBroadcast = true,
+            });
+
+            var target = Envir.Main.GetObject(cast.TargetId);
+            if (target == null) return;
+            if (target.Dead || target.Node == null || target.CurrentMap != owner.CurrentMap) return;
+            if (!target.IsAttackTarget(owner)) return;
+
+            target.Attacked(owner, cast.Damage, DefenceType.MAC, false);
+        }
+
+        /// <summary>
         /// 执行连击符文的"补刀"：再走一次原版 Attack（不额外吃冷却），
         /// 并把这一刀单独发给本人客户端（服务端 Broadcast 不会发给本人），
         /// 让客户端补播一次攻击动画。

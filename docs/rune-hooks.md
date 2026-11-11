@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 服务端（10 个文件 / 23 行）
+## 1. 服务端（10 个文件 / 26 行）
 
 | # | 文件 | 行 | 改动 |
 |---|---|---|---|
@@ -35,6 +35,9 @@
 | S15 | `Server/MirDatabase/BuffInfo.cs` | 86 | `BuffType.Rune` 的 BuffInfo（**所有符文 Buff 共用**） |
 | S16 | `Server/MirObjects/MonsterObject.cs`（`RefreshAll` 末尾） | `RuneHooks.ApplyPetBoon(this);`（召唤物增益：按宠物等级重算属性，`RefreshBase` 会先重置，天然幂等） |
 | S17 | `Server/MirObjects/HumanObject.cs`（`SummonSkeleton`） | `int petLimit = RuneHooks.PetLimit(this, Spell.SummonSkeleton, RuneEffect.ExtraPet, 1);`——把"已有一只就召回"和"宠物数 >= 2"两处硬编码换成 `skeletons >= petLimit` / `>= petLimit + 1`；无符文时 `petLimit == 1`，与原生逐字等价 |
+| S18 | `Server/MirObjects/HumanObject.cs`（`CompleteMagic` 的 `#region Poisoning` 绿毒分支） | `greenValue = RuneHooks.PoisonValue(magic, PoisonType.Green, greenValue);`（毒伤翻倍；只改 `Poison.Value`，时长/tick/抗性全部原样） |
+| S19 | `Server/MirObjects/HumanObject.cs`（`Magic` 末尾的 `Broadcast(new S.ObjectMagic …)`） | 给广播包补 `RuneId = magic != null ? magic.RuneId : (ushort)0`——让客户端知道"这次施法带的是哪个符文"，用于按 `EffectScale` 放大技能特效；纯表现字段，服务端逻辑不读 |
+| S20 | `Server/MirObjects/HumanObject.cs`（`ElectricShock` 的驯服成功分支，`target.MaxPetLevel = (byte)(1 + magic.Level * 2);` 之后） | `RuneHooks.ApplyTameLevel(this, target, magic);`（1 行）——符文可在驯服成功那一刻改写宠物等级；没有符文时第一行就 return，行为与原生完全一致 |
 
 ## 2. Shared（5 个文件）
 
@@ -46,7 +49,7 @@
 | H4 | `Shared/Packet.cs` | 4 行包注册 |
 | H5 | `Shared/Data/RuneData.cs` | 新文件：`ClientRuneInfo` / `ClientRuneState` |
 
-## 3. 客户端（5 个文件）
+## 3. 客户端（6 个文件）
 
 | # | 文件 | 改动 |
 |---|---|---|
@@ -60,6 +63,8 @@
 | C8 | `Client/MirScenes/GameScene.cs`（`ObjectAttack`） | 允许 `SelfBroadcast` 的包作用于本人 + 给补刀动作打"纯表现"标记（~5 行） |
 | C9 | `Client/MirObjects/PlayerObject.cs`（`SetAction` 的 `Attack1`） | 读到"纯表现"标记时只取 Spell/SpellLevel 后 return，不发 `C.Attack`、不刷新本地攻击冷却（~7 行） |
 | C10 | `Client/MirObjects/MapObject.cs`（`ApplyDrawColour` 末尾） | `RuneVisuals.Apply(this, drawColour, body: true)`（本体着色，1 行） |
+| C11 | `Client/MirScenes/GameScene.cs`（`ObjectMagic`） | 追加一个"纯表现广播"参数：`action.Params.Add(p.SelfBroadcast && p.ObjectID == User.ObjectID)`（索引 7，1 行） |
+| C12 | `Client/MirObjects/PlayerObject.cs`（`SetAction` 的 `MirAction.Spell`） | 该 case 从 `AttackRange2` 里拆出来；读到索引 7 为 `true` 时**不发 `C.Magic`**（否则服务端补发的施法包会让客户端再施法一次，形成递归，~10 行） |
 
 ## 4. 新增模块（不受限制，可自由扩展）
 

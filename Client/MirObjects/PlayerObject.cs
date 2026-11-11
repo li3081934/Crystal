@@ -63,6 +63,35 @@ namespace Client.MirObjects
         }
 
         public Spell Spell;
+        /// <summary>本次施法所用符文（0 = 无符文），来自 S.ObjectMagic.RuneId，用于特效表现。</summary>
+        public ushort SpellRuneId;
+
+        /// <summary>
+        /// 本次施法对应符文的特效放大倍数：别人施法看包里的 RuneId，
+        /// 自己施法（走 S.Magic 回显，包里没有 RuneId）看本地已选符文。
+        /// </summary>
+        private float SpellEffectScale()
+        {
+            var rune = SpellRuneId != 0
+                ? RuneSystem.RuneLibrary.Get(SpellRuneId)
+                : (this == User ? RuneSystem.RuneLibrary.GetSelected(Spell) : null);
+
+            if (rune == null || rune.EffectScale <= 1F) return 1F;
+            return rune.EffectScale;
+        }
+
+        /// <summary>当前技能符文给特效指定的着色（0 = 原版配色）。</summary>
+        private Color SpellEffectColour()
+        {
+            var rune = SpellRuneId != 0
+                ? RuneSystem.RuneLibrary.Get(SpellRuneId)
+                : (this == User ? RuneSystem.RuneLibrary.GetSelected(Spell) : null);
+
+            if (rune == null || rune.TintArgb == 0) return Color.White;
+
+            var c = Color.FromArgb(rune.TintArgb);
+            return Color.FromArgb(c.A, c.R, c.G, c.B);
+        }
         public byte SpellLevel;
 
         public bool Cast;
@@ -1081,6 +1110,7 @@ namespace Client.MirObjects
                         break;
                     case MirAction.Spell:
                         Spell = (Spell)action.Params[0];
+                        SpellRuneId = action.Params.Count > 6 && action.Params[6] is ushort runeId ? runeId : (ushort)0;
                         switch (Spell)
                         {
                             case Spell.ShoulderDash:
@@ -1462,7 +1492,6 @@ namespace Client.MirObjects
                             }
                             break;
                         case MirAction.AttackRange2:
-                        case MirAction.Spell:
                             {
                                 Spell = (Spell)action.Params[0];
                                 uint targetID = (uint)action.Params[1];
@@ -1481,7 +1510,32 @@ namespace Client.MirObjects
                                     MapControl.NextAction = CMain.Time + 2500;
                                 }
                             }
-                            break;                         
+                            break;
+                        case MirAction.Spell:
+                            {
+                                Spell = (Spell)action.Params[0];
+                                uint targetID = (uint)action.Params[1];
+                                Point location = (Point)action.Params[2];
+
+                                //服务端补发的"纯表现"法术（符文双发的第二张符）：只播动画，不再回发 C.Magic，
+                                //否则服务端会把它当成一次新的施法，越套越多。
+                                bool visualOnlySpell = action.Params.Count > 7 && action.Params[7] is bool vo && vo;
+
+                                if (!visualOnlySpell)
+                                    Network.Enqueue(new C.Magic { ObjectID = GameScene.User.ObjectID, Spell = Spell, Direction = Direction, TargetID = targetID, Location = location });
+
+                                if (Spell == Spell.FlashDash)
+                                {
+                                    GameScene.SpellTime = CMain.Time + 250;
+                                    MapControl.NextAction = CMain.Time;
+                                }
+                                else
+                                {
+                                    GameScene.SpellTime = Spell == Spell.FlameField ? CMain.Time + 2500 : CMain.Time + 1800;
+                                    MapControl.NextAction = CMain.Time + 2500;
+                                }
+                            }
+                            break;
                         case MirAction.Harvest:
                             if (ArcherLayTrap)
                             {
@@ -1717,7 +1771,7 @@ namespace Client.MirObjects
                             #region ThunderBolt
 
                             case Spell.ThunderBolt:
-                                Effects.Add(new Effect(Libraries.Magic2, 20, 3, 300, this));
+                                Effects.Add(new Effect(Libraries.Magic2, 20, 3, 300, this) { Tint = SpellEffectColour() });
                                 break;
 
                             #endregion
@@ -2968,10 +3022,12 @@ namespace Client.MirObjects
 
                                         SoundManager.PlaySound(20000 + (ushort)Spell * 10);
 
+                                        Color boltTint = SpellEffectColour();   //「雷电·烈焰」＝赤红火雷
+
                                         if (ob == null)
-                                            MapControl.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, TargetPoint));
+                                            MapControl.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, TargetPoint) { Tint = boltTint });
                                         else
-                                            ob.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, ob));
+                                            ob.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, ob) { Tint = boltTint });
                                         break;
 
                                     #endregion
@@ -2981,13 +3037,16 @@ namespace Client.MirObjects
                                     case Spell.SoulFireBall:
                                         SoundManager.PlaySound(20000 + (ushort)Spell * 10 + 1);
                                         missile = CreateProjectile(1160, Libraries.Magic, true, 3, 30, 7);
+                                        float soulBoomScale = SpellEffectScale();   // 飞行途中 Spell 可能被下一发覆盖，先取定值
 
                                         if (missile.Target != null)
                                         {
                                             missile.Complete += (o, e) =>
                                             {
                                                 if (missile.Target.CurrentAction == MirAction.Dead) return;
-                                                missile.Target.Effects.Add(new Effect(Libraries.Magic, 1360, 10, 600, missile.Target));
+
+                                                // 符文「灵魂·炎爆」等可以把爆炸特效放大（EffectScale 随 RuneList 下发）
+                                                missile.Target.Effects.Add(new Effect(Libraries.Magic, 1360, 10, 600, missile.Target) { Scale = soulBoomScale });
                                                 SoundManager.PlaySound(20000 + (ushort)Spell.SoulFireBall * 10 + 2);
                                             };
                                         }

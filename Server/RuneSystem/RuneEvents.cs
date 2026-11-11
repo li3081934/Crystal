@@ -67,10 +67,12 @@ namespace Server.RuneSystem
         public static void OnTick(HumanObject owner)
         {
             if (owner == null || !RuneRepository.Any) return;
-            if (owner.RuneRepeatDueTime == 0) return;
-            if (Envir.Main.Time < owner.RuneRepeatDueTime) return;
 
-            RuneEffects.ExecuteRepeat(owner);
+            if (owner.RuneRepeatDueTime != 0 && Envir.Main.Time >= owner.RuneRepeatDueTime)
+                RuneEffects.ExecuteRepeat(owner);
+
+            if (owner.RunePendingCasts.Count > 0)
+                RuneEffects.ExecutePendingCasts(owner);
         }
 
         /// <summary>真正造成伤害时（HumanObject.Attacked 里调用）。</summary>
@@ -173,7 +175,8 @@ namespace Server.RuneSystem
 
         /// <summary>法术结算（CompleteMagic）阶段会派发的能力位。</summary>
         private const RuneEffect MagicCompleteEffects =
-            RuneEffect.BuffOnMagicComplete | RuneEffect.DualPoison;
+            RuneEffect.BuffOnMagicComplete | RuneEffect.DualPoison | RuneEffect.AreaOnHit | RuneEffect.DoubleCast |
+            RuneEffect.DebuffOnHit;
 
         private static void ForEachActiveRune(HumanObject owner, RuneEffect effect, Action<RuneContext> action)
         {

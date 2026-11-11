@@ -3784,7 +3784,7 @@ namespace Server.MirObjects
             }
 
             Enqueue(new S.Magic { Spell = spell, TargetID = targetID, Target = location, Cast = cast, Level = level });
-            Broadcast(new S.ObjectMagic { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Spell = spell, TargetID = targetID, Target = location, Cast = cast, Level = level });
+            Broadcast(new S.ObjectMagic { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Spell = spell, TargetID = targetID, Target = location, Cast = cast, Level = level, RuneId = magic != null ? magic.RuneId : (ushort)0 });
         }
 
         #region Elemental System
@@ -4100,6 +4100,7 @@ namespace Server.MirObjects
             target.ShockTime = 0;
             target.OperateTime = 0;
             target.MaxPetLevel = (byte)(1 + magic.Level * 2);
+            RuneHooks.ApplyTameLevel(this, target, magic);
 
             if (!Settings.PetSave)
             {
@@ -6073,13 +6074,16 @@ namespace Server.MirObjects
                     switch (item.Info.Shape)
                     {
                         case 1:
+                            int greenValue = value / 15 + magic.Level + 1 + Envir.Random.Next(Stats[Stat.PoisonAttack]);
+                            greenValue = RuneHooks.PoisonValue(magic, PoisonType.Green, greenValue);
+
                             target.ApplyPoison(new Poison
                             {
                                 Duration = (value * 2) + ((magic.Level + 1) * 7),
                                 Owner = this,
                                 PType = PoisonType.Green,
                                 TickSpeed = 2000,
-                                Value = value / 15 + magic.Level + 1 + Envir.Random.Next(Stats[Stat.PoisonAttack])
+                                Value = greenValue
                             }, this);
                             break;
                         case 2:

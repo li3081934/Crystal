@@ -15,6 +15,8 @@ namespace Server.RuneSystem
         public const string RepeatCastOnSwing = "RepeatCastOnSwing";
         public const string DebuffOnHit = "DebuffOnHit";
         public const string DualPoison = "DualPoison";
+        public const string AreaOnHit = "AreaOnHit";
+        public const string DoubleCast = "DoubleCast";
 
         private static readonly Dictionary<string, IRuneBehavior> Behaviors =
             new Dictionary<string, IRuneBehavior>(StringComparer.OrdinalIgnoreCase);

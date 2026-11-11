@@ -1125,6 +1125,50 @@ namespace Client.MirGraphics
 
             mi.CleanTime = CMain.Time + Settings.CleanDelay;
         }
+        /// <summary>
+        /// 混合绘制并缩放（scale = 1 走原路径）。缩放以图片中心为锚点，
+        /// 这样爆炸之类的落地特效放大后仍然"长在原地"，不会往右下漂。
+        /// </summary>
+        public void DrawBlend(int index, Point point, Color colour, bool offSet, float rate, float scale)
+        {
+            if (scale <= 0F || Math.Abs(scale - 1F) < 0.001F)
+            {
+                DrawBlend(index, point, colour, offSet, rate);
+                return;
+            }
+
+            if (!CheckImage(index))
+                return;
+
+            MImage mi = _images[index];
+
+            if (offSet) point.Offset(mi.X, mi.Y);
+
+            int width = (int)Math.Round(mi.Width * scale);
+            int height = (int)Math.Round(mi.Height * scale);
+            if (width <= 0 || height <= 0) return;
+
+            // 以中心为锚点：把左上角往左上挪 (新增尺寸 / 2)
+            point.Offset(-(width - mi.Width) / 2, -(height - mi.Height) / 2);
+
+            if (point.X >= Settings.ScreenWidth || point.Y >= Settings.ScreenHeight || point.X + width < 0 || point.Y + height < 0)
+                return;
+
+            float scaleX = (float)width / mi.Width;
+            float scaleY = (float)height / mi.Height;
+
+            bool oldBlend = DXManager.Blending;
+            DXManager.SetBlend(true, rate);
+
+            DXManager.Sprite.Transform = Matrix.Scaling(scaleX, scaleY, 0);
+            DXManager.Draw(mi.Image, new Rectangle(0, 0, mi.Width, mi.Height),
+                new Vector3((float)point.X / scaleX, (float)point.Y / scaleY, 0.0F), colour);
+            DXManager.Sprite.Transform = Matrix.Identity;
+
+            DXManager.SetBlend(oldBlend);
+            mi.CleanTime = CMain.Time + Settings.CleanDelay;
+        }
+
         public void Draw(int index, Point point, Size size, Color colour)
         {
             if (!CheckImage(index))

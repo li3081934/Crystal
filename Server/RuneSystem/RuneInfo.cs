@@ -40,6 +40,18 @@ namespace Server.RuneSystem
         /// <summary>召唤上限：把「一次只能有一只」改成「最多 PetCount 只」（见 PetCount 字段）。</summary>
         ExtraPet = 1 << 24,
 
+        /// <summary>毒伤：把指定毒（DebuffType）每次 tick 的伤害按 PoisonValuePct 放大（见 PoisonValuePct 字段）。</summary>
+        PoisonValueUp = 1 << 25,
+
+        /// <summary>溅射：技能结算后对主目标周围 SplashRadius 格内的其他目标造成 SplashPct% 伤害（见 Splash* 字段）。</summary>
+        AreaOnHit = 1 << 26,
+
+        /// <summary>双发：一次施法连发 CastCount 张（每发单独结算伤害，见 CastCount / CastDelayMs 字段）。</summary>
+        DoubleCast = 1 << 27,
+
+        /// <summary>诱惑之光：驯服成功时改写宠物的初始等级（技能等级 + PetLevelBonus）。</summary>
+        TameLevel = 1 << 28,
+
         // ---- 预留（暂未实现，先占位以固定数据格式） ----
         ExtraTargets = 1 << 20,
         RangeUp = 1 << 21,
@@ -134,11 +146,38 @@ namespace Server.RuneSystem
         /// </summary>
         public ushort PetSkin { get; set; }
 
+        /// <summary>诱惑之光的宠物初始等级 = 技能等级 + 这个值。默认 4。</summary>
+        public int PetLevelBonus { get; set; } = 4;
+
         /// <summary>
         /// 召唤上限（ExtraPet 使用）：该技能同时最多存在的召唤物数量。
         /// 1 = 原版行为；2 = 可以再召唤一只。
         /// </summary>
         public int PetCount { get; set; } = 1;
+
+        /// <summary>
+        /// 毒伤（PoisonValueUp 使用）：每次 tick 的伤害百分比增量。
+        /// 100 = 翻倍，50 = +50%，0 = 不生效。
+        /// </summary>
+        public int PoisonValuePct { get; set; }
+
+        // ---- 溅射类参数（AreaOnHit）：技能对主目标造成伤害后，周围半径内的其他目标再吃一份 ----
+        /// <summary>溅射半径（格，1 = 3x3 区域；只算与主目标同图、可攻击的对象）。</summary>
+        public int SplashRadius { get; set; } = 1;
+
+        /// <summary>溅射伤害占主目标伤害的百分比（100 = 同等伤害）。</summary>
+        public int SplashPct { get; set; } = 100;
+
+        // ---- 双发类参数（DoubleCast）：一次施法连发多张，每张单独飞行、单独结算 ----
+        /// <summary>一次施法总共发几发（含第一发；2 = 双发，上限 5）。</summary>
+        public int CastCount { get; set; } = 2;
+
+        /// <summary>相邻两发之间的间隔（毫秒）。要大于一次施法动作的时长，客户端才播得开两段动画。</summary>
+        public int CastDelayMs { get; set; } = 600;
+
+        // ---- 表现类参数 ----
+        /// <summary>技能特效放大倍数（1 = 原版；客户端渲染用，随 RuneList 下发）。</summary>
+        public float EffectScale { get; set; } = 1F;
 
         /// <summary>
         /// 无视防御类：true = 连命中判定一起跳过（DefenceType.None）；

@@ -3050,6 +3050,25 @@ namespace Server.MirObjects
                         ReceiveChat((GameLanguage.ServerTextMap.GetLocalization((ServerTextKeys.PetHasBeenRecalled), mInfo2.Name, count)), ChatType.System);
                         break;
 
+                    //调试/测试用：把当前所有宠物的等级、血量回显给自己
+                    case "PETINFO":
+                        if (!IsGM && !Settings.TestServer) return;
+
+                        if (Pets.Count == 0)
+                        {
+                            ReceiveChat("PETINFO none", ChatType.System);
+                            break;
+                        }
+
+                        foreach (var petOb in Pets)
+                        {
+                            if (petOb == null) continue;
+
+                            ReceiveChat($"PETINFO name={petOb.Name} level={petOb.PetLevel} max={petOb.MaxPetLevel} hp={petOb.HP}/{petOb.Stats[Stat.HP]} dead={petOb.Dead}", ChatType.System);
+                        }
+
+                        break;
+
                     case "RELOADDROPS":
                         if (!IsGM) return;
 

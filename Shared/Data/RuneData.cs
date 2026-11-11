@@ -13,6 +13,10 @@ public class ClientRuneInfo
     public byte NeedMagicLevel;
     public string Name = string.Empty;
     public string Description = string.Empty;
+    /// <summary>技能特效放大倍数（1 = 原版；仅客户端渲染用）。</summary>
+    public float EffectScale = 1F;
+    /// <summary>技能特效着色（ARGB，0 = 不染色）。例如「雷电·烈焰」把雷电画成火红色。</summary>
+    public int TintArgb;
 
     public ClientRuneInfo() { }
 
@@ -25,6 +29,8 @@ public class ClientRuneInfo
         NeedMagicLevel = reader.ReadByte();
         Name = reader.ReadString();
         Description = reader.ReadString();
+        EffectScale = reader.ReadSingle();
+        TintArgb = reader.ReadInt32();
     }
 
     public void Save(BinaryWriter writer)
@@ -36,6 +42,8 @@ public class ClientRuneInfo
         writer.Write(NeedMagicLevel);
         writer.Write(Name ?? string.Empty);
         writer.Write(Description ?? string.Empty);
+        writer.Write(EffectScale <= 0F ? 1F : EffectScale);
+        writer.Write(TintArgb);
     }
 }
 

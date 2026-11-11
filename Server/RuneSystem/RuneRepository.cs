@@ -150,7 +150,9 @@ namespace Server.RuneSystem
                                  || rune.HasEffect(RuneEffect.GuaranteedCritical)
                                  || rune.HasEffect(RuneEffect.RepeatCastOnSwing)
                                  || rune.HasEffect(RuneEffect.DebuffOnHit)
-                                 || rune.HasEffect(RuneEffect.DualPoison);
+                                 || rune.HasEffect(RuneEffect.DualPoison)
+                                 || rune.HasEffect(RuneEffect.AreaOnHit)
+                                 || rune.HasEffect(RuneEffect.DoubleCast);
 
             bool hasNumeric = rune.DamagePct != 0 || rune.DamageFlat != 0 || rune.CostPct != 0
                               || rune.CooldownPct != 0 || rune.PowerPct != 0 || rune.PowerFlat != 0;
@@ -361,7 +363,7 @@ namespace Server.RuneSystem
                     PetDamagePct = 15,
                     PetMoveSpeedPct = 8,
                     PetAttackSpeedPct = 8,
-                    PetSkin = 2000,
+                    PetSkin = 2001,
                 },
                 new RuneInfo
                 {
@@ -374,6 +376,94 @@ namespace Server.RuneSystem
                     Effect = RuneEffect.ExtraPet,
                     ProcChance = 100,
                     PetCount = 2,
+                },
+                new RuneInfo
+                {
+                    Id = 11,
+                    Spell = Spell.Poisoning,
+                    Slot = 2,
+                    Name = "施毒·蚀骨",
+                    Description = "施毒术上给目标的绿毒，每次掉血翻倍（毒的总时长、tick 间隔不变）。",
+                    Icon = 2,
+                    Effect = RuneEffect.PoisonValueUp,
+                    ProcChance = 100,
+                    DebuffType = "Green",
+                    PoisonValuePct = 100,
+                },
+                new RuneInfo
+                {
+                    Id = 12,
+                    Spell = Spell.SoulFireBall,
+                    Slot = 1,
+                    Name = "灵魂·炎爆",
+                    Description = "灵魂火符命中时爆裂成火海：主目标周围 1 格内的所有敌人再承受 100% 伤害，爆炸特效放大 1 倍。",
+                    Icon = 2,
+                    Effect = RuneEffect.AreaOnHit,
+                    ProcChance = 100,
+                    SplashRadius = 1,
+                    SplashPct = 100,
+                    EffectScale = 2F,
+                    BehaviorId = RuneBehaviorRegistry.AreaOnHit,
+                },
+                new RuneInfo
+                {
+                    Id = 13,
+                    Spell = Spell.SoulFireBall,
+                    Slot = 3,
+                    Name = "灵魂·双发",
+                    Description = "灵魂火符一分为二：一次施法连发两张火符，各自飞向目标并单独结算一次伤害。不额外消耗护身符。",
+                    Icon = 2,
+                    Effect = RuneEffect.DoubleCast,
+                    ProcChance = 100,
+                    CastCount = 2,
+                    CastDelayMs = 600,
+                    BehaviorId = RuneBehaviorRegistry.DoubleCast,
+                },
+                new RuneInfo
+                {
+                    Id = 14,
+                    Spell = Spell.ElectricShock,
+                    Slot = 1,
+                    Name = "诱惑·御兽",
+                    Description = "诱惑之光驯服成功后，宠物直接以「技能等级 + 4」的等级登场（3 级技能即 7 级宠物），生命与攻防随等级同步提高。",
+                    Icon = 2,
+                    Effect = RuneEffect.TameLevel,
+                    ProcChance = 100,
+                    PetLevelBonus = 4,
+                },
+                new RuneInfo
+                {
+                    Id = 16,
+                    Spell = Spell.ThunderBolt,
+                    Slot = 3,
+                    Name = "雷电·赤雷",
+                    Description = "雷电术的雷光转为赤红，命中后必定撕裂伤口造成流血（每秒 20% 伤害，持续 5 秒）。",
+                    Icon = 2,
+                    Effect = RuneEffect.DebuffOnHit,
+                    ProcChance = 100,
+                    DebuffType = "Bleeding",
+                    DebuffDuration = 5,
+                    DebuffTickSpeed = 1000,
+                    DebuffValuePct = 20,
+                    RequireSpellHit = true,
+                    TintColor = "#FF3030",
+                    TintMs = 500,
+                    TintBody = false,
+                    BehaviorId = RuneBehaviorRegistry.DebuffOnHit,
+                },
+                new RuneInfo
+                {
+                    Id = 15,
+                    Spell = Spell.ThunderBolt,
+                    Slot = 1,
+                    Name = "雷电·双重",
+                    Description = "雷电术必出两道：一次施法落下两记雷击，各自结算一次伤害。不额外消耗魔法值。",
+                    Icon = 2,
+                    Effect = RuneEffect.DoubleCast,
+                    ProcChance = 100,
+                    CastCount = 2,
+                    CastDelayMs = 600,
+                    BehaviorId = RuneBehaviorRegistry.DoubleCast,
                 },
             };
         }

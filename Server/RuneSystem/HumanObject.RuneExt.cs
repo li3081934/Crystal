@@ -124,6 +124,9 @@ namespace Server.MirObjects
             return Server.MirEnvir.Envir.Main.Time <= RuneLastHitSpellUntil;
         }
 
+        /// <summary>待补发的法术（双发类符文），由 RuneEvents.OnTick 到期执行。</summary>
+        internal readonly List<RunePendingCast> RunePendingCasts = new List<RunePendingCast>();
+
         /// <summary>连击符文的待执行时间（0 = 没有待执行的补刀）。</summary>
         internal long RuneRepeatDueTime;
         internal MirDirection RuneRepeatDir;
@@ -182,6 +185,8 @@ namespace Server.MirObjects
                     NeedMagicLevel = rune.NeedMagicLevel,
                     Name = rune.Name,
                     Description = rune.Description,
+                    EffectScale = rune.EffectScale,
+                    TintArgb = rune.ResolvedTintArgb,
                 });
             }
 
