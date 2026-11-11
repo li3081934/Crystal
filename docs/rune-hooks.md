@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 服务端（10 个文件 / 22 行）
+## 1. 服务端（10 个文件 / 23 行）
 
 | # | 文件 | 行 | 改动 |
 |---|---|---|---|
@@ -34,6 +34,7 @@
 | S14 | 同上 | 3233 | GM 调试命令 `@RUNE` / `@RUNELIST`（纯调试，可删） |
 | S15 | `Server/MirDatabase/BuffInfo.cs` | 86 | `BuffType.Rune` 的 BuffInfo（**所有符文 Buff 共用**） |
 | S16 | `Server/MirObjects/MonsterObject.cs`（`RefreshAll` 末尾） | `RuneHooks.ApplyPetBoon(this);`（召唤物增益：按宠物等级重算属性，`RefreshBase` 会先重置，天然幂等） |
+| S17 | `Server/MirObjects/HumanObject.cs`（`SummonSkeleton`） | `int petLimit = RuneHooks.PetLimit(this, Spell.SummonSkeleton, RuneEffect.ExtraPet, 1);`——把"已有一只就召回"和"宠物数 >= 2"两处硬编码换成 `skeletons >= petLimit` / `>= petLimit + 1`；无符文时 `petLimit == 1`，与原生逐字等价 |
 
 ## 2. Shared（5 个文件）
 

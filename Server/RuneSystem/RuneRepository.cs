@@ -363,6 +363,18 @@ namespace Server.RuneSystem
                     PetAttackSpeedPct = 8,
                     PetSkin = 2000,
                 },
+                new RuneInfo
+                {
+                    Id = 10,
+                    Spell = Spell.SummonSkeleton,
+                    Slot = 2,
+                    Name = "召唤·双卫",
+                    Description = "召唤骷髅的上限 +1：一次施法只召唤 1 只，但场上可以同时存在 2 只骷髅（再次施法召唤第二只，满 2 只后施法则收回身边）。",
+                    Icon = 2,
+                    Effect = RuneEffect.ExtraPet,
+                    ProcChance = 100,
+                    PetCount = 2,
+                },
             };
         }
     }

@@ -51,7 +51,8 @@ namespace RuneTestTool
                 bool stun = options.ContainsKey("stun");
                 bool dual = options.ContainsKey("dual");
                 bool pet = options.ContainsKey("pet");
-                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet);
+                bool extraPet = options.ContainsKey("extrapet");
+                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet);
             }
 
             string dir = options.GetValueOrDefault("dir");

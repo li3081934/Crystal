@@ -14,7 +14,7 @@ namespace RuneTestTool
     /// </summary>
     internal static class Smoke
     {
-        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false)
+        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false)
         {
             Packet.IsServer = false; // 我们是客户端：收到的包按 ServerPackets 解析
 
@@ -90,6 +90,12 @@ namespace RuneTestTool
                 return RunPetBoon(stream, buffer, spell, runeId);
             }
 
+            // 召唤数量类符文（例如 召唤·双卫）：要真的施法两次，也要护身符
+            if (extraPet)
+            {
+                return RunExtraPet(stream, buffer, myLocation, spell, runeId);
+            }
+
             // 第二目标类符文需要一个真的学会了的技能才能选中
             if (stun)
             {
@@ -116,8 +122,132 @@ namespace RuneTestTool
 
             if (lifesteal) return RunLifesteal(stream, buffer, myLocation);
 
-            Console.WriteLine("未指定测试模式（可用 --pet / --stun / --dual / --crit / --repeat / --maxatk / --onlyspell）");
+            Console.WriteLine("未指定测试模式（可用 --pet / --extrapet / --stun / --dual / --crit / --repeat / --maxatk / --onlyspell）");
             return 0;
+        }
+
+        /// <summary>
+        /// 召唤数量符文（「召唤·双卫」）：
+        ///   1) 无符文时连按两次召唤，场上仍然只有 1 只骷髅
+        ///   2) 选上符文后能同时存在 2 只
+        ///   3) 满 2 只之后再次施法只召回、不再增加
+        /// 需要真的学会技能 + 装备护身符（SummonSkeleton 里走 GetAmulet），所以先 @GIVESKILL / @MAKE Amulet。
+        /// </summary>
+        private static int RunExtraPet(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"--- 召唤数量验证（{spell} → 符文 #{runeId}）---");
+
+            Send(stream, new C.Chat { Message = "@REVIVE" });
+            Drain(stream, buffer, 600);
+            Send(stream, new C.Chat { Message = "@SUPERMAN" });
+            Drain(stream, buffer, 300);
+            Send(stream, new C.Chat { Message = $"@GIVESKILL {spell} 3" });
+            Drain(stream, buffer, 800);
+
+            if (!EquipAmulet(stream, buffer)) return 1;
+
+            // A) 无符文：连按两次，应该只有 1 只
+            Send(stream, new C.SetRune { Spell = spell, RuneId = 0 });
+            Drain(stream, buffer, 900);
+            Send(stream, new C.Chat { Message = "@CLEARMOB" });
+            Drain(stream, buffer, 400);
+
+            var pets = new Dictionary<uint, string>();
+            int plain = SummonSkeletons(stream, buffer, myLocation, spell, pets, 2, "A 无符文");
+            if (plain != 1)
+            {
+                Console.WriteLine($"  × 无符文时连按两次召唤出了 {plain} 只（期望 1）");
+                return 1;
+            }
+            Console.WriteLine("  ✓ 无符文：连按两次仍然只有 1 只");
+
+            // B) 带符文：切符文会把旧骷髅解散，再连按两次应该 2 只
+            Send(stream, new C.SetRune { Spell = spell, RuneId = runeId });
+            Drain(stream, buffer, 2500);
+            Send(stream, new C.Chat { Message = "@CLEARMOB" });
+            Drain(stream, buffer, 400);
+            pets.Clear();
+
+            int withRune = SummonSkeletons(stream, buffer, myLocation, spell, pets, 2, "B 带符文");
+            if (withRune != 2)
+            {
+                Console.WriteLine($"  × 带符文时连按两次只召唤出 {withRune} 只（期望 2）");
+                return 1;
+            }
+            Console.WriteLine("  ✓ 带符文：能同时存在 2 只");
+
+            // C) 满员后再按一次：只召回，不再增加
+            int capped = SummonSkeletons(stream, buffer, myLocation, spell, pets, 1, "C 满员再按");
+            if (capped != 2)
+            {
+                Console.WriteLine($"  × 满员后再施法变成了 {capped} 只（期望仍是 2）");
+                return 1;
+            }
+            Console.WriteLine("  ✓ 满员后施法：只召回，不再增加");
+
+            Console.WriteLine("召唤数量验证通过：无符文 1 只 → 带符文 2 只 → 满员封顶");
+            return 0;
+        }
+
+        /// <summary>连按 N 次召唤，返回场上（本段收集到的）骷髅数量。</summary>
+        private static int SummonSkeletons(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, Dictionary<uint, string> pets, int casts, string tag)
+        {
+            for (int i = 0; i < casts; i++)
+            {
+                TrySend(stream, new C.Magic { Spell = spell, Direction = MirDirection.Down, TargetID = 0, Location = myLocation });
+
+                foreach (var p in Drain(stream, buffer, 2200))
+                {
+                    if (p is S.ObjectMonster om && om.Image == Monster.BoneFamiliar)
+                    {
+                        pets[om.ObjectID] = om.Name;
+                        Console.WriteLine($"    {tag} 第 {i + 1} 次施法 → 骷髅 {om.Name} (ObjectID={om.ObjectID})");
+                    }
+                    else if (p is S.ObjectRemove rm && pets.Remove(rm.ObjectID))
+                    {
+                        Console.WriteLine($"    {tag} 骷髅消失 (ObjectID={rm.ObjectID})");
+                    }
+                    else if (p is S.Chat chat && chat.Message != null && (chat.Message.Contains("护身符") || chat.Message.Contains("summon") || chat.Message.Contains("召唤")))
+                    {
+                        Console.WriteLine($"    {tag} [服务端提示] {chat.Message}");
+                    }
+                }
+
+                Console.WriteLine($"    {tag} 第 {i + 1} 次施法后，场上骷髅 = {pets.Count}");
+            }
+
+            return pets.Count;
+        }
+
+        /// <summary>清背包后造一个护身符并装到 Amulet 槽（@CLEARBAG 只清背包，不影响已穿的装备）。</summary>
+        private static bool EquipAmulet(NetworkStream stream, List<byte> buffer)
+        {
+            Console.WriteLine("准备护身符...");
+
+            Send(stream, new C.Chat { Message = "@CLEARBAG" });
+            Drain(stream, buffer, 700);
+
+            Send(stream, new C.Chat { Message = "@MAKE Amulet 10" });
+            var packets = Drain(stream, buffer, 2500);
+            var gained = packets.OfType<S.GainedItem>().LastOrDefault();
+            if (gained?.Item == null)
+            {
+                Console.WriteLine("  × 没拿到护身符（@MAKE Amulet 没回包，确认物品库里存在 Amulet）");
+                return false;
+            }
+
+            ulong uid = gained.Item.UniqueID;
+            Send(stream, new C.EquipItem { Grid = MirGridType.Inventory, UniqueID = uid, To = (int)EquipmentSlot.Amulet });
+            var equip = Drain(stream, buffer, 2500).OfType<S.EquipItem>().LastOrDefault();
+            if (equip == null || !equip.Success)
+            {
+                Console.WriteLine($"  × 装备护身符失败（Success={equip?.Success}，UniqueID={uid}）");
+                return false;
+            }
+
+            Console.WriteLine("  ✓ 护身符已装备到 Amulet 槽");
+            return true;
         }
 
         /// <summary>

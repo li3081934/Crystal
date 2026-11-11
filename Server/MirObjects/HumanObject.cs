@@ -4413,16 +4413,30 @@ namespace Server.MirObjects
             }
             
             MonsterObject monster;
+
+            // 符文「召唤·双卫」等可以把「同时只能 1 只」抬高到 N 只（没有符文时恒为 1，与原生代码等价）
+            int petLimit = RuneHooks.PetLimit(this, Spell.SummonSkeleton, RuneEffect.ExtraPet, 1);
+
+            int skeletons = 0;
+            MonsterObject recall = null;
             for (int i = 0; i < Pets.Count; i++)
             {
                 monster = Pets[i];
                 if ((monster.Info.Name != Settings.SkeletonName) || monster.Dead) continue;
                 if (monster.Node == null) continue;
-                monster.ActionList.Add(new DelayedAction(DelayedType.Recall, Envir.Time + 500));
+
+                skeletons++;
+                if (recall == null) recall = monster;
+            }
+
+            // 已经到上限：和原版一样只把已有的骷髅召回身边，不再召唤新的
+            if (skeletons >= petLimit)
+            {
+                if (recall != null) recall.ActionList.Add(new DelayedAction(DelayedType.Recall, Envir.Time + 500));
                 return;
             }
 
-            if (Pets.Count(x => x.Race == ObjectType.Monster) >= 2) return;
+            if (Pets.Count(x => x.Race == ObjectType.Monster) >= petLimit + 1) return;
 
             UserItem item = GetAmulet(1);
             if (item == null) return;

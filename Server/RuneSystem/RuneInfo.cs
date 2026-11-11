@@ -37,6 +37,9 @@ namespace Server.RuneSystem
         /// <summary>召唤物增益：按召唤物等级提升 攻击/防御/血量/移速/攻速（见 Pet*Pct 字段）。</summary>
         PetBoon = 1 << 23,
 
+        /// <summary>召唤上限：把「一次只能有一只」改成「最多 PetCount 只」（见 PetCount 字段）。</summary>
+        ExtraPet = 1 << 24,
+
         // ---- 预留（暂未实现，先占位以固定数据格式） ----
         ExtraTargets = 1 << 20,
         RangeUp = 1 << 21,
@@ -130,6 +133,12 @@ namespace Server.RuneSystem
         /// 0 = 不换皮（继续用原贴图）。图库与迁移后的原版骷髅帧表一致才能直接换。
         /// </summary>
         public ushort PetSkin { get; set; }
+
+        /// <summary>
+        /// 召唤上限（ExtraPet 使用）：该技能同时最多存在的召唤物数量。
+        /// 1 = 原版行为；2 = 可以再召唤一只。
+        /// </summary>
+        public int PetCount { get; set; } = 1;
 
         /// <summary>
         /// 无视防御类：true = 连命中判定一起跳过（DefenceType.None）；

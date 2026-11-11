@@ -205,5 +205,24 @@ namespace Server.RuneSystem
             int result = (int)Math.Round(value * (1f + rune.CostPct / 100f));
             return result < 0 ? 0 : result;
         }
+
+        /// <summary>
+        /// 召唤上限（符文「召唤·双卫」等）：返回该技能同时最多能存在几只召唤物。
+        /// 没有符文、或符文不带 ExtraPet 时原值返回（原版 = 1）。
+        /// 只改数量，不动召唤流程本身（消耗护身符、属性、宠物等级保持原样）。
+        /// </summary>
+        public static int PetLimit(HumanObject owner, Spell spell, RuneEffect effect, int baseLimit)
+        {
+            if (owner == null || !RuneRepository.Any) return baseLimit;
+
+            var rune = GetActiveRune(owner, spell, effect);
+            if (rune == null) return baseLimit;
+
+            if (rune.PetCount <= baseLimit) return baseLimit;
+
+            // 再大也不能盖过全局宠物上限，否则召唤物会占满但无法存活
+            int cap = Globals.MaxPets;
+            return rune.PetCount < cap ? rune.PetCount : cap;
+        }
     }
 }
