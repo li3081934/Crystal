@@ -1,0 +1,161 @@
+Client/MirScenes/Dialogs/MainDialogs.cs
+  s_e627ee9f43f62f::t_f4bce133423460 3604
+  s_e627ee9f43f62f::t_06768b40f70398 3602-3603,3605
+  s_fac1f2ea76a1c2::t_414e019daa104c 3600-3601
+Server/RuneSystem/HumanObject.RuneExt.cs
+  s_220f379c12fa5d::t_6152db1bc9940a 67,85-98
+  s_220f379c12fa5d::t_cb6b6039e9e1dc 205
+Client/RuneSystem/RuneLibrary.cs
+  s_220f379c12fa5d::t_f4eafa0a37c62b 47-49
+Shared/Enums.cs
+  s_e627ee9f43f62f::t_8b38b6067617cd 1269
+  s_fac1f2ea76a1c2::t_63a475d789898c 1267-1268,1270
+Build/Server/Release/Envir/NPCs/BichonProvince/BichonWall/ArcaneBookSeller.txt
+  s_e627ee9f43f62f::t_d0f753181a8f45 18
+  s_e627ee9f43f62f::t_0d190cd73f9f63 13,19
+  s_e627ee9f43f62f::t_676cf90528f5eb 1-12,14-17
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_ad42a2a127e29e 230-235,237-242,244-250,252-256,258-260
+  s_220f379c12fa5d::t_d17ee9cb1bdfc1 236,243,251,257
+  s_220f379c12fa5d::t_a56b9126fb858f 261-277,279
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_07a06c4add069b 569,1964-1966,1968-1976,1978-1989,1991-1992,1996-2010,2013-2014,2021-2029,2033-2037,2042,2044-2048,2052-2053
+  s_220f379c12fa5d::t_54b6be2e845c24 568,1967,1977,1990,1993-1995,2011-2012,2015-2020,2030-2032,2038-2041,2043
+  s_220f379c12fa5d::t_723fd3002e2cf5 2049-2051
+Client/MirObjects/PlayerObject.cs
+  s_e627ee9f43f62f::t_c9404b0523a143 1816-1824
+Tools/RuneTestTool/Program.cs
+  s_220f379c12fa5d::t_b1b54d30c3f4dc 59
+  s_220f379c12fa5d::t_1e470744b0d761 60-62
+  s_220f379c12fa5d::t_a24cc4e9fafd30 63-66,70
+Server/MirEnvir/Envir.cs
+  s_e627ee9f43f62f::t_b0ba74ea480c97 1940-1942,1947-1949
+  s_e627ee9f43f62f::t_78fded530a35cd 1943-1946,1950-1951,1970-1978
+  s_e627ee9f43f62f::t_57b5cf8e172619 1926-1927,1931-1936,1952-1969,1979-1980
+  s_e627ee9f43f62f::t_61c90c34bb46b5 1924-1925,1928-1930,1937-1939
+Client/Localization/English.json
+  s_e627ee9f43f62f::t_48f35a82029de0 596
+  s_e627ee9f43f62f::t_483140b497a0d8 595
+Server/MirObjects/HumanObject.cs
+  s_220f379c12fa5d::t_7c124d04285ba1 3480-3483
+  s_e627ee9f43f62f::t_867074625f5a2e 189,329,555-601,1816-1817,3437,3474-3479,3520-3522,3610,5990-6016,6251-6274,7045,7047-7049
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_0a3a16bcecb81c 59-61
+  s_220f379c12fa5d::t_b91ac5c2be1331 178-184
+  s_220f379c12fa5d::t_af478f320f1811 2,56-58,171-172,175-177,185-187
+  s_220f379c12fa5d::t_d17ee9cb1bdfc1 173-174
+  s_220f379c12fa5d::t_8e9c1160d48bd2 188
+Client/MirScenes/GameScene.cs
+  s_e627ee9f43f62f::t_74d5cb02659ed6 11971
+  s_e627ee9f43f62f::t_86ecd2f51879b4 11437-11449
+  s_fac1f2ea76a1c2::t_6bfa1358fd6b51 11944-11949
+docs/词条系统-词条池.md
+  s_220f379c12fa5d::t_02a5aa1320f1c3 1-117,119-226,228,230-341,343-347,357-440
+  s_220f379c12fa5d::t_5d67e7e6e2134c 342,348-356
+  s_220f379c12fa5d::t_b5fdf46b23de04 118,227,229
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_d17ee9cb1bdfc1 143-144
+  s_220f379c12fa5d::t_735821ddb0fff3 96-99,131-142,145-155
+  s_220f379c12fa5d::t_b91ac5c2be1331 100-130
+.gitignore
+  s_e627ee9f43f62f::t_ff7ff81f02bcb3 373,375
+  s_e627ee9f43f62f::t_d144ea2a7fe43d 374
+Server/MirObjects/PlayerObject.cs
+  s_220f379c12fa5d::t_b1b54d30c3f4dc 3231
+  s_e627ee9f43f62f::t_7b7fdbbf2da019 5936
+  s_e627ee9f43f62f::t_3c2f1cdee1d18a 5915
+  s_220f379c12fa5d::t_2489e6fed512b1 582
+  s_220f379c12fa5d::t_ad42a2a127e29e 3073-3078
+  s_e627ee9f43f62f::t_302f28ad2fe54e 5951,5968
+  s_e627ee9f43f62f::t_c0a5b8a3f69749 5909-5914,5916-5935,5937-5950,5952-5967,5969-5993,6270-6275
+  s_220f379c12fa5d::t_7e5b3aa8234c15 6276
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_d17ee9cb1bdfc1 499,504-506
+  s_220f379c12fa5d::t_ad42a2a127e29e 493-498,500-503,507-508
+  s_220f379c12fa5d::t_e82c7b05b3bbe5 509-519
+  s_220f379c12fa5d::t_af478f320f1811 2,105,170-180,182-192
+  s_220f379c12fa5d::t_21cea3cf3657de 181
+Shared/Language.cs
+  s_e627ee9f43f62f::t_15cd8f4d51a1d9 1145-1146,1943-1944
+  s_e627ee9f43f62f::t_160985945ef182 619,3451
+  s_fac1f2ea76a1c2::t_5453ecfaf1a435 618,3450
+Client/MirObjects/UserObject.cs
+  s_220f379c12fa5d::t_d17ee9cb1bdfc1 194
+  s_220f379c12fa5d::t_f4eafa0a37c62b 156,182-193,195-206
+Server/MirObjects/SpellObject.cs
+  s_e627ee9f43f62f::t_e3e2d2f145aa41 33-34,317-319
+Shared/Data/RuneData.cs
+  s_220f379c12fa5d::t_cb6b6039e9e1dc 3,22-25,40-53,67-82
+  s_220f379c12fa5d::t_6152db1bc9940a 1-2
+docs/词条系统-设计方案.md
+  s_220f379c12fa5d::t_51820c9497bcd3 1-4,6-16,19-28,30,32-72,74-115,117-169,172-195,197,199,202,208,210,216,220-369,371-437,439-441,443-500,502-508,510-511,513,515-520,524,526-527,534,536,539-620,622-644,646-647,651-654,656-666,668-673,678-707,709-710,712,714-717,719,721,731
+  s_220f379c12fa5d::t_b976ffe63f79db 713
+  s_220f379c12fa5d::t_5d67e7e6e2134c 708,711
+  s_220f379c12fa5d::t_343c5ffdfc065e 5,17-18,29,116,196,198,200-201,203-207,209,211-215,217-219,370,537,621,648,667,675
+  s_220f379c12fa5d::t_02a5aa1320f1c3 170-171,655,718,720,722-730,732-734
+  s_220f379c12fa5d::t_a6d85e7c776446 31,73,438,442,501,509,512,514,521-523,525,528-533,535,538,645,649-650,674,676-677
+Server.MirForms/Localization/Chinese.json
+  s_e627ee9f43f62f::t_35f0ed6d722b7d 24-25
+Server/MirNetwork/MirConnection.cs
+  s_220f379c12fa5d::t_343c5ffdfc065e 1579-1582
+  s_220f379c12fa5d::t_7907f818a389e2 1583
+  s_220f379c12fa5d::t_a5077460fabf3e 290
+Server/MirObjects/MonsterObject.cs
+  s_220f379c12fa5d::t_e82c7b05b3bbe5 994
+Client/Localization/Chinese.json
+  s_e627ee9f43f62f::t_2b79ff28ce8cab 596
+  s_e627ee9f43f62f::t_483140b497a0d8 595
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_2be0f9acc3fa53 11,41
+Server/MirDatabase/MagicInfo.cs
+  s_e627ee9f43f62f::t_d43ec8c1a28e18 229-241
+Server.MirForms/Localization/English.json
+  s_e627ee9f43f62f::t_e3aad3f9b67695 24-25
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_1e470744b0d761 1999-2000,2008-2020
+  s_220f379c12fa5d::t_87d50c836efda7 2059,2068,2093
+  s_220f379c12fa5d::t_3a295edfbd85a9 2114-2116,2137-2138,2167,2173-2174,2177,2179-2180,2184-2186,2188-2190,2203
+  s_220f379c12fa5d::t_abd0e734a1ad2b 2161
+  s_220f379c12fa5d::t_f9df0286f9a902 2211-2214,2217,2219-2220,2222,2224,2226-2231,2237
+  s_220f379c12fa5d::t_d39e5e7ffb0338 2232-2233
+  s_220f379c12fa5d::t_5d59f734dc27cb 2142-2143,2145-2155,2166,2172,2175,2194-2200,2202,2210
+  s_220f379c12fa5d::t_4f42277011b212 2039
+  s_220f379c12fa5d::t_48cf367794c7c7 1907,1922,1925,1933,1948,1950-1952
+  s_220f379c12fa5d::t_a24cc4e9fafd30 17,128,2031-2038,2040-2058,2060-2067,2069-2092,2094-2100,2102,2104-2107,2109-2111,2113,2117-2118,2130-2131,2139-2141,2144,2156-2160,2162-2165,2168-2171,2176,2178,2193,2201,2204-2209,2215-2216,2218,2221,2223,2225,2234
+  s_220f379c12fa5d::t_bd6b3cfb74f661 127,132,1893-1906,1908-1921,1923-1924,1926-1932,1934-1947,1949,1953-1998,2001,2003,2025-2030,2235-2236
+  s_220f379c12fa5d::t_65eac88d25aef9 2002,2004-2007,2021-2024
+  s_220f379c12fa5d::t_12fab4501b7450 2101,2103,2108,2112,2119-2129
+  s_220f379c12fa5d::t_671fdd9ee796dd 2132-2136,2181-2183,2187,2191-2192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2e625249b12272139e9c79a1a07cc0ea963f63de",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_e627ee9f43f62f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1cddb-0095-7206-8c21-c2df59748a22",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_fac1f2ea76a1c2": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a17c44-c63f-71e3-bb2a-edcafaff95c0",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
