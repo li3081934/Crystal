@@ -991,6 +991,7 @@ namespace Server.MirObjects
             if (EXPOwner != null && EXPOwner.Node != null && Master == null && (EXPOwner.Race == ObjectType.Player || EXPOwner.Race == ObjectType.Hero))
             {
                 EXPOwner.WinExp(Experience, Level);
+                RuneHooks.ApplyManaOnKill(EXPOwner, this);   //符文：击杀回蓝（ManaOnKill）
 
                 if (EXPOwner.Race != ObjectType.Hero)
                 {

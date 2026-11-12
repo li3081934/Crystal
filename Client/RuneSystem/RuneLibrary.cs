@@ -44,6 +44,9 @@ namespace Client.RuneSystem
             }
 
             RefreshUi();
+
+            if (GameScene.User != null)
+                GameScene.User.RefreshStats(); //符文被动属性（背包负重/腕力）要立刻反映到面板
         }
 
         public static void OnSetRune(S.SetRune p)

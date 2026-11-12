@@ -30,6 +30,8 @@ namespace Server.MirObjects
         public int Value, TickSpeed, BonusDmg;
         public Spell Spell;
         public Point CastLocation;
+        public Point ExitLocation;
+        public bool HasExitLocation;
         public bool Show, Decoration;
 
         //ExplosiveTrap
@@ -312,7 +314,9 @@ namespace Server.MirObjects
 
                         if (portal != null)
                         {
-                            Point newExit = Functions.PointMove(portal.CurrentLocation, ob.Direction, 1);
+                            Point newExit = portal.HasExitLocation
+                                ? portal.ExitLocation
+                                : Functions.PointMove(portal.CurrentLocation, ob.Direction, 1);
 
                             if (!portal.CurrentMap.ValidPoint(newExit)) return;
 

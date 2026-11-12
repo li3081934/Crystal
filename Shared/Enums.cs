@@ -1264,6 +1264,10 @@ public enum Spell : byte
     FireBounce = 154,
     MeteorShower = 155,
 
+    //Custom Passive
+    ArcaneRecovery = 170,
+    ArcaneShift = 171,
+
     //Map Events
     DigOutZombie = 200,
     Rubble = 201,

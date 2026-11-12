@@ -186,6 +186,7 @@ namespace Server.MirObjects
 
         public const long LoyaltyDelay = 1000, ItemExpireDelay = 60000, DuraDelay = 10000, RegenDelay = 10000, PotDelay = 200, HealDelay = 600, VampDelay = 500, MoveDelay = 600;
         public long StruckTime, RunTime, ActionTime, AttackTime, RegenTime, SpellTime, StackingTime, IncreaseLoyaltyTime, ItemExpireTime, TorchTime, DuraTime, PotTime, HealTime, VampTime, LogTime, DecreaseLoyaltyTime, SearchTime;
+        public long ArcaneRecoveryTime;
 
         protected int _stepCounter, _runCounter;
 
@@ -325,6 +326,7 @@ namespace Server.MirObjects
 
             ProcessBuffs();
             ProcessRegen();
+            ProcessArcaneRecovery();
             ProcessPoison();
 
             UserItem item;
@@ -550,6 +552,53 @@ namespace Server.MirObjects
                 RefreshStats();
             }
         }
+        private void ProcessArcaneRecovery()
+        {
+            if (Dead || Class != MirClass.Wizard) return;
+
+            UserMagic magic = GetMagic(Spell.ArcaneRecovery);
+            if (magic == null || magic.Info == null) return;
+
+            long now = Envir.Time;
+            long interval = Math.Max(1, (int)magic.Info.PowerBase) * 1000L;
+
+            if (ArcaneRecoveryTime == 0)
+            {
+                ArcaneRecoveryTime = now + interval;
+                return;
+            }
+
+            if (now < ArcaneRecoveryTime) return;
+
+            ArcaneRecoveryTime = now + interval;
+
+            if (Level < magic.Info.Level1) return;
+
+            int maxMP = Stats[Stat.MP];
+            if (maxMP <= 0 || MP >= maxMP) return;
+
+            int percent = magic.Level switch
+            {
+                0 => magic.Info.PowerBonus,
+                1 => magic.Info.MPowerBase,
+                2 => magic.Info.MPowerBonus,
+                _ => (int)magic.Info.MultiplierBase,
+            };
+
+            if (percent <= 0) return;
+
+            int amount = (int)Math.Ceiling(maxMP * (percent / 100D));
+            if (amount > 0) ChangeMP(amount);
+        }
+
+        private void GainArcaneRecoveryExperience()
+        {
+            UserMagic magic = GetMagic(Spell.ArcaneRecovery);
+            if (magic == null || magic.Level >= 3) return;
+
+            LevelMagic(magic, 1);
+        }
+
         private void ProcessRegen()
         {
             if (Dead) return;
@@ -1763,6 +1812,8 @@ namespace Server.MirObjects
             Stats[Stat.AttackSpeed] += (Stats[Stat.AttackSpeed] * Stats[Stat.AttackSpeedRatePercent]) / 100;
 
             RefreshStatCaps();
+
+            RuneHooks.ApplyPassiveStats(this); //符文被动属性（例如背包负重/腕力）
 
             if (HP > Stats[Stat.HP]) SetHP(Stats[Stat.HP]);
             if (MP > Stats[Stat.MP]) SetMP(Stats[Stat.MP]);
@@ -3383,7 +3434,7 @@ namespace Server.MirObjects
         {
             int cost = magic.Info.BaseCost + magic.Info.LevelCost * magic.Level;
             Spell spell = magic.Spell;
-            if (spell == Spell.Teleport || spell == Spell.Blink || spell == Spell.StormEscape)
+            if (spell == Spell.Teleport || spell == Spell.Blink || spell == Spell.StormEscape || spell == Spell.ArcaneShift)
             {
                 if (Stats[Stat.TeleportManaPenaltyPercent] > 0)
                 {
@@ -3420,7 +3471,16 @@ namespace Server.MirObjects
                 return;
             }
 
-            if ((location.X != 0) && (location.Y != 0) && magic.Info.Range != 0 && Functions.InRange(CurrentLocation, location, magic.Info.Range) == false) return;
+            if (spell == Spell.ArcaneRecovery)
+            {
+                Enqueue(new S.UserLocation { Direction = Direction, Location = CurrentLocation });
+                return;
+            }
+
+            if ((location.X != 0) && (location.Y != 0) && magic.Info.Range != 0 && Functions.InRange(CurrentLocation, location, magic.Info.Range) == false)
+            {
+                return;
+            }
 
             if (Hidden)
             {
@@ -3456,6 +3516,9 @@ namespace Server.MirObjects
 
             RegenTime = Envir.Time + RegenDelay;
             ChangeMP(-cost);
+
+            if (Info.Class == MirClass.Wizard && spell != Spell.ArcaneRecovery)
+                GainArcaneRecoveryExperience();
 
             if (spell == Spell.ShoulderDash && Race == ObjectType.Hero)
                 dir = Direction;
@@ -3544,6 +3607,7 @@ namespace Server.MirObjects
                     break;
                 case Spell.Teleport:
                 case Spell.Blink:
+                case Spell.ArcaneShift:
                     ActionList.Add(new DelayedAction(DelayedType.Magic, Envir.Time + 200, magic, location));
                     break;
                 case Spell.Hiding:
@@ -5923,6 +5987,33 @@ namespace Server.MirObjects
 
             SneakingActive = true;
         }
+        private static int GetArcaneShiftDistance(UserMagic magic)
+        {
+            if (magic == null || magic.Info == null) return 0;
+
+            switch (magic.Level)
+            {
+                case 0: return (int)magic.Info.PowerBase;
+                case 1: return (int)magic.Info.PowerBonus;
+                case 2: return (int)magic.Info.MPowerBase;
+                default: return (int)magic.Info.MPowerBonus;
+            }
+        }
+
+        private Point ClampArcaneShiftLocation(Point location, int maxDistance)
+        {
+            int dx = location.X - CurrentLocation.X;
+            int dy = location.Y - CurrentLocation.Y;
+            int distance = Math.Max(Math.Abs(dx), Math.Abs(dy));
+
+            if (distance <= maxDistance) return location;
+
+            double scale = (double)maxDistance / distance;
+            return new Point(
+                CurrentLocation.X + (int)Math.Round(dx * scale),
+                CurrentLocation.Y + (int)Math.Round(dy * scale));
+        }
+
         protected void CompleteMagic(IList<object> data)
         {
             UserMagic magic = (UserMagic)data[0];
@@ -6152,6 +6243,30 @@ namespace Server.MirObjects
                         LevelMagic(magic);
 
                         AddBuff(BuffType.TemporalFlux, this, Settings.Second * 30, new Stats { [Stat.TeleportManaPenaltyPercent] = 30 });
+                    }
+                    break;
+
+                #endregion
+
+                #region ArcaneShift
+
+                case Spell.ArcaneShift:
+                    {
+                        location = (Point)data[1];
+                        if (CurrentMap.Info.NoTeleport)
+                        {
+                            ReceiveChat(GameLanguage.ServerTextMap.GetLocalization(ServerTextKeys.YouCannotTeleportOnMap), ChatType.System);
+                            return;
+                        }
+
+                        int maxDistance = GetArcaneShiftDistance(magic);
+                        if (maxDistance <= 0) return;
+
+                        location = ClampArcaneShiftLocation(location, maxDistance);
+                        if (!CurrentMap.ValidPoint(location) || !Teleport(CurrentMap, location, false)) return;
+
+                        CurrentMap.Broadcast(new S.ObjectEffect { ObjectID = ObjectID, Effect = SpellEffect.Teleport }, CurrentLocation);
+                        LevelMagic(magic);
                     }
                     break;
 
@@ -6927,9 +7042,11 @@ namespace Server.MirObjects
 
             return null;
         }
-        public void LevelMagic(UserMagic magic)
+        public void LevelMagic(UserMagic magic, int? fixedExperience = null)
         {
-            byte exp = (byte)(Envir.Random.Next(3) + 1);
+            byte exp = fixedExperience.HasValue
+                ? (byte)Math.Min(byte.MaxValue, Math.Max(0, fixedExperience.Value))
+                : (byte)(Envir.Random.Next(3) + 1);
 
             if (Settings.MentorSkillBoost && Info.Mentor != 0 && Info.IsMentor)
             {

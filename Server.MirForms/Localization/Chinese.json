@@ -21,6 +21,8 @@
     "InventoryIncreased": "背包容量已增加。",
     "FaceToTrade": "你必须面对玩家才能交易。",
     "NoTownTeleport": "此地图无法使用回城功能。",
+    "TownPortalAlreadyOpen": "你已经有传送门打开了。",
+    "TownPortalNoSpace": "这里没有空间打开传送门。",
     "CanNotRandom": "此地图无法使用随机传送。",
     "CanNotDungeon": "此地图无法使用逃离地牢功能。",
     "CannotResurrection": "你在存活状态下无法使用复活卷轴。",

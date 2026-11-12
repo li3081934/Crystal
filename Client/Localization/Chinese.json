@@ -592,6 +592,8 @@
     "FastMoveSkillDescription": "快速移动\n\n引导施法\n法力消耗 {2}\n\n利用蓄力技能提升移动速度。\n\n当前技能等级 {0}\n下一级 {1}",
     "StormEscapeSkillDescription": "风暴逃脱\n\n引导施法\n法力消耗 {2}\n\n麻痹附近敌人并瞬移至指定位置。\n\n当前技能等级 {0}\n下一级 {1}",
     "BlinkSkillDescription": "闪现\n\n瞬间施法\n法力消耗 {2}\n\n随机瞬移至附近位置。\n\n当前技能等级 {0}\n下一级 {1}",
+    "ArcaneRecoverySkillDescription": "奥术回流\n\n被动技能\n\n周期性恢复一定比例的最大法力值。\n\n当前技能等级 {0}\n下一级 {1}",
+    "ArcaneShiftSkillDescription": "奥术跃迁\n\n瞬间施法\n法力消耗 {2}\n\n传送到鼠标位置（最远 {3} 格）。\n冷却 {4} 秒。\n\n当前技能等级 {0}\n下一级 {1}",
     "SpiritSwordSkillDescription": "精神力战法\n\n提升近战命中目标的概率。\n被动技能\n\n当前技能等级 {0}\n下一级 {1}",
     "HealingSkillDescription": "治愈术\n\n瞬间施法\n法力消耗 {2}\n\n治疗单一目标，\n持续恢复生命值。\n\n当前技能等级 {0}\n下一级 {1}",
     "PoisoningSkillDescription": "施毒术\n\n瞬间施法\n法力消耗 {2}\n\n需要物品：剧毒粉末\n\n向怪物投掷毒药以削弱其能力。\n使用绿色毒药削弱生命值。\n使用红色毒药削弱防御力。\n\n当前技能等级 {0}\n下一级 {1}",

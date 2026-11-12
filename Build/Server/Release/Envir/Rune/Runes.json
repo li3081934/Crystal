@@ -227,5 +227,53 @@
     "TintMs": 500,
     "TintBody": false,
     "BehaviorId": "DebuffOnHit"
+  },
+  {
+    "Id": 17,
+    "Spell": "ArcaneRecovery",
+    "Slot": 1,
+    "Name": "奥术·巨力",
+    "Description": "被动：按技能等级提升背包负重上限 +10/20/30/50、穿戴重量 +1/2/3/5、腕力 +1/2/3/5。",
+    "Icon": 50,
+    "Unlock": "Always",
+    "Effect": "StatBonus",
+    "ProcChance": 100,
+    "StatBonus": {
+      "BagWeight": [
+        10,
+        20,
+        30,
+        50
+      ],
+      "WearWeight": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "HandWeight": [
+        1,
+        2,
+        3,
+        5
+      ]
+    }
+  },
+  {
+    "Id": 18,
+    "Spell": "ArcaneRecovery",
+    "Slot": 2,
+    "Name": "奥术·噬灵",
+    "Description": "被动：每杀死一只怪物，按其最大生命值的 5%/10%/15%/25%（对应技能等级 0/1/2/3）回复法力。",
+    "Icon": 52,
+    "Unlock": "Always",
+    "Effect": "ManaOnKill",
+    "ProcChance": 100,
+    "ManaPct": [
+      5,
+      10,
+      15,
+      25
+    ]
   }
 ]

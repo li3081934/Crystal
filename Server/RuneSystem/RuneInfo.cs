@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Server.RuneSystem
@@ -51,6 +52,12 @@ namespace Server.RuneSystem
 
         /// <summary>诱惑之光：驯服成功时改写宠物的初始等级（技能等级 + PetLevelBonus）。</summary>
         TameLevel = 1 << 28,
+
+        /// <summary>被动属性：只要选中该符文，就按技能等级给角色加属性（见 StatBonus 字段）。</summary>
+        StatBonus = 1 << 29,
+
+        /// <summary>击杀回蓝：杀死怪物时按其最大 HP 的百分比回复法力（见 ManaPct 字段）。</summary>
+        ManaOnKill = 1 << 30,
 
         // ---- 预留（暂未实现，先占位以固定数据格式） ----
         ExtraTargets = 1 << 20,
@@ -160,6 +167,24 @@ namespace Server.RuneSystem
         /// 100 = 翻倍，50 = +50%，0 = 不生效。
         /// </summary>
         public int PoisonValuePct { get; set; }
+
+        // ---- 被动属性类参数（StatBonus）：选着符文就生效，不需要施法、不会消耗 ----
+        /// <summary>
+        /// Stat 名 → 各技能等级的加成值。下标直接取技能等级（0/1/2/3），数组比等级短时取最后一档。
+        /// 例：{ "BagWeight": [10,20,30,50], "WearWeight": [1,2,3,5], "HandWeight": [1,2,3,5] }
+        /// </summary>
+        public Dictionary<string, int[]> StatBonus { get; set; }
+
+        // ---- 击杀回蓝类参数（ManaOnKill） ----
+        /// <summary>
+        /// 击杀怪物时回复的法力 = 怪物最大 HP × 百分比。
+        /// 数组下标直接取技能等级（0/1/2/3），只配 1 个值时所有等级共用。
+        /// </summary>
+        public int[] ManaPct { get; set; }
+
+        /// <summary>运行时解析结果（StatBonus 里的字符串键解析成 Stat），不进 JSON。</summary>
+        [JsonIgnore]
+        public List<KeyValuePair<Stat, int[]>> ResolvedStatBonus { get; set; }
 
         // ---- 溅射类参数（AreaOnHit）：技能对主目标造成伤害后，周围半径内的其他目标再吃一份 ----
         /// <summary>溅射半径（格，1 = 3x3 区域；只算与主目标同图、可攻击的对象）。</summary>

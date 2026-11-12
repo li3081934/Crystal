@@ -153,6 +153,7 @@ namespace Client.MirObjects
             RefreshSkills();
             RefreshBuffs();
             RefreshGuildBuffs();
+            RefreshRuneStats();
 
             SetLibraries();
             SetEffects();
@@ -176,6 +177,31 @@ namespace Client.MirObjects
             PercentHealth = (byte)(HP / (float)Stats[Stat.HP] * 100);
 
             GameScene.Scene.Redraw();
+        }
+
+        /// <summary>符文被动属性（例如背包负重/腕力）：只用于本地显示，服务端才是权威。</summary>
+        private void RefreshRuneStats()
+        {
+            if (Magics == null) return;
+
+            foreach (var magic in Magics)
+            {
+                if (magic == null) continue;
+
+                var rune = RuneSystem.RuneLibrary.GetSelected(magic.Spell);
+                if (rune?.StatBonus == null) continue;
+
+                int index = magic.Level;
+
+                foreach (var pair in rune.StatBonus)
+                {
+                    int[] values = pair.Value;
+                    if (values == null || values.Length == 0) continue;
+                    if (!Enum.TryParse(pair.Key, true, out Stat stat) || !Enum.IsDefined(typeof(Stat), stat)) continue;
+
+                    Stats[stat] += values[Math.Min(index, values.Length - 1)];
+                }
+            }
         }
 
         private void RefreshLevelStats()

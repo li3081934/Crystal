@@ -615,6 +615,8 @@ public enum ClientTextKeys
     FastMoveSkillDescription,
     StormEscapeSkillDescription,
     BlinkSkillDescription,
+    ArcaneRecoverySkillDescription,
+    ArcaneShiftSkillDescription,
     SpiritSwordSkillDescription,
     HealingSkillDescription,
     PoisoningSkillDescription,
@@ -1140,6 +1142,8 @@ public enum ServerTextKeys
     InventoryIncreased,
     FaceToTrade,
     NoTownTeleport,
+    TownPortalAlreadyOpen,
+    TownPortalNoSpace,
     CanNotRandom,
     CanNotDungeon,
     CannotResurrection,
@@ -1936,6 +1940,8 @@ public static class GameLanguage
             { nameof(ServerTextKeys.InventoryIncreased), "Inventory size increased." },
             { nameof(ServerTextKeys.FaceToTrade), "You must face someone to trade." },
             { nameof(ServerTextKeys.NoTownTeleport), "You cannot use Town Teleports here" },
+            { nameof(ServerTextKeys.TownPortalAlreadyOpen), "You already have a town portal open." },
+            { nameof(ServerTextKeys.TownPortalNoSpace), "There is no room to open a town portal here." },
             { nameof(ServerTextKeys.CanNotRandom), "You cannot use Random Teleports here" },
             { nameof(ServerTextKeys.CanNotDungeon), "You cannot use Dungeon Escapes here" },
             { nameof(ServerTextKeys.CannotResurrection), "You cannot use Resurrection Scrolls whilst alive" },
@@ -3441,6 +3447,8 @@ public static class GameLanguage
                 "Storm Escape\n\nChannelling Casting\nMana Cost {2}\n\nParalyze nearby enemies and teleport to the designated location.\n\nCurrent Skill Level {0}\nNext Level {1}"
             },
             { nameof(ClientTextKeys.BlinkSkillDescription), "Blink\n\nInstant Casting\nMana Cost {2}\n\nTeleport to a random spot near you.\n\nCurrent Skill Level {0}\nNext Level {1}" },
+            { nameof(ClientTextKeys.ArcaneRecoverySkillDescription), "Arcane Recovery\n\nPassive Skill\n\nPeriodically restores a percentage of your maximum MP.\n\nCurrent Skill Level {0}\nNext Level {1}" },
+            { nameof(ClientTextKeys.ArcaneShiftSkillDescription), "Arcane Shift\n\nInstant Casting\nMana Cost {2}\n\nTeleport to the mouse position (max {3} tiles).\nCooldown {4} seconds.\n\nCurrent Skill Level {0}\nNext Level {1}" },
             {
                 nameof(ClientTextKeys.SpiritSwordSkillDescription),
                 "Spirit Sword\n\nIncreases the chance of hitting the target in\n melee combat.\nPassive Skill\n\nCurrent Skill Level {0}\nNext Level {1}"

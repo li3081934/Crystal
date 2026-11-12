@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
 /// <summary>
 /// 符文定义（下发客户端用于渲染符文面板）。服务器端 RuneInfo 是它的超集，
@@ -17,6 +19,10 @@ public class ClientRuneInfo
     public float EffectScale = 1F;
     /// <summary>技能特效着色（ARGB，0 = 不染色）。例如「雷电·烈焰」把雷电画成火红色。</summary>
     public int TintArgb;
+    /// <summary>
+    /// 被动属性加成（Stat 名 → 各技能等级的值）。客户端只用来同步显示（背包负重条等），服务端才是权威。
+    /// </summary>
+    public Dictionary<string, int[]> StatBonus;
 
     public ClientRuneInfo() { }
 
@@ -31,6 +37,20 @@ public class ClientRuneInfo
         Description = reader.ReadString();
         EffectScale = reader.ReadSingle();
         TintArgb = reader.ReadInt32();
+
+        int statCount = reader.ReadByte();
+        if (statCount > 0)
+        {
+            StatBonus = new Dictionary<string, int[]>(statCount);
+            for (int i = 0; i < statCount; i++)
+            {
+                string key = reader.ReadString();
+                int valueCount = reader.ReadByte();
+                int[] values = new int[valueCount];
+                for (int j = 0; j < valueCount; j++) values[j] = reader.ReadInt32();
+                StatBonus[key] = values;
+            }
+        }
     }
 
     public void Save(BinaryWriter writer)
@@ -44,6 +64,22 @@ public class ClientRuneInfo
         writer.Write(Description ?? string.Empty);
         writer.Write(EffectScale <= 0F ? 1F : EffectScale);
         writer.Write(TintArgb);
+
+        if (StatBonus == null || StatBonus.Count == 0)
+        {
+            writer.Write((byte)0);
+        }
+        else
+        {
+            writer.Write((byte)Math.Min(255, StatBonus.Count));
+            foreach (var pair in StatBonus)
+            {
+                writer.Write(pair.Key ?? string.Empty);
+                int[] values = pair.Value ?? new int[0];
+                writer.Write((byte)Math.Min(255, values.Length));
+                foreach (int value in values) writer.Write(value);
+            }
+        }
     }
 }
 

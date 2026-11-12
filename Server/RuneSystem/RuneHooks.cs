@@ -93,6 +93,66 @@ namespace Server.RuneSystem
         /// 诱惑之光驯服成功时改写宠物等级：技能等级 + PetLevelBonus。
         /// 原版驯服出来的宠物是 0 级（MaxPetLevel = 1 + 技能等级 * 2），这里把两者一起抬上去。
         /// </summary>
+        /// <summary>
+        /// 被动属性类符文（StatBonus）：选中就生效，直接加在当前角色的 Stats 上。
+        /// 只在 RefreshStats() 里调用（那里 Stats 刚从零重建），所以天然幂等。
+        /// </summary>
+        /// <summary>
+        /// 击杀回蓝（ManaOnKill）：怪物死亡、经验结算给击杀者时调用。
+        /// 回复量 = 怪物最大 HP × 符文配置的百分比（按技能等级取值）。
+        /// </summary>
+        public static void ApplyManaOnKill(MapObject killer, MonsterObject monster)
+        {
+            if (killer == null || monster == null || !RuneRepository.Any) return;
+            if (killer is not HumanObject owner) return;
+            if (owner.Info?.Magics == null || owner.Info.Magics.Count == 0) return;
+
+            int maxHp = monster.Stats[Stat.HP];
+            if (maxHp <= 0) return;
+
+            foreach (var magic in owner.Info.Magics)
+            {
+                if (magic == null) continue;
+
+                var rune = GetActiveRune(owner, magic.Spell, RuneEffect.ManaOnKill);
+                if (rune?.ManaPct == null || rune.ManaPct.Length == 0) continue;
+
+                int pct = rune.ManaPct[Math.Min(magic.Level, rune.ManaPct.Length - 1)];
+                if (pct <= 0) continue;
+
+                long amount = (long)maxHp * pct / 100;
+                if (amount <= 0) continue;
+
+                owner.ChangeMP((int)Math.Min(int.MaxValue, amount));
+                return;   // 只吃一次
+            }
+        }
+
+        public static void ApplyPassiveStats(HumanObject owner)
+        {
+            if (owner == null || owner.Info == null || !RuneRepository.Any) return;
+            if (owner.Info.Magics == null) return;
+
+            foreach (var magic in owner.Info.Magics)
+            {
+                if (magic == null) continue;
+
+                var rune = GetActiveRune(owner, magic.Spell, RuneEffect.StatBonus);
+                if (rune?.ResolvedStatBonus == null) continue;
+
+                // 下标直接取技能等级（0~3）；数组比技能等级短时退回最后一档
+                int index = magic.Level;
+
+                foreach (var pair in rune.ResolvedStatBonus)
+                {
+                    int[] values = pair.Value;
+                    if (values == null || values.Length == 0) continue;
+
+                    owner.Stats[pair.Key] += values[Math.Min(index, values.Length - 1)];
+                }
+            }
+        }
+
         public static void ApplyTameLevel(HumanObject owner, MonsterObject pet, UserMagic magic)
         {
             if (owner == null || pet == null || magic == null || !RuneRepository.Any) return;

@@ -11434,6 +11434,19 @@ namespace Client.MirScenes
                 case MouseButtons.Right:
                     {
                         AutoRun = false;
+
+                        if (MapObject.MouseObject is SpellObject spell && spell.Spell == Spell.Portal)
+                        {
+                            var path = GameScene.Scene.MapControl.PathFinder.FindPath(MapObject.User.CurrentLocation, spell.CurrentLocation, 20);
+
+                            if (path != null && path.Count > 0)
+                            {
+                                GameScene.Scene.MapControl.CurrentPath = path;
+                                GameScene.Scene.MapControl.AutoPath = true;
+                            }
+                            return;
+                        }
+
                         if (MapObject.MouseObject == null)
                         {
                             if (Settings.NewMove && MapLocation != MapObject.User.CurrentLocation && GameScene.Scene.MapControl.EmptyCell(MapLocation))
@@ -11928,6 +11941,12 @@ namespace Client.MirScenes
 
         public void UseMagic(ClientMagic magic, UserObject actor)
         {
+            if (magic.Spell == Spell.ArcaneRecovery)
+            {
+                actor.ClearMagic();
+                return;
+            }
+
             if (CMain.Time < GameScene.SpellTime || actor.Poison.HasFlag(PoisonType.Stun))
             {
                 actor.ClearMagic();
@@ -11949,7 +11968,7 @@ namespace Client.MirScenes
 
             int cost = magic.Level * magic.LevelCost + magic.BaseCost;
 
-            if (magic.Spell == Spell.Teleport || magic.Spell == Spell.Blink || magic.Spell == Spell.StormEscape)
+            if (magic.Spell == Spell.Teleport || magic.Spell == Spell.Blink || magic.Spell == Spell.StormEscape || magic.Spell == Spell.ArcaneShift)
             {
                 if (actor.Stats[Stat.TeleportManaPenaltyPercent] > 0)
                 {

@@ -592,6 +592,8 @@
     "FastMoveSkillDescription": "Fast Move\n\nChannelling Casting\nMana Cost {2}\n\nIncrease movement with rooted skills.\n\nCurrent Skill Level {0}\nNext Level {1}",
     "StormEscapeSkillDescription": "Storm Escape\n\nChannelling Casting\nMana Cost {2}\n\nParalyze nearby enemies and teleport to the designated location.\n\nCurrent Skill Level {0}\nNext Level {1}",
     "BlinkSkillDescription": "Blink\n\nInstant Casting\nMana Cost {2}\n\nTeleport to a random spot near you.\n\nCurrent Skill Level {0}\nNext Level {1}",
+    "ArcaneRecoverySkillDescription": "Arcane Recovery\n\nPassive Skill\n\nPeriodically restores a percentage of your maximum MP.\n\nCurrent Skill Level {0}\nNext Level {1}",
+    "ArcaneShiftSkillDescription": "Arcane Shift\n\nInstant Casting\nMana Cost {2}\n\nTeleport to the mouse position (max {3} tiles).\nCooldown {4} seconds.\n\nCurrent Skill Level {0}\nNext Level {1}",
     "SpiritSwordSkillDescription": "Spirit Sword\n\nIncreases the chance of hitting the target in\n melee combat.\nPassive Skill\n\nCurrent Skill Level {0}\nNext Level {1}",
     "HealingSkillDescription": "Healing\n\nInstant Casting\nMana Cost {2}\n\nHeals a single target \nrecovering HP over time.\n\nCurrent Skill Level {0}\nNext Level {1}",
     "PoisoningSkillDescription": "Poisoning\n\nInstant Casting\nMana Cost {2}\n\nRequired Items: Poison Powder\n\nThrow poison at mobs to weaken them.\nUse green poison to weaken Hp.\nUse red poison to weaken defense.\n\nCurrent Skill Level {0}\nNext Level {1}",

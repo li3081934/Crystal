@@ -287,6 +287,7 @@ namespace Server.MirNetwork
         {
             if (p == null || Disconnecting) return;
 
+
             switch (p.Index)
             {
                 case (short)ClientPacketIds.ClientVersion:
@@ -1575,7 +1576,11 @@ namespace Server.MirNetwork
             if (Player.HeroSpawned && p.ObjectID == Player.Hero.ObjectID)
                 actor = Player.Hero;
 
-            if (actor.Dead) return;
+            if (actor.Dead)
+            {
+                return;
+            }
+
 
             if (!actor.Dead && (actor.ActionTime > Envir.Time || actor.SpellTime > Envir.Time))
                 _retryList.Enqueue(p);

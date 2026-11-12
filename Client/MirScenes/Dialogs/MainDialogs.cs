@@ -3597,6 +3597,12 @@ namespace Client.MirScenes.Dialogs
                 case Spell.Blink:
                     SkillButton.Hint = GameLanguage.ClientTextMap.GetLocalization((ClientTextKeys.BlinkSkillDescription), Magic.Level, Magic.Level == 0 ? Magic.Level1 : Magic.Level == 1 ? Magic.Level2 : Magic.Level == 2 ? Magic.Level3 : 0, Magic.BaseCost);
                     break;
+                case Spell.ArcaneRecovery:
+                    SkillButton.Hint = GameLanguage.ClientTextMap.GetLocalization((ClientTextKeys.ArcaneRecoverySkillDescription), Magic.Level, Magic.Level == 0 ? Magic.Level1 : Magic.Level == 1 ? Magic.Level2 : Magic.Level == 2 ? Magic.Level3 : 0);
+                    break;
+                case Spell.ArcaneShift:
+                    SkillButton.Hint = GameLanguage.ClientTextMap.GetLocalization((ClientTextKeys.ArcaneShiftSkillDescription), Magic.Level, Magic.Level == 0 ? Magic.Level1 : Magic.Level == 1 ? Magic.Level2 : Magic.Level == 2 ? Magic.Level3 : 0, Magic.BaseCost, Magic.Level <= 0 ? 2 : Magic.Level == 1 ? 3 : Magic.Level == 2 ? 4 : 5, Magic.Level <= 0 ? 5 : Magic.Level == 1 ? 4 : Magic.Level == 2 ? 2 : 0);
+                    break;
 
                 //Taoist
                 case Spell.SpiritSword:

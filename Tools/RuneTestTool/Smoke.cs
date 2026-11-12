@@ -14,7 +14,7 @@ namespace RuneTestTool
     /// </summary>
     internal static class Smoke
     {
-        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false, bool greenDot = false, bool splash = false, bool doubleCast = false, bool tame = false, string tameMonster = "Hen", string doubleMonster = "Scorpion", bool boltBleed = false)
+        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false, bool greenDot = false, bool splash = false, bool doubleCast = false, bool tame = false, string tameMonster = "Hen", string doubleMonster = "Scorpion", bool boltBleed = false, bool statBonus = false, bool manaKill = false, string manaMonster = "SnakeScorpion", int manaMonsterHp = 330, int[] manaPct = null)
         {
             Packet.IsServer = false; // 我们是客户端：收到的包按 ServerPackets 解析
 
@@ -124,10 +124,12 @@ namespace RuneTestTool
             if (doubleCast) return RunDoubleCast(stream, buffer, myLocation, spell, runeId, doubleMonster);
             if (tame) return RunTame(stream, buffer, myLocation, spell, runeId, tameMonster);
             if (boltBleed) return RunSpellBleed(stream, buffer, myLocation, spell, runeId);
+            if (statBonus) return RunStatBonus(stream, buffer, spell, runeId);
+            if (manaKill) return RunManaOnKill(stream, buffer, myLocation, spell, runeId, manaMonster, manaMonsterHp, manaPct);
 
             if (lifesteal) return RunLifesteal(stream, buffer, myLocation);
 
-            Console.WriteLine("未指定测试模式（可用 --pet / --extrapet / --stun / --dual / --crit / --repeat / --maxatk / --onlyspell / --green / --splash / --double / --tame / --boltbleed）");
+            Console.WriteLine("未指定测试模式（可用 --pet / --extrapet / --stun / --dual / --crit / --repeat / --maxatk / --onlyspell / --green / --splash / --double / --tame / --boltbleed / --statbonus）");
             return 0;
         }
 
@@ -1888,7 +1890,351 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             return 1;
         }
 
-        private static List<Packet> Drain(NetworkStream stream, List<byte> buffer, int durationMs)
+        /// <summary>
+        /// 被动属性类符文（奥术·巨力）：选中符文后，背包负重/穿戴重量/腕力按技能等级提升。
+        /// 通过 GM 命令 @STATINFO 读服务端实际生效的属性值来验证。
+        /// </summary>
+        private static int RunStatBonus(NetworkStream stream, List<byte> buffer, Spell spell, ushort runeId)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"--- 被动属性验证（{spell} → 符文 #{runeId}）---");
+
+            Send(stream, new C.Chat { Message = "@REVIVE" });
+            Drain(stream, buffer, 700);
+            Send(stream, new C.Chat { Message = "@SUPERMAN" });
+            Drain(stream, buffer, 300);
+
+            Send(stream, new C.Chat { Message = $"@GIVESKILL {spell} 0" });
+            Drain(stream, buffer, 800);
+
+            Send(stream, new C.SetRune { Spell = spell, RuneId = 0 });
+            Drain(stream, buffer, 1000);
+            var baseStats = ReadStatInfo(stream, buffer);
+            if (baseStats == null)
+            {
+                Console.WriteLine("× 没读到 @STATINFO 回显（账号不是 GM？）");
+                return 1;
+            }
+            Console.WriteLine($"  无符文       : bag={baseStats[0]} wear={baseStats[1]} hand={baseStats[2]}");
+
+            var level3 = ApplyRuneAndRead(stream, buffer, spell, runeId, 3);
+            var level2 = ApplyRuneAndRead(stream, buffer, spell, runeId, 2);
+            var level1 = ApplyRuneAndRead(stream, buffer, spell, runeId, 1);
+            var level0 = ApplyRuneAndRead(stream, buffer, spell, runeId, 0);
+
+            if (level3 == null || level2 == null || level1 == null || level0 == null)
+            {
+                Console.WriteLine("× 带符文时没读到 @STATINFO");
+                return 1;
+            }
+
+            Console.WriteLine($"  技能等级 3   : bag={level3[0]} wear={level3[1]} hand={level3[2]}");
+            Console.WriteLine($"  技能等级 2   : bag={level2[0]} wear={level2[1]} hand={level2[2]}");
+            Console.WriteLine($"  技能等级 1   : bag={level1[0]} wear={level1[1]} hand={level1[2]}");
+            Console.WriteLine($"  技能等级 0   : bag={level0[0]} wear={level0[1]} hand={level0[2]}");
+
+            Send(stream, new C.SetRune { Spell = spell, RuneId = 0 });
+            Drain(stream, buffer, 1000);
+            var cleared = ReadStatInfo(stream, buffer);
+            if (cleared == null)
+            {
+                Console.WriteLine("× 取消符文后没读到 @STATINFO");
+                return 1;
+            }
+            Console.WriteLine($"  取消符文     : bag={cleared[0]} wear={cleared[1]} hand={cleared[2]}");
+
+            bool ok = true;
+
+            // 等级 3 / 2 / 1 / 0：+50/+5/+5、+30/+3/+3、+20/+2/+2、+10/+1/+1
+            ok &= Expect(level3, baseStats, 50, 5, 5, "技能等级 3");
+            ok &= Expect(level2, baseStats, 30, 3, 3, "技能等级 2");
+            ok &= Expect(level1, baseStats, 20, 2, 2, "技能等级 1");
+            ok &= Expect(level0, baseStats, 10, 1, 1, "技能等级 0");
+            // 取消符文：回到原值
+            if (cleared[0] != baseStats[0] || cleared[1] != baseStats[1] || cleared[2] != baseStats[2])
+            {
+                Console.WriteLine($"  × 取消符文后没有回落（期望 {baseStats[0]}/{baseStats[1]}/{baseStats[2]}）");
+                ok = false;
+            }
+
+            if (!ok)
+            {
+                Console.WriteLine("× 被动属性验证失败");
+                return 1;
+            }
+
+            Console.WriteLine("✓ 被动属性验证通过：背包负重/穿戴重量/腕力按技能等级生效，取消后回落");
+            return 0;
+        }
+
+        private static bool Expect(int[] actual, int[] baseStats, int bag, int wear, int hand, string tag)
+        {
+            if (actual[0] - baseStats[0] == bag && actual[1] - baseStats[1] == wear && actual[2] - baseStats[2] == hand)
+                return true;
+
+            Console.WriteLine($"  × {tag} 期望 +{bag}/+{wear}/+{hand}，实际 +{actual[0] - baseStats[0]}/+{actual[1] - baseStats[1]}/+{actual[2] - baseStats[2]}");
+            return false;
+        }
+
+        private static int[] ApplyRuneAndRead(NetworkStream stream, List<byte> buffer, Spell spell, ushort runeId, byte level)
+        {
+            Send(stream, new C.Chat { Message = $"@GIVESKILL {spell} {level}" });
+            Drain(stream, buffer, 800);
+
+            Send(stream, new C.SetRune { Spell = spell, RuneId = runeId });
+            Drain(stream, buffer, 900);
+
+            return ReadStatInfo(stream, buffer);
+        }
+
+        private static int[] ReadStatInfo(NetworkStream stream, List<byte> buffer)
+        {
+            Send(stream, new C.Chat { Message = "@STATINFO" });
+
+            foreach (var packet in Drain(stream, buffer, 1200))
+            {
+                if (!(packet is S.Chat chat) || string.IsNullOrEmpty(chat.Message)) continue;
+                if (!chat.Message.StartsWith("STATINFO")) continue;
+
+                //[0]=bag [1]=wear [2]=hand [3]=mp [4]=mpMax
+                var result = new int[5];
+
+                foreach (var part in chat.Message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    int equal = part.IndexOf('=');
+                    if (equal <= 0) continue;
+
+                    string key = part.Substring(0, equal);
+                    string raw = part.Substring(equal + 1);
+
+                    if (key == "mp")
+                    {
+                        var pair = raw.Split('/');
+                        int.TryParse(pair[0], out int cur);
+                        int Max = pair.Length > 1 && int.TryParse(pair[1], out int m2) ? m2 : 0;
+                        result[3] = cur;
+                        result[4] = Max;
+                        continue;
+                    }
+
+                    int.TryParse(raw, out int value);
+
+                    if (key == "bag") result[0] = value;
+                    else if (key == "wear") result[1] = value;
+                    else if (key == "hand") result[2] = value;
+                }
+
+                return result;
+            }
+
+            return null;
+        }
+
+        /// <summary>击杀回蓝（ManaOnKill）：验证「按怪物最大 HP 百分比回蓝」并按技能等级分档。</summary>
+        private static int RunManaOnKill(NetworkStream stream, List<byte> buffer, Point myLocation, Spell runeSpell, ushort runeId, string monsterName, int monsterHp, int[] pct)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"--- 击杀回蓝验证（{runeSpell} → 符文 #{runeId}，击杀 {monsterName} 最大HP {monsterHp}）---");
+
+            //注意：这里不能开 @SUPERMAN —— GMNeverDie 会让 ChangeMP 每次都把 MP 拉回满值，回蓝就观察不到了
+            Send(stream, new C.Chat { Message = "@REVIVE" });
+            Drain(stream, buffer, 700);
+            Send(stream, new C.Chat { Message = "@GIVESKILL ThunderBolt 3" });
+            Drain(stream, buffer, 800);
+
+            bool allOk = true;
+            int[] levels = { 3, 0 };
+
+            foreach (int level in levels)
+            {
+                Send(stream, new C.Chat { Message = $"@GIVESKILL {runeSpell} {level}" });
+                Drain(stream, buffer, 700);
+
+                int expectPct = pct == null || pct.Length == 0 ? 0 : pct[Math.Min(level, pct.Length - 1)];
+                int expect = monsterHp * expectPct / 100;
+
+                //A：无符文，用同样的击杀动作测一次净变化（法术本身扣蓝）
+                Send(stream, new C.SetRune { Spell = runeSpell, RuneId = 0 });
+                Drain(stream, buffer, 900);
+                if (!KillOnce(stream, buffer, myLocation, monsterName, monsterHp, expect + 40, out int plainDelta, out string plainNote))
+                {
+                    Console.WriteLine($"× 技能等级 {level}：无符文时没打死 {monsterName}");
+                    return 1;
+                }
+
+                //B：带符文
+                Send(stream, new C.SetRune { Spell = runeSpell, RuneId = runeId });
+                Drain(stream, buffer, 900);
+                if (!KillOnce(stream, buffer, myLocation, monsterName, monsterHp, expect + 40, out int runeDelta, out string runeNote))
+                {
+                    Console.WriteLine($"× 技能等级 {level}：带符文时没打死 {monsterName}");
+                    return 1;
+                }
+
+                int gain = runeDelta - plainDelta;
+                int tolerance = Math.Max(3, expect / 5);
+                bool ok = Math.Abs(gain - expect) <= tolerance;
+
+                Console.WriteLine($"  技能等级 {level}：无符文 ΔMP {plainDelta}（{plainNote}）");
+                Console.WriteLine($"                带符文 ΔMP {runeDelta}（{runeNote}）");
+                Console.WriteLine($"                → 击杀回蓝 ≈ {gain}（期望 {expectPct}% × {monsterHp} = {expect}）{(ok ? "✓" : "×")}");
+
+                if (!ok) allOk = false;
+            }
+
+            Send(stream, new C.SetRune { Spell = runeSpell, RuneId = 0 });
+            Drain(stream, buffer, 600);
+
+            Console.WriteLine(allOk ? "✓ 击杀回蓝验证通过" : "× 击杀回蓝验证失败");
+            return allOk ? 0 : 1;
+        }
+
+        /// <summary>打一只怪直到它死，返回「击杀那一击」前后的 MP 变化（法术耗蓝与击杀回蓝合并）。</summary>
+        private static bool KillOnce(NetworkStream stream, List<byte> buffer, Point myLocation, string monsterName, int monsterHp, int needHeadroom, out int deltaMp, out string note)
+        {
+            deltaMp = 0;
+            note = string.Empty;
+
+            if (needHeadroom > 0) BurnMana(stream, buffer, myLocation, needHeadroom);
+
+            Send(stream, new C.Chat { Message = "@CLEARMOB" });
+            Drain(stream, buffer, 900);
+            Send(stream, new C.Chat { Message = $"@MOB {monsterName} 1" });
+            var spawn = Drain(stream, buffer, 1200);
+
+            uint id = 0;
+            Point loc = myLocation;
+
+            //刷怪窗口里可能还混着上一只怪（比如 BurnMana 的木桩）的 ObjectMonster，按名字挑
+            foreach (var packet in spawn)
+            {
+                if (packet is not S.ObjectMonster mob) continue;
+                if (!string.IsNullOrEmpty(mob.Name) && !mob.Name.StartsWith(monsterName, StringComparison.OrdinalIgnoreCase)) continue;
+
+                //同一只怪可能在窗口里出现多次，取 ObjectID 最大的那只（服务端自增，最新的就是刚刷的）
+                if (mob.ObjectID < id) continue;
+
+                id = mob.ObjectID;
+                loc = mob.Location;
+            }
+
+            if (id == 0)
+            {
+                foreach (var packet in spawn)
+                {
+                    if (packet is not S.ObjectMonster mob) continue;
+
+                    id = mob.ObjectID;
+                    loc = mob.Location;
+                }
+            }
+
+            if (id == 0)
+            {
+                Console.WriteLine($"  [dbg] 没刷出 {monsterName}");
+                return false;
+            }
+
+            int totalDamage = 0;
+
+            for (int i = 0; i < 14; i++)
+            {
+                var pre = Drain(stream, buffer, 150);
+                int beforeMp = -1, beforeMax = 0;
+
+                foreach (var packet in pre)
+                    if (packet is S.HealthChanged hb) { beforeMp = hb.MP; beforeMax = Math.Max(beforeMax, hb.MP); }
+
+                if (beforeMp < 0)
+                {
+                    var st0 = ReadStatInfo(stream, buffer);
+                    if (st0 == null) return false;
+                    beforeMp = st0[3];
+                    beforeMax = st0[4];
+                }
+
+                Send(stream, new C.Magic
+                {
+                    Spell = Spell.ThunderBolt,
+                    Direction = Functions.DirectionFromPoint(myLocation, loc),
+                    TargetID = id,
+                    Location = Point.Empty   //传 (0,0)：服务端会跳过 location 范围校验（角色可能被 REVIVE 挪过位置）
+                });
+
+                var packets = Drain(stream, buffer, 1600);
+                bool died = false;
+                int afterMp = -1, afterMax = 0;
+                int dmg = 0;
+
+                foreach (var packet in packets)
+                {
+                    if (packet is S.ObjectMonster moved && moved.ObjectID == id) loc = moved.Location;
+
+                    if (packet is S.DamageIndicator ind && ind.ObjectID == id && ind.Damage < 0) dmg += -ind.Damage;
+
+                    if (packet is S.HealthChanged hc) { afterMp = hc.MP; afterMax = hc.MP; }
+
+                    if (packet is S.ObjectDied dead && dead.ObjectID == id) died = true;
+                }
+
+                totalDamage += dmg;
+
+                if (!died)
+                {
+                    //有些怪死亡包会被前面等待的包吞掉，用累计伤害兜底判断
+                    if (monsterHp > 0 && totalDamage >= monsterHp) died = true;
+                }
+
+                if (!died)
+                {
+                    Console.WriteLine($"  [dbg] 第 {i + 1} 击：mp {beforeMp}（上限 {beforeMax}），对 {id} 造成 {dmg} 伤害（累计 {totalDamage}），未死亡");
+                    continue;
+                }
+
+                if (afterMp < 0)
+                {
+                    var after = ReadStatInfo(stream, buffer);
+                    if (after == null) return false;
+                    afterMp = after[3];
+                    afterMax = after[4];
+                }
+
+                deltaMp = afterMp - beforeMp;
+                note = $"mp {beforeMp} → {afterMp}（上限 {(beforeMax > 0 ? beforeMax : afterMax)}，累计伤害 {totalDamage}）";
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// MP 快满时先自己空放「魔法盾」（自身增益、不造成伤害）把蓝耗掉。
+        /// 不要打木桩怪：IcePilar / StoningStatue 这类会反弹伤害，法师血薄会直接被自己打死
+        /// （服务端 HumanObject.Magic 里 actor.Dead 会静默丢弃所有施法包，看起来像"施法没生效"）。
+        /// </summary>
+        private static void BurnMana(NetworkStream stream, List<byte> buffer, Point myLocation, int needHeadroom)
+        {
+            for (int i = 0; i < 20; i++)
+            {
+                var st = ReadStatInfo(stream, buffer);
+                if (st == null) return;
+
+                if (st[4] - st[3] >= needHeadroom) break;
+
+                Send(stream, new C.Magic
+                {
+                    Spell = Spell.MagicShield,
+                    Direction = MirDirection.Up,
+                    TargetID = 0,
+                    Location = Point.Empty,
+                });
+
+                //服务端每次施法会 SpellTime = now + 1800ms，间隔必须大于它，否则包会被丢进 retryList
+                Drain(stream, buffer, 1900);
+            }
+        }
+
+private static List<Packet> Drain(NetworkStream stream, List<byte> buffer, int durationMs)
         {
             var result = new List<Packet>();
             long deadline = Environment.TickCount64 + durationMs;

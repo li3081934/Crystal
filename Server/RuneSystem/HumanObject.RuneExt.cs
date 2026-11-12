@@ -64,6 +64,7 @@ namespace Server.MirObjects
                 Info.Runes.Set(spell, 0);
                 Enqueue(new S.SetRune { ObjectID = ObjectID, Spell = spell, RuneId = 0 });
                 KillSkeletonPets(spell);
+                RefreshStats(); //被动属性类符文（背包负重/腕力）取消后要立刻回落
                 return;
             }
 
@@ -81,6 +82,20 @@ namespace Server.MirObjects
 
             Enqueue(new S.SetRune { ObjectID = ObjectID, Spell = spell, RuneId = runeId });
             KillSkeletonPets(spell);
+            RefreshStats(); //被动属性类符文（背包负重/腕力）选中后要立刻生效
+        }
+
+        /// <summary>把服务端的被动属性表转成下发格式（Stat 名 → 各等级值），客户端只用于显示。</summary>
+        private static Dictionary<string, int[]> ToClientStatBonus(RuneInfo rune)
+        {
+            if (rune?.ResolvedStatBonus == null || rune.ResolvedStatBonus.Count == 0) return null;
+
+            var result = new Dictionary<string, int[]>(rune.ResolvedStatBonus.Count);
+
+            foreach (var pair in rune.ResolvedStatBonus)
+                result[pair.Key.ToString()] = pair.Value;
+
+            return result;
         }
 
         /// <summary>
@@ -187,6 +202,7 @@ namespace Server.MirObjects
                     Description = rune.Description,
                     EffectScale = rune.EffectScale,
                     TintArgb = rune.ResolvedTintArgb,
+                    StatBonus = ToClientStatBonus(rune),
                 });
             }
 

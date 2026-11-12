@@ -226,6 +226,19 @@ namespace Server.MirDatabase
 
         public long GetDelay()
         {
+            if (Info.Spell == Spell.ArcaneShift)
+            {
+                long delay = Level switch
+                {
+                    0 => (long)Info.DelayBase,
+                    1 => (long)Info.DelayReduction,
+                    2 => (long)Info.MultiplierBase,
+                    _ => (long)Info.MultiplierBonus,
+                };
+
+                return RuneHooks.Delay(this, delay);
+            }
+
             return RuneHooks.Delay(this, Info.DelayBase - (Level * Info.DelayReduction));
         }
     }

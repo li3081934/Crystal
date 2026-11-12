@@ -579,6 +579,7 @@ namespace Server.MirObjects
         }
         public override void Die()
         {
+
             if (SpecialMode.HasFlag(SpecialItemMode.Revival) && Envir.Time > LastRevivalTime)
             {
                 LastRevivalTime = Envir.Time + 300000;
@@ -3069,6 +3070,12 @@ namespace Server.MirObjects
 
                         break;
 
+                    case "STATINFO":
+                        if (!IsGM && !Settings.TestServer) return;
+
+                        ReceiveChat($"STATINFO bag={Stats[Stat.BagWeight]} wear={Stats[Stat.WearWeight]} hand={Stats[Stat.HandWeight]} hp={HP}/{Stats[Stat.HP]} mp={MP}/{Stats[Stat.MP]}", ChatType.System);
+                        break;
+
                     case "RELOADDROPS":
                         if (!IsGM) return;
 
@@ -3221,6 +3228,7 @@ namespace Server.MirObjects
                             player.Info.Magics.FirstOrDefault(e => e.Spell == skill).Level = spellLevel;
 
                             Enqueue(new S.MagicLeveled { ObjectID = ObjectID, Spell = magic.Spell, Level = magic.Level, Experience = 0 });
+                            player.RefreshStats(); //被动属性类符文按技能等级取值，改等级要立刻重算
 
                             string skillChangeMsg = GameLanguage.ServerTextMap.GetLocalization((ServerTextKeys.SpellChangedByGM), player.Name, skill.ToString(), spellLevel, Name);
 
@@ -5898,6 +5906,91 @@ namespace Server.MirObjects
             }
             Enqueue(p);
         }
+        private bool UseTownPortalScroll(UserItem item)
+        {
+            const int TownMapIndex = 1;
+            Point townArrival = new Point(328, 264);
+            Map townMap = Envir.GetMap(TownMapIndex);
+
+            if (townMap == null || CurrentMap == townMap || CurrentMap.Info.NoTeleport || CurrentMap.Info.NoTownTeleport || townMap.Info.NoTeleport || townMap.Info.NoTownTeleport)
+            {
+                ReceiveChat(GameLanguage.ServerTextMap.GetLocalization(ServerTextKeys.NoTownTeleport), ChatType.System);
+                return false;
+            }
+
+            if (Envir.Spells.Any(x => x.Spell == Spell.Portal && x.Caster == this))
+            {
+                ReceiveChat(GameLanguage.ServerTextMap.GetLocalization(ServerTextKeys.TownPortalAlreadyOpen), ChatType.System);
+                return false;
+            }
+
+            Point entranceLocation = FindFreeAdjacent(CurrentMap, CurrentLocation);
+            Point townPortalLocation = FindFreeAdjacent(townMap, townArrival);
+
+            if (entranceLocation == Point.Empty || townPortalLocation == Point.Empty || !townMap.ValidPoint(townArrival))
+            {
+                ReceiveChat(GameLanguage.ServerTextMap.GetLocalization(ServerTextKeys.TownPortalNoSpace), ChatType.System);
+                return false;
+            }
+
+            int duration = item.Info.Durability > 0 ? item.Info.Durability : 1800;
+            long expireTime = Envir.Time + duration * 1000L;
+            Point originalLocation = CurrentLocation;
+
+            SpellObject entrance = new SpellObject
+            {
+                Spell = Spell.Portal,
+                Value = 100,
+                ExpireTime = expireTime,
+                TickSpeed = 1000,
+                StartTime = Envir.Time + 500,
+                Caster = this,
+                CurrentMap = CurrentMap,
+                CurrentLocation = entranceLocation,
+                Direction = Direction,
+                ExitLocation = originalLocation,
+                HasExitLocation = true,
+            };
+            CurrentMap.AddObject(entrance);
+            entrance.Spawned();
+
+            SpellObject town = new SpellObject
+            {
+                Spell = Spell.Portal,
+                Value = 100,
+                ExpireTime = expireTime,
+                TickSpeed = 1000,
+                StartTime = Envir.Time + 500,
+                Caster = this,
+                CurrentMap = townMap,
+                CurrentLocation = townPortalLocation,
+                Direction = Direction,
+                ExitLocation = townArrival,
+                HasExitLocation = true,
+            };
+            townMap.AddObject(town);
+            town.Spawned();
+
+            return true;
+        }
+
+        private static Point FindFreeAdjacent(Map map, Point center)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                Point location = Functions.PointMove(center, (MirDirection)i, 1);
+
+                if (!map.ValidPoint(location)) continue;
+
+                Cell cell = map.GetCell(location);
+                if (cell.Objects.Any(x => x.Blocking)) continue;
+
+                return location;
+            }
+
+            return Point.Empty;
+        }
+
         public override void UseItem(ulong id)
         {
             S.UseItem p = new S.UseItem { UniqueID = id, Grid = MirGridType.Inventory, Success = false };
@@ -6173,6 +6266,13 @@ namespace Server.MirObjects
                         case 15: //Increase Hero Inventory
                             ReceiveChat(GameLanguage.ServerTextMap.GetLocalization(ServerTextKeys.MustBeUsedOnHero), ChatType.Hint);
                             Enqueue(p);
+                            break;
+                        case 16: //TownPortalScroll
+                            if (!UseTownPortalScroll(item))
+                            {
+                                Enqueue(p);
+                                return;
+                            }
                             break;
                     }
                     break;

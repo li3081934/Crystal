@@ -1921,6 +1921,63 @@ namespace Server.MirEnvir
                     PowerBase = 10,
                     Range = 9
                 });
+
+            if (!MagicExists(Spell.ArcaneRecovery))
+                MagicInfoList.Add(new MagicInfo
+                {
+                    Name = "ArcaneRecovery",
+                    Spell = Spell.ArcaneRecovery,
+                    Icon = 50,
+                    Level1 = 10,
+                    Level2 = 12,
+                    Level3 = 15,
+                    Need1 = 200,
+                    Need2 = 500,
+                    Need3 = 1000,
+                    BaseCost = 0,
+                    LevelCost = 0,
+                    DelayBase = 0,
+                    Range = 0,
+                    //Arcane Recovery tuning, stored in the database:
+                    //PowerBase = interval in seconds
+                    //PowerBonus = MP % at skill level 0
+                    //MPowerBase = MP % at skill level 1
+                    //MPowerBonus = MP % at skill level 2
+                    //MultiplierBase = MP % at skill level 3
+                    PowerBase = 5,
+                    PowerBonus = 1,
+                    MPowerBase = 2,
+                    MPowerBonus = 3,
+                    MultiplierBase = 5f
+                });
+
+            if (!MagicExists(Spell.ArcaneShift))
+                MagicInfoList.Add(new MagicInfo
+                {
+                    Name = "ArcaneShift",
+                    Spell = Spell.ArcaneShift,
+                    Icon = 51,
+                    Level1 = 10,
+                    Level2 = 12,
+                    Level3 = 15,
+                    Need1 = 200,
+                    Need2 = 500,
+                    Need3 = 1000,
+                    BaseCost = 10,
+                    LevelCost = 2,
+                    Range = 0,
+                    //Arcane Shift tuning, stored in the database:
+                    //PowerBase/PowerBonus/MPowerBase/MPowerBonus = max distance at skill level 0/1/2/3
+                    //DelayBase/DelayReduction/MultiplierBase/MultiplierBonus = cooldown (ms) at skill level 0/1/2/3
+                    DelayBase = 5000,
+                    DelayReduction = 4000,
+                    MultiplierBase = 2000f,
+                    MultiplierBonus = 0f,
+                    PowerBase = 2,
+                    PowerBonus = 3,
+                    MPowerBase = 4,
+                    MPowerBonus = 5
+                });
         }
 
         private string CanStartEnvir()

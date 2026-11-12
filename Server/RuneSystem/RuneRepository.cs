@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -101,6 +102,7 @@ namespace Server.RuneSystem
 
             ResolveTint(rune);
             ResolveDebuff(rune);
+            ResolveStatBonus(rune);
 
             bool needsBuff = rune.HasEffect(RuneEffect.BuffOnSwing)
                              || rune.HasEffect(RuneEffect.BuffOnDealtDamage)
@@ -165,6 +167,29 @@ namespace Server.RuneSystem
         }
 
         /// <summary>解析 DebuffType（PoisonType 名称）。</summary>
+        /// <summary>把 StatBonus 里的字符串键解析成 Stat（写错的名字只报一次，不影响其它属性生效）。</summary>
+        private static void ResolveStatBonus(RuneInfo rune)
+        {
+            if (rune.StatBonus == null || rune.StatBonus.Count == 0) return;
+
+            var resolved = new List<KeyValuePair<Stat, int[]>>(rune.StatBonus.Count);
+
+            foreach (var pair in rune.StatBonus)
+            {
+                if (!Enum.TryParse(pair.Key, true, out Stat stat) || !Enum.IsDefined(typeof(Stat), stat))
+                {
+                    MessageQueue.Instance.Enqueue($"[Rune] 符文 {rune} 的 StatBonus 里有无法识别的属性：{pair.Key}");
+                    continue;
+                }
+
+                if (pair.Value == null || pair.Value.Length == 0) continue;
+
+                resolved.Add(new KeyValuePair<Stat, int[]>(stat, pair.Value));
+            }
+
+            rune.ResolvedStatBonus = resolved;
+        }
+
         private static void ResolveDebuff(RuneInfo rune)
         {
             rune.ResolvedDebuffType = PoisonType.None;
@@ -464,6 +489,33 @@ namespace Server.RuneSystem
                     CastCount = 2,
                     CastDelayMs = 600,
                     BehaviorId = RuneBehaviorRegistry.DoubleCast,
+                },
+                new RuneInfo
+                {
+                    Id = 17,
+                    Spell = Spell.ArcaneRecovery,
+                    Slot = 1,
+                    Name = "奥术·巨力",
+                    Description = "被动：按技能等级提升背包负重上限 +10/20/30/50、穿戴重量 +1/2/3/5、腕力 +1/2/3/5。",
+                    Icon = 50,
+                    Effect = RuneEffect.StatBonus,
+                    StatBonus = new Dictionary<string, int[]>
+                    {
+                        { "BagWeight", new[] { 10, 20, 30, 50 } },
+                        { "WearWeight", new[] { 1, 2, 3, 5 } },
+                        { "HandWeight", new[] { 1, 2, 3, 5 } },
+                    },
+                },
+                new RuneInfo
+                {
+                    Id = 18,
+                    Spell = Spell.ArcaneRecovery,
+                    Slot = 2,
+                    Name = "奥术·噬灵",
+                    Description = "被动：每杀死一只怪物，按其最大生命值的 5%/10%/15%/25%（对应技能等级 0/1/2/3）回复法力。",
+                    Icon = 52,
+                    Effect = RuneEffect.ManaOnKill,
+                    ManaPct = new[] { 5, 10, 15, 25 },
                 },
             };
         }

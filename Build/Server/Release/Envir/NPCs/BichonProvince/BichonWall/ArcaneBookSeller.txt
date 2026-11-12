@@ -1,0 +1,19 @@
+[@Main]
+#SAY
+Welcome. I sell rare spell books.
+<Buy/@BuySell>
+<Close/@exit>
+
+[@BuySell]
+#SAY
+Please select the book you want to buy or sell.
+<Back/@Main>
+
+[Types]
+17
+20
+
+[Trade]
+ArcaneRecovery
+ArcaneShift
+TownPortalScroll

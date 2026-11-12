@@ -370,6 +370,9 @@ FodyWeavers.xsd
 !/Build/Server/Release/Envir
 /Build/Server/Release/Envir/*
 !/Build/Server/Release/Envir/Rune
+# 游戏数据库随代码版本化（账号库 Server.MirADB 不纳入）
+!/Build/Server/Release/Server.MirDB
+# 自定义 NPC 脚本用 git add -f 单独纳入，其余 NPC 脚本仍整体忽略
 /.idea/.idea.Legend of Mir/.idea
 /.idea/config
 
