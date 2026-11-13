@@ -1,0 +1,32 @@
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_fe72b31b67fc94 171-177
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_fe72b31b67fc94 411,417
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_fe72b31b67fc94 156-157
+Server/MirObjects/HumanObject.cs
+  s_220f379c12fa5d::t_fe72b31b67fc94 6173-6175,6178,6181
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_fe72b31b67fc94 313-336
+  s_220f379c12fa5d::t_55b4ce3e74161c 312
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_e1aaccd25aba6a 1678-1679,1691-1692,1702-1705,1711-1716,1720,1733-1734,1760
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_4583f253b49fe4 560-561,1487,1562-1563,1566-1576,1581-1582
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a1f80353f129e5e2c7e881ba64cb7b6d86fa3a41",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
