@@ -1,0 +1,29 @@
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_3c9df05a723a3e 201
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_3c9df05a723a3e 565,1717,1768,1905
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_3c9df05a723a3e 1344
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_3c9df05a723a3e 182,208
+Server/RuneSystem/RuneEffects.cs
+  s_220f379c12fa5d::t_3c9df05a723a3e 47
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_3c9df05a723a3e 444,490
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6fd08f97f169533f7fc5f780599299d448da6cc0",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
