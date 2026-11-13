@@ -1,0 +1,43 @@
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_c5b207e986ffcf 512-522
+  s_220f379c12fa5d::t_107e9826162eab 511
+Server/MirEnvir/Map.cs
+  s_220f379c12fa5d::t_3c68b793dcc62e 4
+  s_220f379c12fa5d::t_c5b207e986ffcf 1111-1112,1136
+  s_220f379c12fa5d::t_7319c8dccaca92 1175
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_c5b207e986ffcf 313-328
+  s_220f379c12fa5d::t_7ef6903299ed80 312
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_a68195bcb8e402 11
+  s_220f379c12fa5d::t_7df49a46cdd3ba 42-43
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_29546414fb65a8 17,123,1650-1661,1663-1664,1666-1668,1670-1671,1673-1675,1678,1680-1686,1691-1692,1694-1696,1701,1705-1708,1711-1713,1719-1720,1722-1723,1729,1734-1736,1738-1739,1742-1743
+  s_220f379c12fa5d::t_3827bb2a08f369 1662,1665,1669,1672,1676-1677,1679,1687-1690,1693,1697-1700,1702-1704,1709-1710,1714-1718,1721,1724-1728,1730-1733,1737,1740-1741
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_93fc2d88a93410 3-12,291
+  s_220f379c12fa5d::t_dda771132d8449 2
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_c5b207e986ffcf 26-28,181-185
+  s_220f379c12fa5d::t_08a9bb114f07ef 186
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_dd74efcd7640ed 576-577,2188-2261
+Tools/RuneTestTool/Program.cs
+  s_220f379c12fa5d::t_29546414fb65a8 61,71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a753424d7d52549fca99bfa124511e1115e8ce53",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
