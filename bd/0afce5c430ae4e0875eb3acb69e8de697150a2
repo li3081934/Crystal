@@ -1,0 +1,27 @@
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_5914d0166d7e8d 2252
+  s_220f379c12fa5d::t_9eb415df2c0473 2113-2116,2121
+  s_220f379c12fa5d::t_c11bba5bb44dff 2118,2139-2140
+  s_220f379c12fa5d::t_9568992cf8c6fb 2059-2077,2086-2105
+  s_220f379c12fa5d::t_bab2b576fffc0a 2117
+  s_220f379c12fa5d::t_65164d0ec24f12 2119
+  s_220f379c12fa5d::t_fb5463e50ff6ff 2209-2212,2219-2223,2241-2242,2244-2245
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_1722dbb48e84ee 572-573,2057-2147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bd0afce5c430ae4e0875eb3acb69e8de697150a2",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
