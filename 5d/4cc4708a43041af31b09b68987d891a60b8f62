@@ -1,0 +1,32 @@
+Shared/ServerPackets.cs
+  s_220f379c12fa5d::t_c9f748535ca651 3490-3491,3508,3533
+Server/RuneSystem/RuneEffects.cs
+  s_220f379c12fa5d::t_c9f748535ca651 102,118
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_ed68dfa60e06ca 1836-1860
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_91380bf1deb352 1376,1386,1399,1408
+  s_220f379c12fa5d::t_063dc6f30c8a4e 1343
+Client/MirScenes/GameScene.cs
+  s_220f379c12fa5d::t_c9f748535ca651 4718-4724
+Client/MirObjects/PlayerObject.cs
+  s_220f379c12fa5d::t_3b3a8ee75413f2 95-163
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_85437e1d46e4a0 69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5d4cc4708a43041af31b09b68987d891a60b8f62",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
