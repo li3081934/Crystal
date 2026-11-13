@@ -476,8 +476,11 @@ namespace Client.MirScenes.Dialogs
         {
             if (Libraries.Prguse == null) return;
 
+            //进图第一帧 User 还没落地时要跳过，否则每帧都会抛 NullReferenceException 刷满 Error.txt
+            if (User == null) return;
+
             int height;
-            if (User != null && User.HP != User.Stats[Stat.HP])
+            if (User.HP != User.Stats[Stat.HP])
                 height = (int)(80 * User.HP / (float)User.Stats[Stat.HP]);
             else
                 height = 80;
