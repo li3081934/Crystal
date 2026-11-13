@@ -179,7 +179,7 @@
     "Effect": "DoubleCast",
     "ProcChance": 100,
     "CastCount": 2,
-    "CastDelayMs": 600,
+    "CastDelayMs": 400,
     "BehaviorId": "DoubleCast"
   },
   {
@@ -205,7 +205,7 @@
     "Effect": "DoubleCast",
     "ProcChance": 100,
     "CastCount": 2,
-    "CastDelayMs": 600,
+    "CastDelayMs": 400,
     "BehaviorId": "DoubleCast"
   },
   {

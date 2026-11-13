@@ -279,6 +279,7 @@ namespace Client.MirObjects
 
                 Stats.Add(realItem.Stats);
                 Stats.Add(temp.AddedStats);
+                AffixStats.Apply(temp, Stats);
 
                 Stats[Stat.MinAC] += temp.Awake.GetAC();
                 Stats[Stat.MaxAC] += temp.Awake.GetAC();
@@ -369,6 +370,7 @@ namespace Client.MirObjects
 
                 Stats.Add(realItem.Stats);
                 Stats.Add(temp.AddedStats);
+                AffixStats.Apply(temp, Stats);
         
                 if (realItem.Light > Light) Light = realItem.Light;
                 if (realItem.Unique != SpecialItemMode.None)

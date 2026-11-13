@@ -1,0 +1,62 @@
+{
+  "Enabled": true,
+  "MaxAffixes": 4,
+  "Bands": [
+    {
+      "MinIlvl": 1,
+      "MaxIlvl": 20,
+      "MinCount": 0,
+      "MaxCount": 1
+    },
+    {
+      "MinIlvl": 21,
+      "MaxIlvl": 40,
+      "MinCount": 0,
+      "MaxCount": 2
+    },
+    {
+      "MinIlvl": 41,
+      "MaxIlvl": 60,
+      "MinCount": 1,
+      "MaxCount": 2
+    },
+    {
+      "MinIlvl": 61,
+      "MaxIlvl": 80,
+      "MinCount": 1,
+      "MaxCount": 3
+    },
+    {
+      "MinIlvl": 81,
+      "MaxIlvl": 255,
+      "MinCount": 2,
+      "MaxCount": 4
+    }
+  ],
+  "TierUpgradeChances": [
+    {
+      "Grade": "None",
+      "Bonus": 0
+    },
+    {
+      "Grade": "Common",
+      "Bonus": 0
+    },
+    {
+      "Grade": "Rare",
+      "Bonus": 20
+    },
+    {
+      "Grade": "Legendary",
+      "Bonus": 40
+    },
+    {
+      "Grade": "Mythical",
+      "Bonus": 60
+    },
+    {
+      "Grade": "Heroic",
+      "Bonus": 60
+    }
+  ]
+}

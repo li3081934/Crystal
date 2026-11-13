@@ -54,7 +54,7 @@ namespace Server.MirEnvir
         public static object LoadLock = new object();
 
         public const int MinVersion = 60;
-        public const int Version = 118;
+        public const int Version = 119;
         public const int CustomVersion = 0;
         public static readonly string DatabasePath = Path.Combine(".", "Server.MirDB");
         public static readonly string AccountPath = Path.Combine(".", "Server.MirADB");
@@ -2966,6 +2966,8 @@ namespace Server.MirEnvir
 
                     RuneBehaviorRegistry.Scan();
                     RuneRepository.Load();
+                    AffixRules.Load();
+                    AffixRepository.Load();
                     if (LoadVersion <= 70)
                         UpdateMagicInfo();
 
@@ -3145,6 +3147,8 @@ namespace Server.MirEnvir
                     }
                 }
             }
+
+            AffixService.ValidateDatabase(AccountList);
         }
 
         public void LoadGuilds()
@@ -4465,7 +4469,20 @@ namespace Server.MirEnvir
         {
             return CreateDropItem(GetItemInfo(index));
         }
+        /// <summary>词条掷骰等级允许高出物品可穿戴等级的最大幅度。</summary>
+        public const int AffixIlvlMargin = 10;
+
         public UserItem CreateDropItem(ItemInfo info)
+        {
+            return CreateDropItem(info, 0);
+        }
+        /// <summary>
+        /// 创建掉落物。<paramref name="affixIlvl"/> 大于 0 时按该等级掷词条，等于 0 时不生成词条。
+        /// 所有“玩家实际获得装备”的入口都应该走这个重载，材质/货币/GM 发放保持 0。
+        /// 实际掷骰等级会被夹到“物品可穿戴等级 + <see cref="AffixIlvlMargin"/>”以内：
+        /// 否则高级怪掉低级物品会产出 lv20 装备带 4 条 T5 词条，直接盖过 60+ 段装备。
+        /// </summary>
+        public UserItem CreateDropItem(ItemInfo info, int affixIlvl)
         {
             if (info == null) return null;
 
@@ -4481,6 +4498,18 @@ namespace Server.MirEnvir
             UpdateItemExpiry(item);
 
             if (!info.NeedIdentify) item.Identified = true;
+
+            if (affixIlvl > 0)
+            {
+                int itemLevel = info.RequiredAmount;
+                if (itemLevel > 0 && affixIlvl > itemLevel + AffixIlvlMargin)
+                {
+                    affixIlvl = itemLevel + AffixIlvlMargin;
+                }
+
+                AffixService.Attach(item, affixIlvl);
+            }
+
             return item;
         }
 

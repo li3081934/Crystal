@@ -1134,6 +1134,7 @@ namespace Server.MirObjects
             Connection.Stage = GameStage.Game;
 
             Enqueue(new S.StartGame { Result = 4, Resolution = Settings.AllowedResolution });
+            Enqueue(new S.AffixInfoList { Affixes = AffixRepository.GetClientInfos() });
             ReceiveChat(GameLanguage.ServerTextMap.GetLocalization((ServerTextKeys.Welcome), GameLanguage.ServerTextMap.GetLocalization(ServerTextKeys.GameName)), ChatType.Hint);
 
             if (Settings.TestServer)
@@ -3290,6 +3291,13 @@ namespace Server.MirObjects
                         ReceiveChat("使用 @RUNE <技能名> <符文Id> 设置符文。", ChatType.Hint);
                         return;
 
+                    case "AFFIX":
+                    case "AFFIXCLEAR":
+                    case "AFFIXROLL":
+                        if (!IsGM) return;
+                        HandleAffixCommand(parts);
+                        return;
+
                     case "FIND":
                         if (!IsGM && !SpecialMode.HasFlag(SpecialItemMode.Probe)) return;
 
@@ -4232,6 +4240,183 @@ namespace Server.MirObjects
                 Broadcast(p);
             }
         }
+        private void HandleAffixCommand(string[] parts)
+        {
+            string command = parts[0].ToUpper();
+            UserItem item;
+
+            if (command == "AFFIX" && parts.Length < 2)
+            {
+                if (!AffixRepository.Any)
+                {
+                    ReceiveChat("没有载入任何词条定义（检查 Envir/Affix/Affixes.json）", ChatType.Hint);
+                    return;
+                }
+
+                List<ClientAffixInfo> all = AffixRepository.GetClientInfos();
+                ReceiveChat($"已载入 {all.Count} 条词条（按 Id 排序，前缀/后缀分开显示）。", ChatType.Hint);
+                foreach (ClientAffixInfo info in all)
+                {
+                    ReceiveChat($"#{info.Id} T{info.Tier} {(info.Suffix ? "后缀" : "前缀")} {info.Name} - {info.Stat.ToLocalizedString()}", ChatType.Hint);
+                }
+                ReceiveChat("用法: @AFFIX <词条Id> [数值]  或  @AFFIX <物品名或Index> <词条Id> [数值]", ChatType.Hint);
+                return;
+            }
+
+            if (command == "AFFIXROLL")
+            {
+                int ilvl = Info.Level;
+                string query = null;
+                if (parts.Length >= 2)
+                {
+                    if (int.TryParse(parts[1], out int parsedIlvl)) ilvl = parsedIlvl;
+                    else query = parts[1];
+                }
+                if (parts.Length >= 3) query = parts[2];
+
+                item = FindAffixItem(query);
+                if (item == null)
+                {
+                    ReceiveChat("找不到目标物品。用法: @AFFIXROLL [ilvl] [物品名或Index]", ChatType.Hint);
+                    return;
+                }
+
+                if (!AffixService.TryRoll(item, ilvl, out string error))
+                {
+                    ReceiveChat(error, ChatType.Hint);
+                    return;
+                }
+
+                RefreshStats();
+                Enqueue(new S.RefreshItem { Item = item });
+                ReceiveChat($"已重掷词条: {item.Info.FriendlyName}，ilvl={ilvl}，共 {item.Affixes.Count} 条。", ChatType.Hint);
+                ReportAffixValidation(item);
+                return;
+            }
+
+            if (command == "AFFIXCLEAR")
+            {
+                string query = parts.Length >= 2 ? parts[1] : null;
+                item = FindAffixItem(query);
+                if (item == null)
+                {
+                    ReceiveChat("找不到目标物品。用法: @AFFIXCLEAR [物品名或Index]", ChatType.Hint);
+                    return;
+                }
+
+                AffixService.Clear(item);
+                RefreshStats();
+                Enqueue(new S.RefreshItem { Item = item });
+                ReceiveChat($"已清除词条: {item.Info.FriendlyName}", ChatType.Hint);
+                return;
+            }
+
+            // 参数解析：第一个参数只有在“确实是一条已定义的词条 Id”时才算词条 Id，
+            // 否则当作物品名/Index，避免 @AFFIX 2001 这种纯数字在两者之间摇摆。
+            ushort affixId;
+            int value = -1;
+
+            if (ushort.TryParse(parts[1], out ushort firstId) && AffixRepository.Get(firstId) != null)
+            {
+                affixId = firstId;
+                item = FindAffixItem(null);
+
+                if (parts.Length >= 3 && !TryParseAffixValue(parts[2], out value))
+                {
+                    ReceiveChat("数值必须是整数，或省略该参数以随机取值。用法: @AFFIX <词条Id> [数值]", ChatType.Hint);
+                    return;
+                }
+            }
+            else
+            {
+                if (parts.Length < 3 || !ushort.TryParse(parts[2], out affixId))
+                {
+                    ReceiveChat("用法: @AFFIX <词条Id> [数值]  或  @AFFIX <物品名或Index> <词条Id> [数值]", ChatType.Hint);
+                    return;
+                }
+
+                if (AffixRepository.Get(affixId) == null)
+                {
+                    ReceiveChat($"词条 #{affixId} 不存在（可用 @AFFIX 列出全部词条）。", ChatType.Hint);
+                    return;
+                }
+
+                item = FindAffixItem(parts[1]);
+
+                if (parts.Length >= 4 && !TryParseAffixValue(parts[3], out value))
+                {
+                    ReceiveChat("数值必须是整数，或省略该参数以随机取值。用法: @AFFIX <物品名或Index> <词条Id> [数值]", ChatType.Hint);
+                    return;
+                }
+            }
+
+            if (item == null)
+            {
+                ReceiveChat("找不到目标物品。请穿上一件可附词条的装备，或用物品名/Index 指定。", ChatType.Hint);
+                return;
+            }
+
+            if (!AffixService.Add(item, affixId, value, out string addError))
+            {
+                ReceiveChat(addError, ChatType.Hint);
+                return;
+            }
+
+            RefreshStats();
+            Enqueue(new S.RefreshItem { Item = item });
+            ReceiveChat($"已添加词条 #{affixId}: {item.Info.FriendlyName}", ChatType.Hint);
+            ReportAffixValidation(item);
+        }
+
+        /// <summary>
+        /// 解析 GM 传入的词条数值；缺省返回 -1（由 AffixService.Add 按定义区间随机）。
+        /// </summary>
+        private static bool TryParseAffixValue(string text, out int value)
+        {
+            value = -1;
+            if (string.IsNullOrEmpty(text)) return true;
+            return int.TryParse(text, out value);
+        }
+
+        /// <summary>
+        /// GM 改完词条后跑一次校验，把“能写进去但已经不合规”的状态当场暴露出来。
+        /// </summary>
+        private void ReportAffixValidation(UserItem item)
+        {
+            if (AffixService.Validate(item, out string error))
+                return;
+
+            ReceiveChat($"[词条校验] {error}", ChatType.Hint);
+        }
+
+        private UserItem FindAffixItem(string query)
+        {
+            for (int i = 0; i < Info.Equipment.Length; i++)
+            {
+                UserItem item = Info.Equipment[i];
+                if (item == null || !AffixService.IsEligible(item.Info.Type)) continue;
+                if (string.IsNullOrWhiteSpace(query) || MatchesAffixItem(item, query)) return item;
+            }
+
+            for (int i = 0; i < Info.Inventory.Length; i++)
+            {
+                UserItem item = Info.Inventory[i];
+                if (item == null || !AffixService.IsEligible(item.Info.Type)) continue;
+                if (string.IsNullOrWhiteSpace(query) || MatchesAffixItem(item, query)) return item;
+            }
+
+            return null;
+        }
+
+        private static bool MatchesAffixItem(UserItem item, string query)
+        {
+            if (item == null || item.Info == null) return false;
+            if (item.Info.Index.ToString() == query) return true;
+            if (!string.IsNullOrEmpty(item.Info.Name) && item.Info.Name.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            if (!string.IsNullOrEmpty(item.Info.FriendlyName) && item.Info.FriendlyName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            return false;
+        }
+
         private string ProcessChatItems(string text, List<PlayerObject> recipients, List<ChatItem> chatItems)
         {
             if (chatItems == null)
@@ -9283,6 +9468,8 @@ namespace Server.MirObjects
                             newItem.WeddingRing = item.WeddingRing;
                             newItem.Identified = item.Identified;
                             newItem.Cursed = item.Cursed;
+                            newItem.Affixes = item.Affixes == null ? new List<AffixInstance>() : new List<AffixInstance>(item.Affixes);
+                            newItem.AffixIlvl = item.AffixIlvl;
 
                             Info.Inventory[i] = newItem;
 
@@ -11387,7 +11574,7 @@ namespace Server.MirObjects
                             {
                                 foreach (var dropitems in reward.Items)
                                 {
-                                    dropItem = Envir.CreateDropItem(drop.Item);
+                                    dropItem = Envir.CreateDropItem(drop.Item, Info.Level);
                                     break;
                                 }
                             }
@@ -12584,7 +12771,7 @@ namespace Server.MirObjects
                 dropItem = CreateDynamicWonderDrug(boxtype, dropItem);
             }
             else
-                dropItem = Envir.CreateDropItem(dropItem.Info);
+                dropItem = Envir.CreateDropItem(dropItem.Info, Info.Level);
 
             if (FreeSpace(Info.Inventory) < 1)
             {
@@ -12606,7 +12793,7 @@ namespace Server.MirObjects
                 if (highRate > rate)
                 {
                     highRate = rate;
-                    dropItem = Envir.CreateDropItem(drop.Item);
+                    dropItem = Envir.CreateDropItem(drop.Item, Info.Level);
                 }
             }
             if (FreeSpace(Info.Inventory) < 1)

@@ -172,7 +172,7 @@ namespace Server.MirEnvir
                 }
                 else
                 {
-                    UserItem item = Envir.CreateDropItem(drop.Item);
+                    UserItem item = Envir.CreateDropItem(drop.Item, Info.Level + 10);
                     if (item == null) continue;
                     if (!DropItem(item)) return;
                 }

@@ -700,6 +700,8 @@ public abstract class Packet
                 return new S.RuneProc();
             case (short)ServerPacketIds.PetSkin:
                 return new S.PetSkin();
+            case (short)ServerPacketIds.AffixInfo:
+                return new S.AffixInfoList();
             case (short)ServerPacketIds.ObjectHealth:
                 return new S.ObjectHealth();
             case (short)ServerPacketIds.ObjectMana:

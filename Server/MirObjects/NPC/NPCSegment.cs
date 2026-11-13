@@ -4597,7 +4597,7 @@ namespace Server.MirObjects
 
                                     foreach (var dropItem in reward.Items)
                                     {
-                                        UserItem item = Envir.CreateDropItem(dropItem);
+                                        UserItem item = Envir.CreateDropItem(dropItem, player == null ? 0 : player.Level);
 
                                         if (item == null) continue;
 

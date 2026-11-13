@@ -441,7 +441,7 @@ namespace Server.RuneSystem
                     Effect = RuneEffect.DoubleCast,
                     ProcChance = 100,
                     CastCount = 2,
-                    CastDelayMs = 600,
+                    CastDelayMs = 400,
                     BehaviorId = RuneBehaviorRegistry.DoubleCast,
                 },
                 new RuneInfo
@@ -487,7 +487,7 @@ namespace Server.RuneSystem
                     Effect = RuneEffect.DoubleCast,
                     ProcChance = 100,
                     CastCount = 2,
-                    CastDelayMs = 600,
+                    CastDelayMs = 400,
                     BehaviorId = RuneBehaviorRegistry.DoubleCast,
                 },
                 new RuneInfo

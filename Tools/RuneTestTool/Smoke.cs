@@ -1332,7 +1332,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             Console.WriteLine("  × 没收到补发的施法包，第二张符没出现");
             return 1;
         }
-        Console.WriteLine($"✓ 双发验证通过：补发 {casts2} 个施法包，第二发伤害确实晚于第一发（>0.9s）");
+        Console.WriteLine($"✓ 双发验证通过：补发 {casts2} 个纯表现施法包，第二发伤害确实晚于第一发");
         return 0;
     }
 
@@ -1340,7 +1340,8 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
     {
         casts = 0;
         gap = 0;
-        int instantCasts = 0;      //补发里带 Instant 标记的个数（纯表现，不该再播施法动作）
+        int instantCasts = 0;
+        const int firstWindowMs = 700;      //补发里带 Instant 标记的个数（纯表现，不该再播施法动作）
         Dictionary<uint, Point> dictionary = new Dictionary<uint, Point>();
         for (int i = 0; i < 4; i++)
         {
@@ -1378,7 +1379,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             int num = 0;
             int num2 = 0;
             int num3 = 0;
-            foreach (Packet item2 in Drain(stream, buffer, 900))
+            foreach (Packet item2 in Drain(stream, buffer, firstWindowMs))
             {
                 if (item2 is S.ObjectMagic { SelfBroadcast: not false })
                 {
@@ -1402,10 +1403,10 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 {
                     num++;
                     num3++;
-                    gap = 900;
+                    gap = firstWindowMs;
                 }
             }
-            Console.WriteLine($"  [{tag}] 补发施法包 {casts} 个（其中纯表现 {instantCasts} 个），伤害 {num} 次（前 0.9s {num2} 次 / 补发窗口 {num3} 次），第二发约 {gap}ms 到账");
+            Console.WriteLine($"  [{tag}] 补发施法包 {casts} 个（其中纯表现 {instantCasts} 个），伤害 {num} 次（前 {firstWindowMs}ms {num2} 次 / 补发窗口 {num3} 次），第二发大约在第一个 {gap}ms 之后到账");
             if (casts == expectCasts && num >= expectHits)
             {
                 return true;

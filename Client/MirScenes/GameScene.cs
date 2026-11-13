@@ -149,6 +149,7 @@ namespace Client.MirScenes
 
 
         public static List<ItemInfo> ItemInfoList = new List<ItemInfo>();
+        public static List<ClientAffixInfo> AffixInfoList = new List<ClientAffixInfo>();
         public static List<UserId> UserIdList = new List<UserId>();
         public static List<UserItem> ChatItemList = new List<UserItem>();
         public static List<ClientQuestInfo> QuestInfoList = new List<ClientQuestInfo>();
@@ -1722,6 +1723,9 @@ namespace Client.MirScenes
                     break;
                 case (short)ServerPacketIds.RuneList:
                     RuneLibrary.OnRuneList((S.RuneList)p);
+                    break;
+                case (short)ServerPacketIds.AffixInfo:
+                    AffixInfoList = ((S.AffixInfoList)p).Affixes ?? new List<ClientAffixInfo>();
                     break;
                 case (short)ServerPacketIds.SetRune:
                     RuneLibrary.OnSetRune((S.SetRune)p);
@@ -6863,6 +6867,25 @@ namespace Client.MirScenes
             }
         }
 
+        public Color AffixTierColor(byte tier)
+        {
+            switch (tier)
+            {
+                case 1:
+                    return Color.DeepSkyBlue;
+                case 2:
+                    return Color.Yellow;
+                case 3:
+                    return Color.DarkOrange;
+                case 4:
+                    return Color.Plum;
+                case 5:
+                    return Color.Red;
+                default:
+                    return Color.White;
+            }
+        }
+
         public void DisposeItemLabel()
         {
             if (ItemLabel != null && !ItemLabel.IsDisposed)
@@ -6916,14 +6939,17 @@ namespace Client.MirScenes
                     GradeString = GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.ItemGradeHeroic);
                     break;
             }
+            byte affixTier = HoverItem.Identified ? AffixStats.HighestTier(HoverItem) : (byte)0;
+            Color nameColor = affixTier > 0 ? AffixTierColor(affixTier) : GradeNameColor(HoverItem.Info.Grade);
+
             MirLabel nameLabel = new MirLabel
             {
                 AutoSize = true,
-                ForeColour = GradeNameColor(HoverItem.Info.Grade),
+                ForeColour = nameColor,
                 Location = new Point(4, 4),
                 OutLine = true,
                 Parent = ItemLabel,
-                Text = HoverItem.Info.Grade != ItemGrade.None ? string.Format("{0}{1}{2}", HoverItem.Info.FriendlyName, "\n", GradeString) : HoverItem.Info.FriendlyName,
+                Text = HoverItem.Info.FriendlyName,
             };
 
             if (HoverItem.RefineAdded > 0)
@@ -6931,6 +6957,24 @@ namespace Client.MirScenes
 
             ItemLabel.Size = new Size(Math.Max(ItemLabel.Size.Width, nameLabel.DisplayRectangle.Right + 4),
                 Math.Max(ItemLabel.Size.Height, nameLabel.DisplayRectangle.Bottom));
+
+            int bottom = nameLabel.DisplayRectangle.Bottom;
+            if (HoverItem.Info.Grade != ItemGrade.None)
+            {
+                MirLabel gradeLabel = new MirLabel
+                {
+                    AutoSize = true,
+                    ForeColour = GradeNameColor(HoverItem.Info.Grade),
+                    Location = new Point(4, bottom),
+                    OutLine = true,
+                    Parent = ItemLabel,
+                    Text = GradeString,
+                };
+
+                ItemLabel.Size = new Size(Math.Max(ItemLabel.Size.Width, gradeLabel.DisplayRectangle.Right + 4),
+                    Math.Max(ItemLabel.Size.Height, gradeLabel.DisplayRectangle.Bottom));
+                bottom = gradeLabel.DisplayRectangle.Bottom;
+            }
 
             string text = "";
 
@@ -7126,7 +7170,7 @@ namespace Client.MirScenes
             {
                 AutoSize = true,
                 ForeColour = Color.White,
-                Location = new Point(4, nameLabel.DisplayRectangle.Bottom),
+                Location = new Point(4, bottom),
                 OutLine = true,
                 Parent = ItemLabel,
                 Text = baseText
@@ -8664,6 +8708,77 @@ namespace Client.MirScenes
             }
             return null;
         }
+
+        public MirControl AffixInfoLabel(UserItem item, bool Inspect = false)
+        {
+            if (item == null || !item.Identified || item.Affixes == null || item.Affixes.Count == 0) return null;
+
+            ItemLabel.Size = new Size(ItemLabel.Size.Width, ItemLabel.Size.Height + 4);
+
+            int count = 0;
+            foreach (AffixInstance affix in item.Affixes)
+            {
+                if (affix == null) continue;
+
+                ClientAffixInfo info = null;
+                for (int i = 0; i < AffixInfoList.Count; i++)
+                {
+                    if (AffixInfoList[i].Id != affix.Id) continue;
+                    info = AffixInfoList[i];
+                    break;
+                }
+
+                string affixName = info == null ? "#" + affix.Id : info.Name;
+                if (info != null && !string.IsNullOrEmpty(info.NameKey))
+                {
+                    string localized;
+                    if (GameLanguage.ClientTextMap.Enum.TryGetValue(info.NameKey, out localized)) affixName = localized;
+                }
+
+                string statName = affix.Stat.ToLocalizedString();
+                string valueText = affix.Value >= 0 ? "+" + affix.Value : affix.Value.ToString();
+                string text = info != null && info.Suffix
+                    ? string.Format("{0} {1} {2}", statName, valueText, affixName)
+                    : string.Format("{0} {1} {2}", affixName, statName, valueText);
+
+                MirLabel affixLabel = new MirLabel
+                {
+                    AutoSize = true,
+                    ForeColour = AffixTierColor(affix.Tier),
+                    Location = new Point(4, ItemLabel.DisplayRectangle.Bottom),
+                    OutLine = true,
+                    Parent = ItemLabel,
+                    Text = text
+                };
+
+                count++;
+                ItemLabel.Size = new Size(Math.Max(ItemLabel.Size.Width, affixLabel.DisplayRectangle.Right + 4),
+                    Math.Max(ItemLabel.Size.Height, affixLabel.DisplayRectangle.Bottom));
+            }
+
+            if (count > 0)
+            {
+                ItemLabel.Size = new Size(ItemLabel.Size.Width, ItemLabel.Size.Height + 4);
+
+                MirControl outLine = new MirControl
+                {
+                    BackColour = Color.FromArgb(255, 50, 50, 50),
+                    Border = true,
+                    BorderColour = Color.Gray,
+                    NotControl = true,
+                    Parent = ItemLabel,
+                    Opacity = 0.4F,
+                    Location = new Point(0, 0)
+                };
+                outLine.Size = ItemLabel.Size;
+
+                return outLine;
+            }
+
+            ItemLabel.Size = new Size(ItemLabel.Size.Width, ItemLabel.Size.Height - 4);
+            return null;
+        }
+
         public MirControl SocketInfoLabel(UserItem item, bool Inspect = false)
         {
             ushort level = Inspect ? InspectDialog.Level : MapObject.User.Level;
@@ -9897,7 +10012,7 @@ namespace Client.MirScenes
             };
 
             //Name Info Label
-            MirControl[] outlines = new MirControl[11];
+            MirControl[] outlines = new MirControl[12];
             outlines[0] = NameInfoLabel(item, inspect, hideDura);
             //Attribute Info1 Label - Attack Info
             outlines[1] = AttackInfoLabel(item, inspect, hideAdded);
@@ -9905,20 +10020,22 @@ namespace Client.MirScenes
             outlines[2] = DefenceInfoLabel(item, inspect, hideAdded);
             //Attribute Info3 Label - Weight Info
             outlines[3] = WeightInfoLabel(item, inspect);
+            //Affix Info Label
+            outlines[4] = AffixInfoLabel(item, inspect);
             //Awake Info Label
-            outlines[4] = AwakeInfoLabel(item, inspect);
+            outlines[5] = AwakeInfoLabel(item, inspect);
             //Socket Info Label
-            outlines[5] = SocketInfoLabel(item, inspect);
+            outlines[6] = SocketInfoLabel(item, inspect);
             //need Info Label
-            outlines[6] = NeedInfoLabel(item, inspect);
+            outlines[7] = NeedInfoLabel(item, inspect);
             //Bind Info Label
-            outlines[7] = BindInfoLabel(item, inspect, hideAdded);
+            outlines[8] = BindInfoLabel(item, inspect, hideAdded);
             //Overlap Info Label
-            outlines[8] = OverlapInfoLabel(item, inspect);
+            outlines[9] = OverlapInfoLabel(item, inspect);
             //Story Label
-            outlines[9] = StoryInfoLabel(item, inspect);
+            outlines[10] = StoryInfoLabel(item, inspect);
             //GM Made
-            outlines[10] = GMMadeLabel(item);
+            outlines[11] = GMMadeLabel(item);
 
             foreach (var outline in outlines)
             {

@@ -88,15 +88,22 @@
                 #endregion
         }
 
-        Caps[Stat.MagicResist] = 2;
-        Caps[Stat.PoisonResist] = 6;
-        Caps[Stat.CriticalRate] = 18;
-        Caps[Stat.CriticalDamage] = 10;
+        // 上限（Caps）在 RefreshStatCaps（HumanObject.cs:2286）里是 Math.Min 硬截断，
+        // 超出部分静默丢弃，所以这里的值必须覆盖“装备 + 宝石 + 词条”的合理总量。
+        // 2026-11-13 调整：原值被单件现有装备直接打满（MirNecklace 魔防 8 > Cap 2、
+        // MirArmour 生命恢复 20 > Cap 8、Orb 暴击 100 > Cap 18），词条落在这些属性上恒为 0 收益。
+        Caps[Stat.MagicResist] = 18;
+        Caps[Stat.PoisonResist] = 12;
+        Caps[Stat.CriticalRate] = 40;
+        Caps[Stat.CriticalDamage] = 25;
         Caps[Stat.Freezing] = 6;
         Caps[Stat.PoisonAttack] = 6;
-        Caps[Stat.HealthRecovery] = 8;
-        Caps[Stat.SpellRecovery] = 8;
-        Caps[Stat.PoisonRecovery] = 6;
+        Caps[Stat.HealthRecovery] = 16;
+        Caps[Stat.SpellRecovery] = 16;
+        Caps[Stat.PoisonRecovery] = 12;
+        // 新增：这两个属性原本完全没有上限（词条可堆到 24% 常驻减伤 / 30%+ 反弹）。
+        Caps[Stat.Reflect] = 20;
+        Caps[Stat.DamageReductionPercent] = 15;
     }
 
     public BaseStats(BinaryReader reader)

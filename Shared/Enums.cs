@@ -1725,6 +1725,9 @@ public enum ServerPacketIds : short
     SetRune,
     RuneProc,
     PetSkin,
+
+    //Affix System
+    AffixInfo,
 }
 
 public enum ClientPacketIds : short

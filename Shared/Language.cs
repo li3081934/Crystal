@@ -4198,6 +4198,17 @@ public static class GameLanguage
                 }
             }
 
+            if (language.Enum != null)
+            {
+                foreach (var item in language.Enum)
+                {
+                    if (item.Key.StartsWith("Affix_", StringComparison.Ordinal))
+                    {
+                        ClientTextMap.Enum[item.Key] = item.Value;
+                    }
+                }
+            }
+
             if (language.Text.Count + language.Enum.Count != ClientTextMap.Text.Count + ClientTextMap.Enum.Count)
             {
                 SaveClientLanguage(languageJsonPath);

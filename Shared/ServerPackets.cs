@@ -6950,4 +6950,46 @@ namespace ServerPackets
             writer.Write(RuneId);
         }
     }
+
+    public sealed class AffixInfoList : Packet
+    {
+        public override short Index { get { return (short)ServerPacketIds.AffixInfo; } }
+
+        public List<ClientAffixInfo> Affixes = new List<ClientAffixInfo>();
+
+        protected override void ReadPacket(BinaryReader reader)
+        {
+            int count = reader.ReadInt32();
+            Affixes = new List<ClientAffixInfo>(count);
+            for (int i = 0; i < count; i++)
+            {
+                Affixes.Add(new ClientAffixInfo
+                {
+                    Id = reader.ReadUInt16(),
+                    Name = reader.ReadString(),
+                    NameKey = reader.ReadString(),
+                    Tier = reader.ReadByte(),
+                    Stat = (Stat)reader.ReadByte(),
+                    Suffix = reader.ReadBoolean(),
+                });
+            }
+        }
+
+        protected override void WritePacket(BinaryWriter writer)
+        {
+            writer.Write(Affixes == null ? 0 : Affixes.Count);
+            if (Affixes == null) return;
+
+            for (int i = 0; i < Affixes.Count; i++)
+            {
+                ClientAffixInfo affix = Affixes[i];
+                writer.Write(affix.Id);
+                writer.Write(affix.Name ?? string.Empty);
+                writer.Write(affix.NameKey ?? string.Empty);
+                writer.Write(affix.Tier);
+                writer.Write((byte)affix.Stat);
+                writer.Write(affix.Suffix);
+            }
+        }
+    }
 }

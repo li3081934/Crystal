@@ -309,6 +309,9 @@ public class UserItem
 
     public Stats AddedStats;
 
+    public List<AffixInstance> Affixes = new List<AffixInstance>();
+    public ushort AffixIlvl;
+
     public bool IsAdded
     {
         get { return AddedStats.Count > 0 || Slots.Length > Info.Slots; }
@@ -455,6 +458,24 @@ public class UserItem
         {
             GMMade = reader.ReadBoolean();
         }
+
+        if (version > 118)
+        {
+            int affixCount = reader.ReadByte();
+            Affixes = new List<AffixInstance>(affixCount);
+            for (int i = 0; i < affixCount; i++)
+            {
+                Affixes.Add(new AffixInstance
+                {
+                    Id = reader.ReadUInt16(),
+                    Tier = reader.ReadByte(),
+                    Stat = (Stat)reader.ReadByte(),
+                    Value = reader.ReadInt16(),
+                    Flags = reader.ReadByte(),
+                });
+            }
+            AffixIlvl = reader.ReadUInt16();
+        }
     }
 
     public void Save(BinaryWriter writer)
@@ -506,11 +527,57 @@ public class UserItem
         SealedInfo?.Save(writer);
 
         writer.Write(GMMade);
+
+        int affixCount = 0;
+        if (Affixes != null)
+        {
+            for (int i = 0; i < Affixes.Count; i++)
+            {
+                if (Affixes[i] != null) affixCount++;
+            }
+        }
+
+        writer.Write((byte)affixCount);
+        if (Affixes != null)
+        {
+            for (int i = 0; i < Affixes.Count; i++)
+            {
+                AffixInstance affix = Affixes[i];
+                if (affix == null) continue;
+                writer.Write(affix.Id);
+                writer.Write(affix.Tier);
+                writer.Write((byte)affix.Stat);
+                writer.Write(affix.Value);
+                writer.Write(affix.Flags);
+            }
+        }
+        writer.Write(AffixIlvl);
+    }
+
+    private static List<AffixInstance> CopyAffixes(List<AffixInstance> source)
+    {
+        var result = new List<AffixInstance>();
+        if (source == null) return result;
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            AffixInstance affix = source[i];
+            if (affix == null) continue;
+            result.Add(new AffixInstance
+            {
+                Id = affix.Id,
+                Tier = affix.Tier,
+                Stat = affix.Stat,
+                Value = affix.Value,
+                Flags = affix.Flags,
+            });
+        }
+        return result;
     }
 
     public int GetTotal(Stat type)
     {
-        return AddedStats[type] + Info.Stats[type];
+        return AddedStats[type] + Info.Stats[type] + AffixStats.Sum(this, type);
     }
 
     public uint Price()
@@ -704,7 +771,10 @@ public class UserItem
             SealedInfo = SealedInfo,
 
             IsShopItem = IsShopItem,
-            GMMade = GMMade
+            GMMade = GMMade,
+
+            Affixes = CopyAffixes(Affixes),
+            AffixIlvl = AffixIlvl
         };
 
         return item;
@@ -721,6 +791,7 @@ public class UserItem
             CurrentDura == other.CurrentDura && MaxDura == other.MaxDura && GemCount == other.GemCount &&
             RefineAdded == other.RefineAdded && RefinedValue == other.RefinedValue &&
             RefineSuccessChance == other.RefineSuccessChance && AddedStats.Equals(other.AddedStats) &&
+            (Affixes == null || Affixes.Count == 0) && (other.Affixes == null || other.Affixes.Count == 0) &&
             Awake.GetAwakeLevel() == 0 && other.Awake.GetAwakeLevel() == 0 &&
             !Slots.Any(slot => slot != null) && !other.Slots.Any(slot => slot != null);
     }

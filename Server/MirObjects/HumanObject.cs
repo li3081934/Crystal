@@ -988,7 +988,7 @@ namespace Server.MirObjects
                 {
                     var info = Envir.GetItemInfo(Drop.Item.Index);
 
-                    UserItem item = Envir.CreateDropItem(info);
+                    UserItem item = Envir.CreateDropItem(info, Info.Level);
                     if (item.Info.Type == ItemType.Ore)
                     {
                         item.CurrentDura = (ushort)Math.Min(ushort.MaxValue, (Drop.MinDura + Envir.Random.Next(Math.Max(0, Drop.MaxDura - Drop.MinDura))) * 1000);
@@ -1912,6 +1912,7 @@ namespace Server.MirObjects
 
                 Stats.Add(realItem.Stats);
                 Stats.Add(temp.AddedStats);
+                AffixStats.Apply(temp, Stats);
 
                 Stats[Stat.MinAC] += temp.Awake.GetAC();
                 Stats[Stat.MaxAC] += temp.Awake.GetAC();
@@ -2019,6 +2020,7 @@ namespace Server.MirObjects
 
                 Stats.Add(RealItem.Stats);
                 Stats.Add(temp.AddedStats);
+                AffixStats.Apply(temp, Stats);
 
                 if (RealItem.Light > Light) Light = RealItem.Light;
                 if (RealItem.Unique != SpecialItemMode.None)
