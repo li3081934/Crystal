@@ -6170,12 +6170,15 @@ namespace Server.MirObjects
                             int greenValue = value / 15 + magic.Level + 1 + Envir.Random.Next(Stats[Stat.PoisonAttack]);
                             greenValue = RuneHooks.PoisonValue(magic, PoisonType.Green, greenValue);
 
+                            int greenDuration = (value * 2) + ((magic.Level + 1) * 7);
+                            int greenTickSpeed = RuneHooks.PoisonTickSpeed(magic, PoisonType.Green, 2000, greenDuration, out greenDuration);
+
                             target.ApplyPoison(new Poison
                             {
-                                Duration = (value * 2) + ((magic.Level + 1) * 7),
+                                Duration = greenDuration,
                                 Owner = this,
                                 PType = PoisonType.Green,
-                                TickSpeed = 2000,
+                                TickSpeed = greenTickSpeed,
                                 Value = greenValue
                             }, this);
                             break;

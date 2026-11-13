@@ -1675,7 +1675,8 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             RuneId = 0
         });
         Drain(stream, buffer, 900);
-        List<int> list = MeasureGreenTicks(stream, buffer, myLocation, spell, "A 无符文");
+        List<int> times;
+        List<int> list = MeasureGreenTicks(stream, buffer, myLocation, spell, "A 无符文", out times);
         if (list.Count < 2)
         {
             Console.WriteLine($"  × 无符文时只收到 {list.Count} 次毒跳，无法比较");
@@ -1687,7 +1688,8 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             RuneId = runeId
         });
         Drain(stream, buffer, 1500);
-        List<int> list2 = MeasureGreenTicks(stream, buffer, myLocation, spell, "B 带符文");
+        List<int> times2;
+        List<int> list2 = MeasureGreenTicks(stream, buffer, myLocation, spell, "B 带符文", out times2);
         if (list2.Count < 2)
         {
             Console.WriteLine($"  × 带符文时只收到 {list2.Count} 次毒跳，无法比较");
@@ -1697,16 +1699,25 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
         double num2 = list2.Average();
         Console.WriteLine($"无符文毒跳均值 {num:F2}（{list.Count} 次：{string.Join(",", list)}）");
         Console.WriteLine($"带符文毒跳均值 {num2:F2}（{list2.Count} 次：{string.Join(",", list2)}）");
+
+        double intervalA = times.Count > 1 ? (times[times.Count - 1] - times[0]) / (double)(times.Count - 1) : 0;
+        double intervalB = times2.Count > 1 ? (times2[times2.Count - 1] - times2[0]) / (double)(times2.Count - 1) : 0;
+        Console.WriteLine($"无符文平均间隔 {intervalA:F0}ms / 带符文平均间隔 {intervalB:F0}ms");
         if (num2 < num * 1.5)
         {
             Console.WriteLine($"  × 翻倍没生效（{num2:F2} < {num * 1.5:F2}）");
             return 1;
         }
-        Console.WriteLine($"绿毒 DoT 验证通过：{num:F2} → {num2:F2}（约 {num2 / num:F2} 倍）");
+        if (intervalA > 0 && intervalB > 0 && intervalB > intervalA * 0.75)
+        {
+            Console.WriteLine($"  × 掉血间隔没有缩短（{intervalB:F0}ms 不小于 {intervalA:F0}ms 的 75%）");
+            return 1;
+        }
+        Console.WriteLine($"绿毒 DoT 验证通过：{num:F2} → {num2:F2}（约 {num2 / num:F2} 倍），间隔 {intervalA:F0}ms → {intervalB:F0}ms");
         return 0;
     }
 
-    private static List<int> MeasureGreenTicks(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, string tag)
+    private static List<int> MeasureGreenTicks(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, string tag, out List<int> times)
     {
         Send(stream, new C.Chat
         {
@@ -1719,6 +1730,8 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
         });
         S.ObjectMonster objectMonster = Drain(stream, buffer, 1500).OfType<S.ObjectMonster>().LastOrDefault();
         List<int> list = new List<int>();
+        times = new List<int>();
+        System.Diagnostics.Stopwatch greenWatch = System.Diagnostics.Stopwatch.StartNew();
         if (objectMonster == null)
         {
             Console.WriteLine("  × " + tag + "：怪物没刷出来");
@@ -1744,6 +1757,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 if (item is S.DamageIndicator damageIndicator && damageIndicator.ObjectID == objectMonster.ObjectID && damageIndicator.Damage != 0)
                 {
                     list.Add(Math.Abs(damageIndicator.Damage));
+                    times.Add((int)greenWatch.ElapsedMilliseconds);
                 }
                 else if (item is S.ObjectPoisoned objectPoisoned && objectPoisoned.ObjectID == objectMonster.ObjectID)
                 {

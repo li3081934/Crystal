@@ -168,6 +168,13 @@ namespace Server.RuneSystem
         /// </summary>
         public int PoisonValuePct { get; set; }
 
+        /// <summary>
+        /// 毒伤（PoisonValueUp 使用）：每次 tick 的间隔缩短百分比。
+        /// 50 = 间隔减半（2 秒 → 1 秒），0 = 不改。
+        /// 缩短后按比例放大 tick 数，保证中毒的总时长不变。
+        /// </summary>
+        public int PoisonTickPct { get; set; }
+
         // ---- 被动属性类参数（StatBonus）：选着符文就生效，不需要施法、不会消耗 ----
         /// <summary>
         /// Stat 名 → 各技能等级的加成值。下标直接取技能等级（0/1/2/3），数组比等级短时取最后一档。

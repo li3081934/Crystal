@@ -408,12 +408,13 @@ namespace Server.RuneSystem
                     Spell = Spell.Poisoning,
                     Slot = 2,
                     Name = "施毒·蚀骨",
-                    Description = "施毒术上给目标的绿毒，每次掉血翻倍（毒的总时长、tick 间隔不变）。",
+                    Description = "施毒术上给目标的绿毒，每次掉血翻倍，且掉血间隔缩短 50%（总时长不变，每秒伤害翻两番）。",
                     Icon = 2,
                     Effect = RuneEffect.PoisonValueUp,
                     ProcChance = 100,
                     DebuffType = "Green",
                     PoisonValuePct = 100,
+                    PoisonTickPct = 50,
                 },
                 new RuneInfo
                 {

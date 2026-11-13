@@ -310,6 +310,31 @@ namespace Server.RuneSystem
         }
 
         /// <summary>
+        /// 毒的 tick 间隔（符文「施毒·蚀骨」等）：返回调整后的 TickSpeed，并同步把 Duration 换成新的 tick 数。
+        /// Poison.Duration 是「跳数」不是毫秒，所以间隔缩短后要按比例放大跳数，中毒的总时长才不变。
+        /// 没有符文、或符文没配 PoisonTickPct 时两个值都原样返回。
+        /// </summary>
+        public static int PoisonTickSpeed(UserMagic magic, PoisonType type, int tickSpeed, int duration, out int newDuration)
+        {
+            newDuration = duration;
+            if (magic == null || magic.RuneId == 0 || !RuneRepository.Any) return tickSpeed;
+            if (tickSpeed <= 0) return tickSpeed;
+
+            var rune = RuneRepository.Get(magic.RuneId);
+            if (rune == null || !rune.Valid || !rune.HasEffect(RuneEffect.PoisonValueUp)) return tickSpeed;
+            if (rune.PoisonTickPct <= 0) return tickSpeed;
+            if (rune.ResolvedDebuffType != PoisonType.None && rune.ResolvedDebuffType != type) return tickSpeed;
+
+            int pct = Math.Min(90, rune.PoisonTickPct);                     //最多缩短 90%，避免 0 间隔
+            int speed = tickSpeed * (100 - pct) / 100;
+            if (speed < 200) speed = 200;                                    //引擎侧下限，别把服务器拖死
+
+            newDuration = (int)Math.Round(duration * (double)tickSpeed / speed);
+            if (newDuration < 1) newDuration = 1;
+            return speed;
+        }
+
+        /// <summary>
         /// 召唤上限（符文「召唤·双卫」等）：返回该技能同时最多能存在几只召唤物。
         /// 没有符文、或符文不带 ExtraPet 时原值返回（原版 = 1）。
         /// 只改数量，不动召唤流程本身（消耗护身符、属性、宠物等级保持原样）。
