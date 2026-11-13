@@ -1340,6 +1340,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
     {
         casts = 0;
         gap = 0;
+        int instantCasts = 0;      //补发里带 Instant 标记的个数（纯表现，不该再播施法动作）
         Dictionary<uint, Point> dictionary = new Dictionary<uint, Point>();
         for (int i = 0; i < 4; i++)
         {
@@ -1372,6 +1373,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 Location = myLocation
             });
             casts = 0;
+            instantCasts = 0;
             gap = 0;
             int num = 0;
             int num2 = 0;
@@ -1381,6 +1383,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 if (item2 is S.ObjectMagic { SelfBroadcast: not false })
                 {
                     casts++;
+                    if (((S.ObjectMagic)item2).Instant) instantCasts++;
                 }
                 if (item2 is S.DamageIndicator { Damage: <0 } damageIndicator && damageIndicator.ObjectID == keyValuePair.Key)
                 {
@@ -1393,6 +1396,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 if (item3 is S.ObjectMagic { SelfBroadcast: not false })
                 {
                     casts++;
+                    if (((S.ObjectMagic)item3).Instant) instantCasts++;
                 }
                 if (item3 is S.DamageIndicator { Damage: <0 } damageIndicator2 && damageIndicator2.ObjectID == keyValuePair.Key)
                 {
@@ -1401,7 +1405,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                     gap = 900;
                 }
             }
-            Console.WriteLine($"  [{tag}] 补发施法包 {casts} 个，伤害 {num} 次（前 0.9s {num2} 次 / 补发窗口 {num3} 次），第二发约 {gap}ms 到账");
+            Console.WriteLine($"  [{tag}] 补发施法包 {casts} 个（其中纯表现 {instantCasts} 个），伤害 {num} 次（前 0.9s {num2} 次 / 补发窗口 {num3} 次），第二发约 {gap}ms 到账");
             if (casts == expectCasts && num >= expectHits)
             {
                 return true;

@@ -92,6 +92,75 @@ namespace Client.MirObjects
             var c = Color.FromArgb(rune.TintArgb);
             return Color.FromArgb(c.A, c.R, c.G, c.B);
         }
+
+        /// <summary>
+        /// 纯表现：符文「灵魂·双发」「雷电·双重」的第二发不再重播施法动作，
+        /// 这里只按法术类型补一段投射物 / 落点特效（不建动作、不发 C.Magic、不占 NextAction）。
+        /// </summary>
+        public void PlayInstantSpellVisual(Spell spell, uint targetId, Point targetPoint, ushort runeId)
+        {
+            MapObject target = targetId != 0 ? MapControl.GetObject(targetId) : null;
+            if (target != null) targetPoint = target.CurrentLocation;
+
+            Spell savedSpell = Spell;
+            ushort savedRuneId = SpellRuneId;
+
+            Spell = spell;
+            if (runeId != 0) SpellRuneId = runeId;
+
+            try
+            {
+                switch (spell)
+                {
+                    case Spell.SoulFireBall:
+                        {
+                            SoundManager.PlaySound(20000 + (ushort)Spell.SoulFireBall * 10 + 1);
+
+                            float boomScale = SpellEffectScale();
+                            Missile missile = CreateProjectile(1160, Libraries.Magic, true, 3, 30, 7, 6, true, null, targetId);
+
+                            if (missile.Target != null)
+                            {
+                                missile.Complete += (o, e) =>
+                                {
+                                    if (missile.Target.CurrentAction == MirAction.Dead) return;
+
+                                    missile.Target.Effects.Add(new Effect(Libraries.Magic, 1360, 10, 600, missile.Target) { Scale = boomScale });
+                                    SoundManager.PlaySound(20000 + (ushort)Spell.SoulFireBall * 10 + 2);
+                                };
+                            }
+                            break;
+                        }
+
+                    case Spell.ThunderBolt:
+                        {
+                            SoundManager.PlaySound(20000 + (ushort)Spell.ThunderBolt * 10);
+
+                            Color boltTint = SpellEffectColour();
+
+                            if (target == null)
+                                MapControl.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, targetPoint) { Tint = boltTint });
+                            else
+                                target.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, target) { Tint = boltTint });
+                            break;
+                        }
+
+                    default:
+                        {
+                            if (target == null)
+                                MapControl.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, targetPoint));
+                            else
+                                target.Effects.Add(new Effect(Libraries.Magic2, 10, 5, 400, target));
+                            break;
+                        }
+                }
+            }
+            finally
+            {
+                Spell = savedSpell;
+                SpellRuneId = savedRuneId;
+            }
+        }
         public byte SpellLevel;
 
         public bool Cast;

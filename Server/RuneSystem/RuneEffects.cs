@@ -99,15 +99,7 @@ namespace Server.RuneSystem
                 Cast = true,
                 Level = magic.Level,
                 RuneId = cast.RuneId,
-            });
-
-            //客户端把"上一次施法"的输入锁设成 2.5 秒；这里先送一份自己的坐标
-            //（位置/朝向没变时客户端只做 MapControl.NextAction = 0，不会有副作用），
-            //否则第二段施法动画会被那个锁挡掉，第二张符就不可能出现在画面上。
-            owner.Enqueue(new ServerPackets.UserLocation
-            {
-                Location = owner.CurrentLocation,
-                Direction = owner.Direction,
+                Instant = true,     //纯表现：客户端只放投射物，不再进完整施法动作
             });
 
             //自己看：单独投递一份，客户端凭 SelfBroadcast 只播动画、不再发 C.Magic
@@ -123,6 +115,7 @@ namespace Server.RuneSystem
                 Level = magic.Level,
                 RuneId = cast.RuneId,
                 SelfBroadcast = true,
+                Instant = true,
             });
 
             var target = Envir.Main.GetObject(cast.TargetId);

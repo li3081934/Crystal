@@ -66,6 +66,7 @@
 | C10 | `Client/MirObjects/MapObject.cs`（`ApplyDrawColour` 末尾） | `RuneVisuals.Apply(this, drawColour, body: true)`（本体着色，1 行） |
 | C11 | `Client/MirScenes/GameScene.cs`（`ObjectMagic`） | 追加一个"纯表现广播"参数：`action.Params.Add(p.SelfBroadcast && p.ObjectID == User.ObjectID)`（索引 7，1 行） |
 | C12 | `Client/MirObjects/PlayerObject.cs`（`SetAction` 的 `MirAction.Spell`） | 该 case 从 `AttackRange2` 里拆出来；读到索引 7 为 `true` 时**不发 `C.Magic`**（否则服务端补发的施法包会让客户端再施法一次，形成递归，~10 行） |
+| C13 | `Client/MirScenes/GameScene.cs`（`ObjectMagic` 内） | 补发法术带 `Instant` 时改走 `PlayerObject.PlayInstantSpellVisual(...)`，不建 `MirAction.Spell` 动作（1 处 if + 1 行调用，~5 行） |
 
 ## 4. 新增模块（不受限制，可自由扩展）
 

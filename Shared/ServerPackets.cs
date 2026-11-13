@@ -3487,6 +3487,8 @@ namespace ServerPackets
         public bool SelfBroadcast = false;
         /// <summary>施法者该技能当前选中的符文（0 = 无符文）；客户端据此调整特效强度（例如爆炸动画放大）。</summary>
         public ushort RuneId;
+        /// <summary>纯表现补发：符文「双发」的第二发不该再播完整施法动作，客户端只补一段投射物/落点特效。</summary>
+        public bool Instant;
         public List<uint> SecondaryTargetIDs = new List<uint>();
 
         protected override void ReadPacket(BinaryReader reader)
@@ -3503,6 +3505,7 @@ namespace ServerPackets
             Level = reader.ReadByte();
             SelfBroadcast = reader.ReadBoolean();
             RuneId = reader.ReadUInt16();
+            Instant = reader.ReadBoolean();
 
             var count = reader.ReadInt32();
             SecondaryTargetIDs = new List<uint>();
@@ -3527,6 +3530,7 @@ namespace ServerPackets
             writer.Write(Level);
             writer.Write(SelfBroadcast);
             writer.Write(RuneId);
+            writer.Write(Instant);
 
             writer.Write(SecondaryTargetIDs.Count);
             foreach (var targetID in SecondaryTargetIDs)

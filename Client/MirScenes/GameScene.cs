@@ -4715,6 +4715,13 @@ namespace Client.MirScenes
                 if (p.TargetID == User.ObjectID)
                     ob.AttackedUserTime = CMain.Time;
 
+                //符文「灵魂·双发」「雷电·双重」的第二发：不重播施法动作，只在原地补一段投射物/落点特效
+                if (p.Instant && ob is PlayerObject instantCaster)
+                {
+                    instantCaster.PlayInstantSpellVisual(p.Spell, p.TargetID, p.Target, p.RuneId);
+                    return;
+                }
+
                 QueuedAction action = new QueuedAction { Action = MirAction.Spell, Direction = p.Direction, Location = p.Location, Params = new List<object>() };
                 action.Params.Add(p.Spell);
                 action.Params.Add(p.TargetID);
