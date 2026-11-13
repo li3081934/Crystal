@@ -1341,7 +1341,7 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
         casts = 0;
         gap = 0;
         int instantCasts = 0;
-        const int firstWindowMs = 700;      //补发里带 Instant 标记的个数（纯表现，不该再播施法动作）
+        const int firstWindowMs = 600;      //补发里带 Instant 标记的个数（纯表现，不该再播施法动作）
         Dictionary<uint, Point> dictionary = new Dictionary<uint, Point>();
         for (int i = 0; i < 4; i++)
         {

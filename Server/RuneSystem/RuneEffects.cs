@@ -44,7 +44,7 @@ namespace Server.RuneSystem
             int count = Math.Max(0, Math.Min(4, rune.CastCount - 1));
             if (count <= 0) return;
 
-            int delay = Math.Max(200, rune.CastDelayMs);
+            int delay = Math.Max(100, rune.CastDelayMs);
             long now = Envir.Main.Time;
 
             for (int i = 0; i < count; i++)

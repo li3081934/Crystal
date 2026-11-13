@@ -198,7 +198,7 @@ namespace Server.RuneSystem
         public int CastCount { get; set; } = 2;
 
         /// <summary>相邻两发之间的间隔（毫秒）。要大于一次施法动作的时长，客户端才播得开两段动画。</summary>
-        public int CastDelayMs { get; set; } = 600;
+        public int CastDelayMs { get; set; } = 600;   //每发间隔（毫秒），下限 100
 
         // ---- 表现类参数 ----
         /// <summary>技能特效放大倍数（1 = 原版；客户端渲染用，随 RuneList 下发）。</summary>
