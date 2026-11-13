@@ -14,7 +14,7 @@ namespace RuneTestTool
     /// </summary>
     internal static class Smoke
     {
-        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false, bool greenDot = false, bool splash = false, bool doubleCast = false, bool tame = false, string tameMonster = "Hen", string doubleMonster = "Scorpion", bool boltBleed = false, bool statBonus = false, bool manaKill = false, string manaMonster = "SnakeScorpion", int manaMonsterHp = 330, int[] manaPct = null)
+        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false, bool greenDot = false, bool splash = false, bool doubleCast = false, bool tame = false, string tameMonster = "Hen", string doubleMonster = "Scorpion", bool boltBleed = false, bool statBonus = false, bool manaKill = false, string manaMonster = "SnakeScorpion", int manaMonsterHp = 330, int[] manaPct = null, bool fireDur = false)
         {
             Packet.IsServer = false; // 我们是客户端：收到的包按 ServerPackets 解析
 
@@ -120,6 +120,7 @@ namespace RuneTestTool
             if (repeat) return RunRepeat(stream, buffer, myLocation, spell, runeId);
             if (crit) return RunCrit(stream, buffer, myLocation, spell, runeId);
             if (greenDot) return RunGreenPoisonDot(stream, buffer, myLocation, spell, runeId);
+            if (fireDur) return RunFireWallDuration(stream, buffer, myLocation, spell, runeId);
             if (splash) return RunSplash(stream, buffer, myLocation, spell, runeId);
             if (doubleCast) return RunDoubleCast(stream, buffer, myLocation, spell, runeId, doubleMonster);
             if (tame) return RunTame(stream, buffer, myLocation, spell, runeId, tameMonster);
@@ -1644,6 +1645,100 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             }
         }
         return 0;
+    }
+
+    private static int RunFireWallDuration(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"--- 火墙持续时间验证（{spell} → 符文 #{runeId}）---");
+
+        Send(stream, new C.Chat { Message = "@REVIVE" });
+        Drain(stream, buffer, 600);
+        Send(stream, new C.Chat { Message = "@SUPERMAN" });
+        Drain(stream, buffer, 300);
+        Send(stream, new C.Chat { Message = $"@GIVESKILL {spell} 3" });
+        Drain(stream, buffer, 800);
+
+        long plain = MeasureFireWallLife(stream, buffer, myLocation, spell, 0, "A 无符文");
+        if (plain <= 0)
+        {
+            Console.WriteLine("  × 无符文时没有观察到火墙消失");
+            return 1;
+        }
+
+        long runed = MeasureFireWallLife(stream, buffer, myLocation, spell, runeId, "B 带符文");
+        if (runed <= 0)
+        {
+            Console.WriteLine("  × 带符文时没有观察到火墙消失");
+            return 1;
+        }
+
+        Console.WriteLine($"无符文火墙存活 {plain}ms → 带符文 {runed}ms（约 {runed / (double)plain:F2} 倍）");
+        if (runed < plain * 1.7)
+        {
+            Console.WriteLine($"  × 持续时间没有翻倍（{runed} < {plain * 1.7:F0}）");
+            return 1;
+        }
+
+        Console.WriteLine("火墙持续时间验证通过：燃烧时长约翻倍");
+        return 0;
+    }
+
+    /// <summary>
+    /// 用「S.ObjectSpell 出现 → S.ObjectRemove 消失」的间隔测火墙存活时间（不依赖伤害，避免高护甲木桩把伤害全吃掉）。
+    /// </summary>
+    private static long MeasureFireWallLife(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId, string tag)
+    {
+        Send(stream, new C.Chat { Message = "@CLEARMOB" });
+        Drain(stream, buffer, 700);
+        Send(stream, new C.SetRune { Spell = spell, RuneId = runeId });
+        Drain(stream, buffer, 900);
+        Send(stream, new C.Chat { Message = "@MOB IcePilar 1" });
+
+        S.ObjectMonster monster = null;
+        foreach (S.ObjectMonster ob in Drain(stream, buffer, 1500).OfType<S.ObjectMonster>())
+            if (monster == null || ob.ObjectID > monster.ObjectID) monster = ob;
+
+        Point spot = monster != null ? monster.Location : Functions.PointMove(myLocation, MirDirection.Up, 1);
+        MirDirection direction = Functions.DirectionFromPoint(myLocation, spot);
+
+        TrySend(stream, new C.Magic
+        {
+            Spell = spell,
+            Direction = direction,
+            TargetID = monster != null ? monster.ObjectID : 0u,
+            Location = spot
+        });
+
+        System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+        Dictionary<uint, long> alive = new Dictionary<uint, long>();
+        long maxLife = 0;
+        int gone = 0;
+
+        while (watch.ElapsedMilliseconds < 160000)
+        {
+            TrySend(stream, new C.KeepAlive { Time = 0L });
+
+            foreach (Packet item in Drain(stream, buffer, 1000))
+            {
+                if (item is S.ObjectSpell spellObject && spellObject.Spell == Spell.FireWall)
+                {
+                    if (!alive.ContainsKey(spellObject.ObjectID)) alive[spellObject.ObjectID] = watch.ElapsedMilliseconds;
+                }
+                else if (item is S.ObjectRemove remove && alive.TryGetValue(remove.ObjectID, out long born))
+                {
+                    long life = watch.ElapsedMilliseconds - born;
+                    if (life > maxLife) maxLife = life;
+                    alive.Remove(remove.ObjectID);
+                    gone++;
+                }
+            }
+
+            if (gone > 0 && alive.Count == 0) break;
+        }
+
+        Console.WriteLine($"    {tag}：观察到 {gone} 段火墙消失，最长存活 {(maxLife <= 0 ? 0 : maxLife)}ms");
+        return maxLife;
     }
 
     private static int RunGreenPoisonDot(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId)

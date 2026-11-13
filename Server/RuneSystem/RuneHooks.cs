@@ -310,6 +310,23 @@ namespace Server.RuneSystem
         }
 
         /// <summary>
+        /// 技能持续时间（符文「火墙·焚天」等）：返回按 DurationPct 放大后的毫秒数。
+        /// 100 = 时长翻倍，0 = 不改。
+        /// </summary>
+        public static int SpellDuration(UserMagic magic, int durationMs)
+        {
+            if (magic == null || magic.RuneId == 0 || !RuneRepository.Any || durationMs <= 0) return durationMs;
+
+            var rune = RuneRepository.Get(magic.RuneId);
+            if (rune == null || !rune.Valid || !rune.HasEffect(RuneEffect.DurationUp)) return durationMs;
+            if (rune.DurationPct == 0) return durationMs;
+
+            int pct = Math.Min(900, rune.DurationPct);                     //最多延长 10 倍，防数据写错
+            long result = (long)durationMs * (100 + pct) / 100;
+            return result > int.MaxValue ? int.MaxValue : (int)result;
+        }
+
+        /// <summary>
         /// 毒的 tick 间隔（符文「施毒·蚀骨」等）：返回调整后的 TickSpeed，并同步把 Duration 换成新的 tick 数。
         /// Poison.Duration 是「跳数」不是毫秒，所以间隔缩短后要按比例放大跳数，中毒的总时长才不变。
         /// 没有符文、或符文没配 PoisonTickPct 时两个值都原样返回。

@@ -58,6 +58,7 @@ namespace RuneTestTool
                 bool boltBleed = options.ContainsKey("boltbleed");
                 bool statBonus = options.ContainsKey("statbonus");
                 bool manaKill = options.ContainsKey("manakill");
+                bool fireDur = options.ContainsKey("firedur");
                 string manaMonster = options.GetValueOrDefault("manamob", "SnakeScorpion");
                 int manaMonsterHp = int.TryParse(options.GetValueOrDefault("monsterhp", "330"), out int mhp) ? mhp : 330;
                 int[] manaPct = (options.GetValueOrDefault("manapct", "5,10,15,25") ?? string.Empty)
@@ -67,7 +68,7 @@ namespace RuneTestTool
                 string doubleMob = options.GetValueOrDefault("doublemob", "Scorpion");
                 bool tame = options.ContainsKey("tame");
                 string tameMonster = options.GetValueOrDefault("tamemob", "Hen");
-                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet, greenDot, splash, doubleCast, tame, tameMonster, doubleMob, boltBleed, statBonus, manaKill, manaMonster, manaMonsterHp, manaPct);
+                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet, greenDot, splash, doubleCast, tame, tameMonster, doubleMob, boltBleed, statBonus, manaKill, manaMonster, manaMonsterHp, manaPct, fireDur);
             }
 
             string dir = options.GetValueOrDefault("dir");

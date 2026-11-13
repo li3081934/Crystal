@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 服务端（10 个文件 / 28 行）
+## 1. 服务端（11 个文件 / 31 行）
 
 | # | 文件 | 行 | 改动 |
 |---|---|---|---|
@@ -39,6 +39,8 @@
 | S19 | `Server/MirObjects/HumanObject.cs`（`Magic` 末尾的 `Broadcast(new S.ObjectMagic …)`） | 给广播包补 `RuneId = magic != null ? magic.RuneId : (ushort)0`——让客户端知道"这次施法带的是哪个符文"，用于按 `EffectScale` 放大技能特效；纯表现字段，服务端逻辑不读 |
 | S20 | `Server/MirObjects/HumanObject.cs`（`ElectricShock` 的驯服成功分支，`target.MaxPetLevel = (byte)(1 + magic.Level * 2);` 之后） | `RuneHooks.ApplyTameLevel(this, target, magic);`（1 行）——符文可在驯服成功那一刻改写宠物等级；没有符文时第一行就 return，行为与原生完全一致 |
 | S21 | `Server/MirObjects/HumanObject.cs`（`RefreshStats()` 里 `RefreshStatCaps();` 之后） | `RuneHooks.ApplyPassiveStats(this);`（1 行）——被动属性类符文（如「奥术·巨力」加背包负重/穿戴/腕力）在属性重算的最后一刻叠加；`RefreshStats()` 开头 `Stats.Clear()`，所以幂等，无符文时循环直接跳过 |
+| S22 | `Server/MirObjects/MonsterObject.cs`（`Die()` 里 `EXPOwner.WinExp(Experience, Level);` 之后） | `RuneHooks.ApplyManaOnKill(EXPOwner, this);`（1 行）——击杀回蓝类符文；挂在经验结算块内，宠物击杀不计 |
+| S23 | `Server/MirEnvir/Map.cs`（`#region FireWall` 的 `case Spell.FireWall:` 里，`data[4]` 取完 castId 之后） | `int wallDuration = RuneHooks.SpellDuration(magic, (10 + value / 2) * 1000);`（1 行）+ 两处 `ExpireTime = Envir.Time + wallDuration`——火墙持续时间类符文 |
 
 ## 2. Shared（5 个文件）
 

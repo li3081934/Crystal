@@ -1,6 +1,7 @@
 using System.Drawing;
 ﻿using Server.MirDatabase;
 using Server.MirObjects;
+using Server.RuneSystem;
 using Shared;
 using S = ServerPackets;
 
@@ -1107,6 +1108,8 @@ namespace Server.MirEnvir
                     int castId = 0;
                     if (data.Count >= 5 && data[4] is int ci) castId = ci;
 
+                    int wallDuration = RuneHooks.SpellDuration(magic, (10 + value / 2) * 1000);
+
                     player.LevelMagic(magic);
 
                     if (ValidPoint(location))
@@ -1130,7 +1133,7 @@ namespace Server.MirEnvir
                             {
                                 Spell = Spell.FireWall,
                                 Value = value,
-                                ExpireTime = Envir.Time + (10 + value / 2) * 1000,
+                                ExpireTime = Envir.Time + wallDuration,
                                 TickSpeed = 2000,
                                 Caster = player,
                                 CurrentLocation = location,
@@ -1169,7 +1172,7 @@ namespace Server.MirEnvir
                         {
                             Spell = Spell.FireWall,
                             Value = value,
-                            ExpireTime = Envir.Time + (10 + value / 2) * 1000,
+                            ExpireTime = Envir.Time + wallDuration,
                             TickSpeed = 2000,
                             Caster = player,
                             CurrentLocation = location,

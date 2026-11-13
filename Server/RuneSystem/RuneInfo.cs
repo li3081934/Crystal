@@ -23,6 +23,9 @@ namespace Server.RuneSystem
         PowerUp = 1 << 6,
         PowerDown = 1 << 7,
 
+        /// <summary>时长类：把技能持续时间按 DurationPct 放大（见 DurationPct 字段）。</summary>
+        DurationUp = 1 << 9,
+
         // ---- 需要行为实现（RuneBehaviors） ----
         BuffOnSwing = 1 << 10,
         BuffOnDealtDamage = 1 << 11,
@@ -174,6 +177,12 @@ namespace Server.RuneSystem
         /// 缩短后按比例放大 tick 数，保证中毒的总时长不变。
         /// </summary>
         public int PoisonTickPct { get; set; }
+
+        /// <summary>
+        /// 技能持续时间（DurationUp 使用）：百分比增量。
+        /// 100 = 时长翻倍，50 = +50%，0 = 不生效。
+        /// </summary>
+        public int DurationPct { get; set; }
 
         // ---- 被动属性类参数（StatBonus）：选着符文就生效，不需要施法、不会消耗 ----
         /// <summary>

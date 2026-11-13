@@ -509,6 +509,18 @@ namespace Server.RuneSystem
                 },
                 new RuneInfo
                 {
+                    Id = 19,
+                    Spell = Spell.FireWall,
+                    Slot = 1,
+                    Name = "火墙·焚天",
+                    Description = "火墙的燃烧时间延长 100%（伤害不变，烧得更久）。",
+                    Icon = 2,
+                    Effect = RuneEffect.DurationUp,
+                    ProcChance = 100,
+                    DurationPct = 100,
+                },
+                new RuneInfo
+                {
                     Id = 18,
                     Spell = Spell.ArcaneRecovery,
                     Slot = 2,

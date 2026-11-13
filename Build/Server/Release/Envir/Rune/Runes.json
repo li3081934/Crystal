@@ -1,5 +1,16 @@
 [
   {
+    "Id": 19,
+    "Spell": "FireWall",
+    "Slot": 1,
+    "Name": "火墙·焚天",
+    "Description": "火墙的燃烧时间延长 100%（伤害不变，烧得更久）。",
+    "Icon": 2,
+    "Effect": "DurationUp",
+    "ProcChance": 100,
+    "DurationPct": 100
+  },
+  {
     "Id": 1,
     "Spell": "Fencing",
     "Slot": 1,
