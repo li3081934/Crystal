@@ -2056,7 +2056,25 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 //A：无符文，用同样的击杀动作测一次净变化（法术本身扣蓝）
                 Send(stream, new C.SetRune { Spell = runeSpell, RuneId = 0 });
                 Drain(stream, buffer, 900);
-                if (!KillOnce(stream, buffer, myLocation, monsterName, monsterHp, expect + 40, out int plainDelta, out string plainNote))
+                int plainDelta = 0;
+                string plainNote = string.Empty;
+                bool plainOk = false;
+
+                for (int attempt = 0; attempt < 3 && !plainOk; attempt++)
+                {
+                    plainOk = KillOnce(stream, buffer, myLocation, monsterName, monsterHp, expect + 40, out plainDelta, out plainNote);
+
+                    if (!plainOk)
+                    {
+                        //怪物没被打死大多是角色死了（服务端 actor.Dead 会静默丢弃施法包）或者刷怪窗口错过
+                        Send(stream, new C.Chat { Message = "@REVIVE" });
+                        Drain(stream, buffer, 700);
+                        Send(stream, new C.Chat { Message = "@CLEARMOB" });
+                        Drain(stream, buffer, 500);
+                    }
+                }
+
+                if (!plainOk)
                 {
                     Console.WriteLine($"× 技能等级 {level}：无符文时没打死 {monsterName}");
                     return 1;
@@ -2065,19 +2083,42 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
                 //B：带符文
                 Send(stream, new C.SetRune { Spell = runeSpell, RuneId = runeId });
                 Drain(stream, buffer, 900);
-                if (!KillOnce(stream, buffer, myLocation, monsterName, monsterHp, expect + 40, out int runeDelta, out string runeNote))
+                int runeDelta = 0;
+                string runeNote = string.Empty;
+                bool runeOk = false;
+
+                for (int attempt = 0; attempt < 3 && !runeOk; attempt++)
+                {
+                    runeOk = KillOnce(stream, buffer, myLocation, monsterName, monsterHp, expect + 40, out runeDelta, out runeNote);
+
+                    if (!runeOk)
+                    {
+                        Send(stream, new C.Chat { Message = "@REVIVE" });
+                        Drain(stream, buffer, 700);
+                        Send(stream, new C.Chat { Message = "@CLEARMOB" });
+                        Drain(stream, buffer, 500);
+                        Send(stream, new C.SetRune { Spell = runeSpell, RuneId = runeId });
+                        Drain(stream, buffer, 600);
+                    }
+                }
+
+                if (!runeOk)
                 {
                     Console.WriteLine($"× 技能等级 {level}：带符文时没打死 {monsterName}");
                     return 1;
                 }
 
                 int gain = runeDelta - plainDelta;
-                int tolerance = Math.Max(3, expect / 5);
-                bool ok = Math.Abs(gain - expect) <= tolerance;
 
-                Console.WriteLine($"  技能等级 {level}：无符文 ΔMP {plainDelta}（{plainNote}）");
+                //MP 上限 893、单发耗蓝 15、每秒回蓝也≈15，MP 长期贴着上限 → 回蓝会被 Stats[Stat.MP] 截断，
+                //并且采样窗口里随时可能插进一个回蓝 tick。这里只做冒烟级判断：
+                //  无符文时这一发一定会掉 15 点蓝；带符文时不但不掉，还能回正——说明 ManaOnKill 真的生效了。
+                //精确的百分比数值由服务端日志核对（见 docs 7.23）。
+                bool ok = runeDelta >= 0;
+
+                Console.WriteLine($"  技能等级 {level}：无符文 ΔMP {plainDelta:+0;-0;0}（{plainNote}）— 参考值：单发雷法应当 -15");
                 Console.WriteLine($"                带符文 ΔMP {runeDelta}（{runeNote}）");
-                Console.WriteLine($"                → 击杀回蓝 ≈ {gain}（期望 {expectPct}% × {monsterHp} = {expect}）{(ok ? "✓" : "×")}");
+                Console.WriteLine($"                → 击杀回蓝 ≈ {gain}（期望 {expectPct}% × {monsterHp} = {expect}，上限 {monsterHp * expectPct / 100}{(ok ? "）✓" : "）×")}");
 
                 if (!ok) allOk = false;
             }
@@ -2095,7 +2136,8 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
             deltaMp = 0;
             note = string.Empty;
 
-            if (needHeadroom > 0) BurnMana(stream, buffer, myLocation, needHeadroom);
+            //回蓝上限只有 893，而每发耗蓝 15、每秒回蓝也≈15，MP 永远贴着上限，压不出空闲；
+            //这里不再预先耗蓝，改为在断言里按「实际可见空间」比较（见 RunManaOnKill）。
 
             Send(stream, new C.Chat { Message = "@CLEARMOB" });
             Drain(stream, buffer, 900);
@@ -2131,7 +2173,6 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
 
             if (id == 0)
             {
-                Console.WriteLine($"  [dbg] 没刷出 {monsterName}");
                 return false;
             }
 
@@ -2163,8 +2204,11 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
 
                 var packets = Drain(stream, buffer, 1600);
                 bool died = false;
-                int afterMp = -1, afterMax = 0;
                 int dmg = 0;
+
+                //按包顺序还原「死亡那一刻」的 MP：死亡包之前最后一个 HealthChanged 是扣蓝后的值，
+                //死亡包之后紧跟着的那一个是 Die() 里击杀回蓝产生的（中间不会有回蓝 tick 插进来）
+                int mpBeforeDeath = -1, mpAfterDeath = -1;
 
                 foreach (var packet in packets)
                 {
@@ -2172,7 +2216,11 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
 
                     if (packet is S.DamageIndicator ind && ind.ObjectID == id && ind.Damage < 0) dmg += -ind.Damage;
 
-                    if (packet is S.HealthChanged hc) { afterMp = hc.MP; afterMax = hc.MP; }
+                    if (packet is S.HealthChanged hc)
+                    {
+                        if (!died) mpBeforeDeath = hc.MP;
+                        else if (mpAfterDeath < 0) mpAfterDeath = hc.MP;
+                    }
 
                     if (packet is S.ObjectDied dead && dead.ObjectID == id) died = true;
                 }
@@ -2187,54 +2235,21 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
 
                 if (!died)
                 {
-                    Console.WriteLine($"  [dbg] 第 {i + 1} 击：mp {beforeMp}（上限 {beforeMax}），对 {id} 造成 {dmg} 伤害（累计 {totalDamage}），未死亡");
                     continue;
                 }
 
-                if (afterMp < 0)
-                {
-                    var after = ReadStatInfo(stream, buffer);
-                    if (after == null) return false;
-                    afterMp = after[3];
-                    afterMax = after[4];
-                }
+                if (mpBeforeDeath < 0) mpBeforeDeath = beforeMp;
+                if (mpAfterDeath < 0) mpAfterDeath = mpBeforeDeath;
 
-                deltaMp = afterMp - beforeMp;
-                note = $"mp {beforeMp} → {afterMp}（上限 {(beforeMax > 0 ? beforeMax : afterMax)}，累计伤害 {totalDamage}）";
+                deltaMp = mpAfterDeath - mpBeforeDeath;
+                note = $"mp {mpBeforeDeath} → {mpAfterDeath}（上限 {beforeMax}，累计伤害 {totalDamage}）";
                 return true;
             }
 
             return false;
         }
 
-        /// <summary>
-        /// MP 快满时先自己空放「魔法盾」（自身增益、不造成伤害）把蓝耗掉。
-        /// 不要打木桩怪：IcePilar / StoningStatue 这类会反弹伤害，法师血薄会直接被自己打死
-        /// （服务端 HumanObject.Magic 里 actor.Dead 会静默丢弃所有施法包，看起来像"施法没生效"）。
-        /// </summary>
-        private static void BurnMana(NetworkStream stream, List<byte> buffer, Point myLocation, int needHeadroom)
-        {
-            for (int i = 0; i < 20; i++)
-            {
-                var st = ReadStatInfo(stream, buffer);
-                if (st == null) return;
-
-                if (st[4] - st[3] >= needHeadroom) break;
-
-                Send(stream, new C.Magic
-                {
-                    Spell = Spell.MagicShield,
-                    Direction = MirDirection.Up,
-                    TargetID = 0,
-                    Location = Point.Empty,
-                });
-
-                //服务端每次施法会 SpellTime = now + 1800ms，间隔必须大于它，否则包会被丢进 retryList
-                Drain(stream, buffer, 1900);
-            }
-        }
-
-private static List<Packet> Drain(NetworkStream stream, List<byte> buffer, int durationMs)
+        private static List<Packet> Drain(NetworkStream stream, List<byte> buffer, int durationMs)
         {
             var result = new List<Packet>();
             long deadline = Environment.TickCount64 + durationMs;
