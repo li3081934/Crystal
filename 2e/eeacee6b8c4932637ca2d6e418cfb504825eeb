@@ -1,0 +1,19 @@
+Client/MirScenes/Dialogs/MainDialogs.cs
+  s_220f379c12fa5d::t_e62065b7dbb5b3 479-481,483
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2eeeacee6b8c4932637ca2d6e418cfb504825eeb",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
