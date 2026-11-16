@@ -1,0 +1,26 @@
+Shared/Data/AffixData.cs
+  s_99dc3268dbef5f::t_1935142ee39bb5 3,61-83
+Client/MirScenes/GameScene.cs
+  s_99dc3268dbef5f::t_c1b35deb84018c 6872,8726
+docs/词条系统-设计方案.md
+  s_99dc3268dbef5f::t_1919094bd91911 471,484,495-496,543,795
+  s_99dc3268dbef5f::t_c1a721f4e16160 479,481
+Server/MirObjects/ItemObject.cs
+  s_99dc3268dbef5f::t_62b5e81127ff47 80-81,109-110,114-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "74f2ab098a4305429005ec8e38c1f1a3f663025b",
+  "prompts": {},
+  "sessions": {
+    "s_99dc3268dbef5f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1d2be-ee0a-7206-8c21-c2e0e5aa4afe",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
