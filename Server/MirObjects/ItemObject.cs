@@ -77,6 +77,8 @@ namespace Server.MirObjects
                     NameColour = Color.Red;
             }
 
+            SetAffixNameColour();
+
 			CurrentMap = dropper.CurrentMap;
             CurrentLocation = dropper.CurrentLocation;
         }
@@ -104,8 +106,15 @@ namespace Server.MirObjects
                     NameColour = Color.Red;
             }
 
+            SetAffixNameColour();
+
             CurrentMap = dropper.CurrentMap;
             CurrentLocation = manualpoint;
+        }
+        private void SetAffixNameColour()
+        {
+            byte tier = AffixStats.HighestTier(Item);
+            if (tier > 0) NameColour = AffixStats.TierColor(tier);
         }
         public ItemObject(MapObject dropper, uint gold)
         {

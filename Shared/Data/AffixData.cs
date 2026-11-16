@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 /// <summary>
 /// 一条已生成的词条实例，随 UserItem 一起存档/下发。
@@ -57,6 +58,29 @@ public sealed class ClientAffixInfo
 /// </summary>
 public static class AffixStats
 {
+    /// <summary>
+    /// 词条档位色板。T2 使用绿色而不是黄色，避免和客户端背包默认的黄色装备名撞色。
+    /// 服务端地面掉落物与客户端 tooltip 共用这一套颜色。
+    /// </summary>
+    public static Color TierColor(byte tier)
+    {
+        switch (tier)
+        {
+            case 1:
+                return Color.DeepSkyBlue;
+            case 2:
+                return Color.LimeGreen;
+            case 3:
+                return Color.DarkOrange;
+            case 4:
+                return Color.Plum;
+            case 5:
+                return Color.Red;
+            default:
+                return Color.White;
+        }
+    }
+
     public static byte HighestTier(UserItem item)
     {
         if (item == null || item.Affixes == null || item.Affixes.Count == 0) return 0;

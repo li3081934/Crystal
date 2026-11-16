@@ -6869,21 +6869,7 @@ namespace Client.MirScenes
 
         public Color AffixTierColor(byte tier)
         {
-            switch (tier)
-            {
-                case 1:
-                    return Color.DeepSkyBlue;
-                case 2:
-                    return Color.Yellow;
-                case 3:
-                    return Color.DarkOrange;
-                case 4:
-                    return Color.Plum;
-                case 5:
-                    return Color.Red;
-                default:
-                    return Color.White;
-            }
+            return AffixStats.TierColor(tier);
         }
 
         public void DisposeItemLabel()
@@ -8737,9 +8723,7 @@ namespace Client.MirScenes
 
                 string statName = affix.Stat.ToLocalizedString();
                 string valueText = affix.Value >= 0 ? "+" + affix.Value : affix.Value.ToString();
-                string text = info != null && info.Suffix
-                    ? string.Format("{0} {1} {2}", statName, valueText, affixName)
-                    : string.Format("{0} {1} {2}", affixName, statName, valueText);
+                string text = string.Format("{0} {1} {2}", affixName, statName, valueText);
 
                 MirLabel affixLabel = new MirLabel
                 {
