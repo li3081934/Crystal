@@ -373,8 +373,11 @@ FodyWeavers.xsd
 !/Build/Server/Release/Envir/Affix
 /Build/Server/Release/Envir/Affix/*
 !/Build/Server/Release/Envir/Affix/*.json
-# 游戏数据库随代码版本化（账号库 Server.MirADB 不纳入）
-!/Build/Server/Release/Server.MirDB
+# 数据库迁移文件随代码版本化（Server.MirDB / Server.MirADB 不提交）
+!/Build/Server/Release/Envir/Migrations
+/Build/Server/Release/Envir/Migrations/*
+!/Build/Server/Release/Envir/Migrations/*.json
+!/Build/Server/Release/Envir/Migrations/*.md
 # 自定义 NPC 脚本用 git add -f 单独纳入，其余 NPC 脚本仍整体忽略
 /.idea/.idea.Legend of Mir/.idea
 /.idea/config

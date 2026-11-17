@@ -22,6 +22,7 @@ namespace Server
             GuildPath = Path.Combine(".", "Guilds"),
             ConquestsPath = Path.Combine(".", "Conquests"),
             NPCPath = Path.Combine(EnvirPath, "NPCs"),
+            MigrationsPath = Path.Combine(EnvirPath, "Migrations"),
             GoodsPath = Path.Combine(EnvirPath, "Goods"),
             RecipePath = Path.Combine(EnvirPath, "Recipe"),
             QuestPath = Path.Combine(EnvirPath, "Quests"),

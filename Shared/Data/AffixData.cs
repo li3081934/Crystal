@@ -59,7 +59,7 @@ public sealed class ClientAffixInfo
 public static class AffixStats
 {
     /// <summary>
-    /// 词条档位色板。T2 使用绿色而不是黄色，避免和客户端背包默认的黄色装备名撞色。
+    /// 词条档位色板，采用魔兽世界式的品质色阶：绿 → 蓝 → 紫 → 橙 → 红。
     /// 服务端地面掉落物与客户端 tooltip 共用这一套颜色。
     /// </summary>
     public static Color TierColor(byte tier)
@@ -67,15 +67,15 @@ public static class AffixStats
         switch (tier)
         {
             case 1:
-                return Color.DeepSkyBlue;
+                return Color.FromArgb(30, 255, 0);    // #1EFF00 绿
             case 2:
-                return Color.LimeGreen;
+                return Color.FromArgb(0, 112, 221);   // #0070DD 蓝
             case 3:
-                return Color.DarkOrange;
+                return Color.FromArgb(163, 53, 238);  // #A335EE 紫
             case 4:
-                return Color.Plum;
+                return Color.FromArgb(255, 128, 0);   // #FF8000 橙
             case 5:
-                return Color.Red;
+                return Color.FromArgb(255, 0, 0);     // #FF0000 红（最高档）
             default:
                 return Color.White;
         }

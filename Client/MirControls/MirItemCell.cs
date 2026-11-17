@@ -4,6 +4,7 @@ using Client.MirObjects;
 using Client.MirScenes;
 using Client.MirSounds;
 using Client.MirScenes.Dialogs;
+using SlimDX;
 using C = ClientPackets;
 
 namespace Client.MirControls
@@ -2572,6 +2573,72 @@ namespace Client.MirControls
             }
             else
                 DisposeCountLabel();
+
+            DrawAffixBorder();
+        }
+
+        /// <summary>
+        /// 给带词条的物品格画一个与最高词条档位同色的双层呼吸边框。
+        /// 只作用于玩家自己的物品栏/装备栏（含英雄），不污染仓库、交易、摆摊等格子。
+        /// </summary>
+        private void DrawAffixBorder()
+        {
+            switch (GridType)
+            {
+                case MirGridType.Inventory:
+                case MirGridType.Equipment:
+                case MirGridType.HeroInventory:
+                case MirGridType.HeroEquipment:
+                    break;
+                default:
+                    return;
+            }
+
+            byte tier = AffixStats.HighestTier(Item);
+            if (tier <= 0) return;
+
+            Color color = AffixStats.TierColor(tier);
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(CMain.Time / 260.0);
+            int boost = 20 + (int)(45 * pulse);
+            Color accent = Color.FromArgb(255,
+                Math.Min(255, color.R + boost),
+                Math.Min(255, color.G + boost),
+                Math.Min(255, color.B + boost));
+
+            int left = DisplayLocation.X + 2;
+            int top = DisplayLocation.Y + 2;
+            int right = DisplayLocation.X + Size.Width - 3;
+            int bottom = DisplayLocation.Y + Size.Height - 3;
+
+            DXManager.Sprite.Flush();
+            DXManager.Line.Draw(RectanglePoints(left, top, right, bottom), color);
+            DXManager.Line.Draw(RectanglePoints(left + 2, top + 2, right - 2, bottom - 2), accent);
+
+            int corner = 4 + (int)(3 * pulse);
+            DrawCorner(left, top, corner, 1, 1, accent);
+            DrawCorner(right, top, corner, -1, 1, accent);
+            DrawCorner(left, bottom, corner, 1, -1, accent);
+            DrawCorner(right, bottom, corner, -1, -1, accent);
+        }
+
+        private static Vector2[] RectanglePoints(int left, int top, int right, int bottom)
+        {
+            return new[]
+            {
+                new Vector2(left, top), new Vector2(right, top),
+                new Vector2(left, top), new Vector2(left, bottom),
+                new Vector2(left, bottom), new Vector2(right, bottom),
+                new Vector2(right, top), new Vector2(right, bottom)
+            };
+        }
+
+        private static void DrawCorner(int x, int y, int length, int dx, int dy, Color color)
+        {
+            DXManager.Line.Draw(new[]
+            {
+                new Vector2(x, y), new Vector2(x + dx * length, y),
+                new Vector2(x, y), new Vector2(x, y + dy * length)
+            }, color);
         }
 
         protected override void OnMouseEnter()

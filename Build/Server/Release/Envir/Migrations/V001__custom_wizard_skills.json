@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "description": "Custom wizard skills, their books, and the custom book seller NPC",
+  "magic": [
+    {
+      "name": "ArcaneRecovery",
+      "spell": "ArcaneRecovery",
+      "icon": 50,
+      "level1": 10,
+      "level2": 12,
+      "level3": 15,
+      "need1": 200,
+      "need2": 500,
+      "need3": 1000,
+      "baseCost": 0,
+      "levelCost": 0,
+      "delayBase": 0,
+      "delayReduction": 0,
+      "powerBase": 5,
+      "powerBonus": 1,
+      "mPowerBase": 2,
+      "mPowerBonus": 3,
+      "multiplierBase": 5.0,
+      "multiplierBonus": 0.0,
+      "range": 0
+    },
+    {
+      "name": "ArcaneShift",
+      "spell": "ArcaneShift",
+      "icon": 51,
+      "level1": 10,
+      "level2": 12,
+      "level3": 15,
+      "need1": 200,
+      "need2": 500,
+      "need3": 1000,
+      "baseCost": 10,
+      "levelCost": 2,
+      "delayBase": 5000,
+      "delayReduction": 4000,
+      "powerBase": 2,
+      "powerBonus": 3,
+      "mPowerBase": 4,
+      "mPowerBonus": 5,
+      "multiplierBase": 2000.0,
+      "multiplierBonus": 0.0,
+      "range": 0
+    }
+  ],
+  "items": [
+    {
+      "name": "ArcaneRecovery",
+      "type": "Book",
+      "shape": 170,
+      "image": 3641,
+      "weight": 1,
+      "price": 4000,
+      "stackSize": 1,
+      "requiredType": "Level",
+      "requiredClass": "Wizard",
+      "requiredAmount": 10
+    },
+    {
+      "name": "ArcaneShift",
+      "type": "Book",
+      "shape": 171,
+      "image": 3641,
+      "weight": 1,
+      "price": 5000,
+      "stackSize": 1,
+      "requiredType": "Level",
+      "requiredClass": "Wizard",
+      "requiredAmount": 10
+    }
+  ],
+  "npcs": [
+    {
+      "fileName": "BichonProvince/BichonWall/ArcaneBookSeller",
+      "name": "Librarian_Mira",
+      "mapIndex": 6,
+      "x": 4,
+      "y": 8,
+      "rate": 100,
+      "image": 2,
+      "canTeleportTo": true
+    }
+  ]
+}

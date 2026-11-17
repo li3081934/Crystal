@@ -54,7 +54,7 @@ namespace Server.MirEnvir
         public static object LoadLock = new object();
 
         public const int MinVersion = 60;
-        public const int Version = 119;
+        public const int Version = 120;
         public const int CustomVersion = 0;
         public static readonly string DatabasePath = Path.Combine(".", "Server.MirDB");
         public static readonly string AccountPath = Path.Combine(".", "Server.MirADB");
@@ -122,6 +122,7 @@ namespace Server.MirEnvir
         public List<BuffInfo> BuffInfoList = new List<BuffInfo>();
         public List<ConquestInfo> ConquestInfoList = new List<ConquestInfo>();
         public List<GTMap> GTMapList = new List<GTMap>();
+        public List<MigrationRecord> AppliedMigrations = new List<MigrationRecord>();
 
         //User DB
         public int NextAccountID, NextCharacterID, NextGuildID, NextHeroID;
@@ -2558,6 +2559,10 @@ namespace Server.MirEnvir
 
                 RespawnTick.Save(writer);
 
+                writer.Write(AppliedMigrations.Count);
+                for (var i = 0; i < AppliedMigrations.Count; i++)
+                    AppliedMigrations[i].Save(writer);
+
                 writer.Write(GTMapList.Count);
                 for (var i = 0; i < GTMapList.Count; i++)
                     GTMapList[i].Save(writer);
@@ -2878,6 +2883,8 @@ namespace Server.MirEnvir
 
         public bool LoadDB()
         {
+            AppliedMigrations.Clear();
+
             lock (LoadLock)
             {
                 if (!File.Exists(DatabasePath))
@@ -2997,6 +3004,14 @@ namespace Server.MirEnvir
 
                     if (LoadVersion > 67)
                         RespawnTick = new RespawnTimer(reader);
+
+                    if (LoadVersion >= 120)
+                    {
+                        count = reader.ReadInt32();
+                        AppliedMigrations.Clear();
+                        for (var i = 0; i < count; i++)
+                            AppliedMigrations.Add(new MigrationRecord(reader));
+                    }
                 }
                 Settings.LinkGuildCreationItems(ItemInfoList);
             }
@@ -3383,7 +3398,11 @@ namespace Server.MirEnvir
             Heroes.Clear();
             MonsterCount = 0;
 
-            LoadDB();
+            if (!LoadDB())
+                return;
+
+            if (!DbMigrator.Apply())
+                return;
 
             BuffInfoList.Clear();
             foreach (var buff in BuffInfo.Load())

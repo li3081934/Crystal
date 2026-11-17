@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 ﻿using Server.MirEnvir;
 using S = ServerPackets;
 
@@ -32,6 +32,7 @@ namespace Server.MirObjects
         public Point CastLocation;
         public Point ExitLocation;
         public bool HasExitLocation;
+        public bool RemoveOnUse;
         public bool Show, Decoration;
 
         //ExplosiveTrap
@@ -320,7 +321,10 @@ namespace Server.MirObjects
 
                             if (!portal.CurrentMap.ValidPoint(newExit)) return;
 
-                            ob.Teleport(portal.CurrentMap, newExit, false);
+                            if (ob.Teleport(portal.CurrentMap, newExit, false) && RemoveOnUse)
+                            {
+                                ExpireTime = 0;
+                            }
                         }
 
                         Value -= 1;

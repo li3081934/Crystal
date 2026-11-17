@@ -6152,6 +6152,7 @@ namespace Server.MirObjects
                 Direction = Direction,
                 ExitLocation = townArrival,
                 HasExitLocation = true,
+                RemoveOnUse = true,
             };
             townMap.AddObject(town);
             town.Spawned();
