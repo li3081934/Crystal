@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using Server.MirDatabase;
@@ -59,6 +59,9 @@ namespace RuneTestTool
                 bool statBonus = options.ContainsKey("statbonus");
                 bool manaKill = options.ContainsKey("manakill");
                 bool fireDur = options.ContainsKey("firedur");
+                bool buffStack = options.ContainsKey("buffstack");
+                bool scDamage = options.ContainsKey("sc");
+                bool poisonProc = options.ContainsKey("poisonproc");
                 string manaMonster = options.GetValueOrDefault("manamob", "SnakeScorpion");
                 int manaMonsterHp = int.TryParse(options.GetValueOrDefault("monsterhp", "330"), out int mhp) ? mhp : 330;
                 int[] manaPct = (options.GetValueOrDefault("manapct", "5,10,15,25") ?? string.Empty)
@@ -68,7 +71,7 @@ namespace RuneTestTool
                 string doubleMob = options.GetValueOrDefault("doublemob", "Scorpion");
                 bool tame = options.ContainsKey("tame");
                 string tameMonster = options.GetValueOrDefault("tamemob", "Hen");
-                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet, greenDot, splash, doubleCast, tame, tameMonster, doubleMob, boltBleed, statBonus, manaKill, manaMonster, manaMonsterHp, manaPct, fireDur);
+                return Smoke.Run(smokeHost, smokePort, smokeAccount, smokePassword, spell, smokeRune, lifesteal, expect, crit, repeat, maxatk, onlySpell, stun, dual, pet, extraPet, greenDot, splash, doubleCast, tame, tameMonster, doubleMob, boltBleed, statBonus, manaKill, manaMonster, manaMonsterHp, manaPct, fireDur, buffStack, scDamage, poisonProc);
             }
 
             string dir = options.GetValueOrDefault("dir");

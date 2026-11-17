@@ -28,6 +28,50 @@ namespace Server.RuneSystem
             damageBase = owner.Stats[Stat.MaxDC];
         }
 
+        /// <summary>
+        /// 近战附伤（符文「精神力剑法」等）：普通攻击时额外附加一次道术伤害。
+        /// 只对普通攻击（spell == Spell.None）生效；技能攻击不吃这份加成，避免和技能自带倍率相乘。
+        /// </summary>
+        public static void ApplyScDamage(HumanObject owner, Spell spell, ref int damageBase)
+        {
+            if (owner == null || !RuneRepository.Any) return;
+            if (spell != Spell.None) return;
+
+            var rune = FindRune(owner, Spell.SpiritSword, RuneEffect.ScDamage);
+            if (rune == null) return;
+            if (!RuneEffects.TryProc(rune)) return;
+
+            int min = owner.Stats[Stat.MinSC];
+            int max = owner.Stats[Stat.MaxSC];
+            if (max < min) max = min;
+
+            int sc = min >= max ? min : Envir.Main.Random.Next(min, max + 1);
+            int pct = rune.ScPct > 0 ? rune.ScPct : 100;
+
+            damageBase += Math.Max(1, sc * pct / 100);
+        }
+
+        /// <summary>按"符文所属技能"找当前选中的符文（不要求本次施放的就是该技能）。</summary>
+        private static RuneInfo FindRune(HumanObject owner, Spell spell, RuneEffect effect)
+        {
+            var magics = owner.Info?.Magics;
+            if (magics == null || magics.Count == 0) return null;
+
+            for (int i = 0; i < magics.Count; i++)
+            {
+                var magic = magics[i];
+                if (magic.RuneId == 0) continue;
+
+                var rune = RuneRepository.Get(magic.RuneId);
+                if (rune == null || !rune.Valid || !rune.HasEffect(effect)) continue;
+                if (rune.Spell != spell) continue;
+
+                return rune;
+            }
+
+            return null;
+        }
+
         /// <summary>本次攻击是否无视目标防御（护甲归零；GuaranteedHit 时连命中判定一起跳过）。</summary>
         public static void ApplyIgnoreDefence(HumanObject owner, Spell spell, ref DefenceType defence)
         {

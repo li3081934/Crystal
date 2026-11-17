@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Server.MirEnvir;
 using Server.MirObjects;
 
 namespace Server.RuneSystem
@@ -45,6 +46,7 @@ namespace Server.RuneSystem
             if (ctx.UsedSpell != ctx.Rune.Spell) return false;
             if (!(data[2] is MapObject target) || target.Dead) return false;
             if (ctx.Rune.RequireSecondTarget) return false;   //法术没有"第 2 格"概念
+            if (ctx.Rune.OnlyNormalAttack) return false;      //只在普攻里挂状态，施法本身不吃
 
             int damage = data[1] is int raw ? raw : 0;
 
@@ -59,13 +61,19 @@ namespace Server.RuneSystem
             if (target == null || target.Dead) return;
             if (ctx.Owner.Dead) return;
 
-            PoisonType type = ctx.Rune.ResolvedDebuffType;
+            //OnlyNormalAttack：只让"普通攻击"触发（技能攻击不吃）
+            if (ctx.Rune.OnlyNormalAttack && !ctx.Owner.IsRuneHitFrom(Spell.None)) return;
+
+            PoisonType type = ctx.Rune.DebuffRandom
+                ? (Envir.Main.Random.Next(2) == 0 ? PoisonType.Green : PoisonType.Red)
+                : ctx.Rune.ResolvedDebuffType;
+
             if (type == PoisonType.None) return;
             if (ctx.Rune.DebuffDuration <= 0) return;
 
             //RequireSpellHit：只让"符文所属技能"打出的伤害附带异常（例如攻杀·血饮 / 雷电术）。
             //法术路径已经用 ctx.UsedSpell == ctx.Rune.Spell 校验过，所以只对近战路径做挥砍标记判定。
-            if (!fromSpell && ctx.Rune.RequireSpellHit && !ctx.Owner.IsRuneHitFrom(ctx.Rune.Spell)) return;
+            if (!fromSpell && !ctx.Rune.OnlyNormalAttack && ctx.Rune.RequireSpellHit && !ctx.Owner.IsRuneHitFrom(ctx.Rune.Spell)) return;
 
             if (!RuneEffects.TryProc(ctx.Rune)) return;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using Server.MirDatabase;
 using Server.MirEnvir;
 using Server.MirObjects;
 
@@ -252,14 +253,71 @@ namespace Server.RuneSystem
             if (ctx?.Owner == null || ctx.Rune == null) return;
             if (ctx.Rune.ResolvedBuffType == BuffType.None) return;
 
+            int duration = Math.Max(1000, ctx.Rune.BuffDurationMs);
+
+            // 可叠层的符文 Buff：每层加一份 BuffStats，层数封顶，触发时刷新持续时间
+            if (ctx.Rune.BuffMaxStacks > 1)
+            {
+                ApplyStackingBuff(ctx, values, updateOnly, duration);
+                return;
+            }
+
             ctx.Owner.AddBuff(
                 ctx.Rune.ResolvedBuffType,
                 ctx.Owner,
-                Math.Max(1000, ctx.Rune.BuffDurationMs),
+                duration,
                 new Stats(ctx.Rune.ResolvedBuffStats),
                 !updateOnly,
                 updateOnly,
                 values);
+        }
+
+        private const string StackKey = "RuneStacks";
+
+        /// <summary>叠层版：第 N 层的属性 = BuffStats × N，上限 BuffMaxStacks，每次触发把持续时间重置为满。</summary>
+        private static void ApplyStackingBuff(RuneContext ctx, int[] values, bool updateOnly, int duration)
+        {
+            HumanObject owner = ctx.Owner;
+            int maxStacks = Math.Max(1, ctx.Rune.BuffMaxStacks);
+
+            Buff buff = owner.HasBuff(ctx.Rune.ResolvedBuffType, out Buff existing) ? existing : null;
+
+            int stacks = buff == null ? 0 : Math.Max(0, buff.Get<int>(StackKey));
+            stacks = Math.Min(maxStacks, stacks + 1);
+
+            if (buff == null)
+            {
+                buff = new Buff(ctx.Rune.ResolvedBuffType)
+                {
+                    Caster = owner,
+                    ObjectID = owner.ObjectID,
+                };
+
+                owner.Buffs.Add(buff);
+            }
+
+            Stats stats = new Stats();
+            for (int i = 0; i < stacks; i++) stats.Add(ctx.Rune.ResolvedBuffStats);
+
+            buff.Stats = stats;
+            buff.Values = values ?? new int[0];
+            buff.Set(StackKey, stacks);
+            buff.ExpireTime = duration;
+            buff.LastTime = Envir.Main.Time;
+            buff.FlagForRemoval = false;
+
+            owner.Enqueue(new ServerPackets.AddBuff { Buff = buff.ToClientBuff() });
+
+            if (!updateOnly) owner.RefreshStats();
+        }
+
+        /// <summary>读取当前层数（没有 Buff 时为 0）。</summary>
+        public static int GetBuffStacks(MapObject owner, BuffType type)
+        {
+            if (owner == null) return 0;
+            if (!owner.HasBuff(type, out Buff buff) || buff == null) return 0;
+
+            return Math.Max(0, buff.Get<int>(StackKey));
         }
     }
 }

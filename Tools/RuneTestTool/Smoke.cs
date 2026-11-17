@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Net.Sockets;
@@ -14,7 +14,7 @@ namespace RuneTestTool
     /// </summary>
     internal static class Smoke
     {
-        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false, bool greenDot = false, bool splash = false, bool doubleCast = false, bool tame = false, string tameMonster = "Hen", string doubleMonster = "Scorpion", bool boltBleed = false, bool statBonus = false, bool manaKill = false, string manaMonster = "SnakeScorpion", int manaMonsterHp = 330, int[] manaPct = null, bool fireDur = false)
+        public static int Run(string host, int port, string account, string password, Spell spell, ushort runeId, bool lifesteal, string expect = "buff", bool crit = false, bool repeat = false, bool maxatk = false, bool onlySpell = false, bool stun = false, bool dual = false, bool pet = false, bool extraPet = false, bool greenDot = false, bool splash = false, bool doubleCast = false, bool tame = false, string tameMonster = "Hen", string doubleMonster = "Scorpion", bool boltBleed = false, bool statBonus = false, bool manaKill = false, string manaMonster = "SnakeScorpion", int manaMonsterHp = 330, int[] manaPct = null, bool fireDur = false, bool buffStack = false, bool scDamage = false, bool poisonProc = false)
         {
             Packet.IsServer = false; // 我们是客户端：收到的包按 ServerPackets 解析
 
@@ -121,6 +121,9 @@ namespace RuneTestTool
             if (crit) return RunCrit(stream, buffer, myLocation, spell, runeId);
             if (greenDot) return RunGreenPoisonDot(stream, buffer, myLocation, spell, runeId);
             if (fireDur) return RunFireWallDuration(stream, buffer, myLocation, spell, runeId);
+            if (buffStack) return RunBuffStacks(stream, buffer, myLocation, spell, runeId);
+            if (scDamage) return RunScDamage(stream, buffer, myLocation, runeId);
+            if (poisonProc) return RunPoisonProc(stream, buffer, myLocation, spell, runeId);
             if (splash) return RunSplash(stream, buffer, myLocation, spell, runeId);
             if (doubleCast) return RunDoubleCast(stream, buffer, myLocation, spell, runeId, doubleMonster);
             if (tame) return RunTame(stream, buffer, myLocation, spell, runeId, tameMonster);
@@ -1739,6 +1742,272 @@ private static int RunLifesteal(NetworkStream stream, List<byte> buffer, Point m
 
         Console.WriteLine($"    {tag}：观察到 {gone} 段火墙消失，最长存活 {(maxLife <= 0 ? 0 : maxLife)}ms");
         return maxLife;
+    }
+
+    /// <summary>
+    /// 验证「每次攻击叠 1 层、封顶 N 层、每次触发刷新持续」：连砍若干刀，读 S.AddBuff 里的 AttackSpeed 与剩余时间。
+    /// </summary>
+    private static int RunBuffStacks(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"--- 叠层 Buff 验证（{spell} → 符文 #{runeId}）---");
+
+        Send(stream, new C.Chat { Message = "@REVIVE" });
+        Drain(stream, buffer, 600);
+        Send(stream, new C.Chat { Message = "@SUPERMAN" });
+        Drain(stream, buffer, 300);
+        Send(stream, new C.Chat { Message = $"@GIVESKILL {spell} 3" });
+        Drain(stream, buffer, 800);
+
+        Send(stream, new C.SetRune { Spell = spell, RuneId = 0 });
+        Drain(stream, buffer, 800);
+        Send(stream, new C.SetRune { Spell = spell, RuneId = runeId });
+        Drain(stream, buffer, 900);
+
+        List<int> attackSpeeds = new List<int>();
+        List<long> remainings = new List<long>();
+
+        for (int i = 0; i < 7; i++)
+        {
+            Send(stream, new C.Chat { Message = "@CLEARMOB" });
+            Drain(stream, buffer, 500);
+            Send(stream, new C.Chat { Message = "@MOB Scorpion 1" });
+
+            S.ObjectMonster monster = null;
+            foreach (S.ObjectMonster ob in Drain(stream, buffer, 1200).OfType<S.ObjectMonster>())
+                if (monster == null || ob.ObjectID > monster.ObjectID) monster = ob;
+
+            if (monster == null)
+            {
+                Console.WriteLine("  × 没能刷出测试怪");
+                return 1;
+            }
+
+            MirDirection direction = Functions.DirectionFromPoint(myLocation, monster.Location);
+            TrySend(stream, new C.Attack { Direction = direction, Spell = Spell.None });
+
+            long deadline = Environment.TickCount64 + 1100;
+            while (Environment.TickCount64 < deadline)
+            {
+                foreach (Packet packet in Drain(stream, buffer, 300))
+                {
+                    if (packet is S.AddBuff add && add.Buff.Type == BuffType.Rune)
+                    {
+                        attackSpeeds.Add(add.Buff.Stats[Stat.AttackSpeed]);
+                        remainings.Add(add.Buff.ExpireTime);
+                    }
+                }
+            }
+        }
+
+        Console.WriteLine($"    每次触发后攻速加成：{string.Join(" → ", attackSpeeds)}");
+        Console.WriteLine($"    对应的剩余持续时间：{string.Join(" / ", remainings.Select(r => r + "ms"))}");
+
+        int[] expect = { 1, 2, 3, 4, 5, 5 };
+        if (attackSpeeds.Count < expect.Length)
+        {
+            Console.WriteLine($"  × 只收到 {attackSpeeds.Count} 次叠层包，期望至少 {expect.Length} 次");
+            return 1;
+        }
+
+        for (int i = 0; i < expect.Length; i++)
+        {
+            if (attackSpeeds[i] != expect[i])
+            {
+                Console.WriteLine($"  × 第 {i + 1} 次触发攻速加成应为 +{expect[i]}，实际 +{attackSpeeds[i]}");
+                return 1;
+            }
+        }
+
+        long lastRemain = remainings[remainings.Count - 1];
+        if (lastRemain < 4000)
+        {
+            Console.WriteLine($"  × 封顶后没有刷新持续时间（剩余 {lastRemain}ms）");
+            return 1;
+        }
+
+        Console.WriteLine("叠层 Buff 验证通过：+1 起叠、封顶 +5、每次触发刷新持续时间");
+        return 0;
+    }
+
+    /// <summary>
+    /// 验证「普通攻击 100% 额外附加道术伤害」：同一只怪，A（无符文）/B（带符文）各砍若干刀，比对跳字。
+    /// 用 @STATINFO 顺带把角色的道术上下限打出来，方便核对差值。
+    /// </summary>
+    private static int RunScDamage(NetworkStream stream, List<byte> buffer, Point myLocation, ushort runeId)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"--- 近战附加道术伤害验证（SpiritSword → 符文 #{runeId}）---");
+
+        Send(stream, new C.Chat { Message = "@REVIVE" });
+        Drain(stream, buffer, 600);
+        Send(stream, new C.Chat { Message = "@SUPERMAN" });
+        Drain(stream, buffer, 300);
+        Send(stream, new C.Chat { Message = "@GIVESKILL SpiritSword 3" });
+        Drain(stream, buffer, 800);
+
+        List<int> plain = MeasureScHits(stream, buffer, myLocation, 0, "A 无符文");
+        if (plain.Count == 0)
+        {
+            Console.WriteLine("  × 无符文阶段没有统计到普攻伤害");
+            return 1;
+        }
+
+        List<int> runed = MeasureScHits(stream, buffer, myLocation, runeId, "B 带符文");
+        if (runed.Count == 0)
+        {
+            Console.WriteLine("  × 带符文阶段没有统计到普攻伤害");
+            return 1;
+        }
+
+        double plainAvg = plain.Average();
+        double runedAvg = runed.Average();
+        double diff = runedAvg - plainAvg;
+
+        Console.WriteLine($"普攻伤害：无符文 {plainAvg:F1}（{plain.Count} 刀）→ 带符文 {runedAvg:F1}（{runed.Count} 刀），差值 {diff:+0.0;-0.0}");
+
+        if (diff < 1)
+        {
+            Console.WriteLine("  × 带符文后普攻伤害没有提升");
+            return 1;
+        }
+
+        Console.WriteLine("近战附伤验证通过：普攻稳定多了道术伤害");
+        return 0;
+    }
+
+    private static List<int> MeasureScHits(NetworkStream stream, List<byte> buffer, Point myLocation, ushort runeId, string tag)
+    {
+        List<int> hits = new List<int>();
+
+        Send(stream, new C.Chat { Message = "@CLEARMOB" });
+        Drain(stream, buffer, 700);
+        Send(stream, new C.SetRune { Spell = Spell.SpiritSword, RuneId = runeId });
+        Drain(stream, buffer, 900);
+        Send(stream, new C.Chat { Message = "@MOB Scorpion 1" });
+
+        S.ObjectMonster monster = null;
+        foreach (S.ObjectMonster ob in Drain(stream, buffer, 1500).OfType<S.ObjectMonster>())
+            if (monster == null || ob.ObjectID > monster.ObjectID) monster = ob;
+
+        if (monster == null)
+        {
+            Console.WriteLine($"    {tag}：没能刷出 Scorpion");
+            return hits;
+        }
+
+        uint targetId = monster.ObjectID;
+        MirDirection direction = Functions.DirectionFromPoint(myLocation, monster.Location);
+
+        for (int i = 0; i < 8; i++)
+        {
+            Send(stream, new C.Chat { Message = "@CLEARMOB" });
+            Drain(stream, buffer, 400);
+            Send(stream, new C.Chat { Message = "@MOB Scorpion 1" });
+
+            S.ObjectMonster fresh = null;
+            foreach (S.ObjectMonster ob in Drain(stream, buffer, 1200).OfType<S.ObjectMonster>())
+                if (fresh == null || ob.ObjectID > fresh.ObjectID) fresh = ob;
+
+            if (fresh == null) continue;
+            targetId = fresh.ObjectID;
+            direction = Functions.DirectionFromPoint(myLocation, fresh.Location);
+
+            TrySend(stream, new C.Attack { Direction = direction, Spell = Spell.None });
+
+            long deadline = Environment.TickCount64 + 1100;
+            while (Environment.TickCount64 < deadline)
+            {
+                foreach (Packet packet in Drain(stream, buffer, 250))
+                {
+                    if (packet is S.DamageIndicator ind2 && ind2.ObjectID == targetId && ind2.Damage < 0)
+                        hits.Add(-ind2.Damage);
+                }
+            }
+        }
+
+        Console.WriteLine($"    {tag}：{hits.Count} 刀命中，伤害 [{string.Join(", ", hits)}]");
+        return hits;
+    }
+
+    private static int RunPoisonProc(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"--- 普攻附加随机毒验证（{spell} → 符文 #{runeId}）---");
+
+        Send(stream, new C.Chat { Message = "@REVIVE" });
+        Drain(stream, buffer, 600);
+        Send(stream, new C.Chat { Message = "@GIVESKILL " + spell + " 3" });
+        Drain(stream, buffer, 800);
+
+        List<PoisonType> none = MeasurePoisonProc(stream, buffer, myLocation, spell, 0, "A 无符文");
+        List<PoisonType> runed = MeasurePoisonProc(stream, buffer, myLocation, spell, runeId, "B 带符文");
+
+        if (none.Count > 0)
+        {
+            Console.WriteLine($"  × 无符文时普攻也中毒了（{none.Count} 次），符文判定有误");
+            return 1;
+        }
+
+        if (runed.Count == 0)
+        {
+            Console.WriteLine("  × 带符文后普攻没有造成中毒");
+            return 1;
+        }
+
+        bool green = runed.Any(p => (p & PoisonType.Green) != 0);
+        bool red = runed.Any(p => (p & PoisonType.Red) != 0);
+
+        Console.WriteLine($"绿毒 {(green ? "√" : "×")} / 红毒 {(red ? "√" : "×")}");
+
+        if (!green || !red)
+        {
+            Console.WriteLine("  × 本轮普攻没有同时出现绿毒与红毒");
+            return 1;
+        }
+
+        Console.WriteLine("普攻附加随机毒验证通过：绿毒与红毒随机出现");
+        return 0;
+    }
+
+    private static List<PoisonType> MeasurePoisonProc(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId, string tag)
+    {
+        List<PoisonType> poisons = new List<PoisonType>();
+
+        Send(stream, new C.Chat { Message = "@CLEARMOB" });
+        Drain(stream, buffer, 500);
+        Send(stream, new C.SetRune { Spell = spell, RuneId = runeId });
+        Drain(stream, buffer, 800);
+
+        for (int i = 0; i < 10; i++)
+        {
+            Send(stream, new C.Chat { Message = "@CLEARMOB" });
+            Drain(stream, buffer, 350);
+            Send(stream, new C.Chat { Message = "@MOB Scorpion 1" });
+
+            S.ObjectMonster fresh = null;
+            foreach (S.ObjectMonster ob in Drain(stream, buffer, 1200).OfType<S.ObjectMonster>())
+                if (fresh == null || ob.ObjectID > fresh.ObjectID) fresh = ob;
+
+            if (fresh == null) continue;
+
+            uint targetId = fresh.ObjectID;
+            MirDirection direction = Functions.DirectionFromPoint(myLocation, fresh.Location);
+            TrySend(stream, new C.Attack { Direction = direction, Spell = Spell.None });
+
+            long deadline = Environment.TickCount64 + 1200;
+            while (Environment.TickCount64 < deadline)
+            {
+                foreach (Packet packet in Drain(stream, buffer, 250))
+                {
+                    if (packet is S.ObjectPoisoned poisoned && poisoned.ObjectID == targetId)
+                        poisons.Add(poisoned.Poison);
+                }
+            }
+        }
+
+        Console.WriteLine($"    {tag}：{poisons.Count} 次中毒 [{string.Join(", ", poisons)}]");
+        return poisons;
     }
 
     private static int RunGreenPoisonDot(NetworkStream stream, List<byte> buffer, Point myLocation, Spell spell, ushort runeId)

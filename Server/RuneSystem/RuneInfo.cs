@@ -26,6 +26,9 @@ namespace Server.RuneSystem
         /// <summary>时长类：把技能持续时间按 DurationPct 放大（见 DurationPct 字段）。</summary>
         DurationUp = 1 << 9,
 
+        /// <summary>近战附伤：普通攻击时额外附加一次道术（SC）伤害，数值按 ScPct 缩放（见 ScPct 字段）。</summary>
+        ScDamage = 1 << 8,
+
         // ---- 需要行为实现（RuneBehaviors） ----
         BuffOnSwing = 1 << 10,
         BuffOnDealtDamage = 1 << 11,
@@ -244,6 +247,8 @@ namespace Server.RuneSystem
         // ---- Buff 类参数（Buff 类行为使用） ----
         public string BuffTypeName { get; set; } = string.Empty;
         public int BuffDurationMs { get; set; }
+        /// <summary>Buff 最大层数：>1 时按层叠加 BuffStats（每层一份），并以该值为上限，每次触发刷新持续时间。</summary>
+        public int BuffMaxStacks { get; set; } = 1;
         public Dictionary<string, int> BuffStats { get; set; } = new Dictionary<string, int>();
 
         // ---- 减益类参数（DebuffOnHit：命中时给目标挂 PoisonType） ----
@@ -261,6 +266,15 @@ namespace Server.RuneSystem
 
         /// <summary>每 tick 数值按本次伤害的百分比计算（&gt;0 时优先于 DebuffValue）。</summary>
         public float DebuffValuePct { get; set; }
+
+        /// <summary>只对普通攻击生效（不掺技能攻击；与 RequireSpellHit 互斥，设了它就忽略 RequireSpellHit）。</summary>
+        public bool OnlyNormalAttack { get; set; }
+
+        /// <summary>异常状态在「绿毒 / 红毒」之间随机选一个（DebuffOnHit 类符文用）。</summary>
+        public bool DebuffRandom { get; set; }
+
+        /// <summary>近战附伤（ScDamage）：附加的道术伤害百分比，100 = 完整一次道术攻击。</summary>
+        public int ScPct { get; set; } = 100;
 
         /// <summary>下列表里对应的行为实现（RuneBehaviors/*）。为空时仅走纯数值能力。</summary>
         public string BehaviorId { get; set; } = string.Empty;

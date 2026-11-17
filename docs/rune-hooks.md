@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 服务端（11 个文件 / 31 行）
+## 1. 服务端（11 个文件 / 32 行）
 
 | # | 文件 | 行 | 改动 |
 |---|---|---|---|
@@ -41,6 +41,7 @@
 | S21 | `Server/MirObjects/HumanObject.cs`（`RefreshStats()` 里 `RefreshStatCaps();` 之后） | `RuneHooks.ApplyPassiveStats(this);`（1 行）——被动属性类符文（如「奥术·巨力」加背包负重/穿戴/腕力）在属性重算的最后一刻叠加；`RefreshStats()` 开头 `Stats.Clear()`，所以幂等，无符文时循环直接跳过 |
 | S22 | `Server/MirObjects/MonsterObject.cs`（`Die()` 里 `EXPOwner.WinExp(Experience, Level);` 之后） | `RuneHooks.ApplyManaOnKill(EXPOwner, this);`（1 行）——击杀回蓝类符文；挂在经验结算块内，宠物击杀不计 |
 | S23 | `Server/MirEnvir/Map.cs`（`#region FireWall` 的 `case Spell.FireWall:` 里，`data[4]` 取完 castId 之后） | `int wallDuration = RuneHooks.SpellDuration(magic, (10 + value / 2) * 1000);`（1 行）+ 两处 `ExpireTime = Envir.Time + wallDuration`——火墙持续时间类符文 |
+| S24 | `Server/MirObjects/HumanObject.cs`（`Attack` 里 `int damageBase = GetAttackPower(...)` / `RuneHooks.ApplyMaxAttack(...)` 之后） | `RuneHooks.ApplyScDamage(this, spell, ref damageBase);`（1 行）——近战附伤类符文（如「精神力·道斩」：普攻额外附加一次道术伤害）；只对 `spell == Spell.None` 生效，没有符文时第一行就 return |
 
 ## 2. Shared（5 个文件）
 

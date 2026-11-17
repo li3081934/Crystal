@@ -3038,6 +3038,7 @@ namespace Server.MirObjects
             //damabeBase = the original damage from your gear (+ bonus from moonlight and darkbody)
             int damageBase = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
             RuneHooks.ApplyMaxAttack(this, spell, ref damageBase);
+            RuneHooks.ApplyScDamage(this, spell, ref damageBase);   //符文：近战附加道术伤害（ScDamage）
             //damageFinal = the damage you're gonna do with skills added
             int damageFinal;
 
