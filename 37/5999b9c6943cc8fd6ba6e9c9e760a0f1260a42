@@ -1,0 +1,58 @@
+Server/MirObjects/PlayerObject.cs
+  s_99dc3268dbef5f::t_689d6fc9656694 16,370,1177,1724
+  s_99dc3268dbef5f::t_3b94bee86b97b6 1133-1157
+Server/MirObjects/HeroObject.cs
+  s_99dc3268dbef5f::t_9cf0e515af527b 1226
+Shared/Language.cs
+  s_99dc3268dbef5f::t_6979992b1cacf0 898-899,3910-3911
+Client/Localization/English.json
+  s_99dc3268dbef5f::t_ab93383a586740 881-882,1136
+Client/MirObjects/UserObject.cs
+  s_99dc3268dbef5f::t_7fe0ccd4733c85 14,171,179-182
+docs/词条系统-设计方案.md
+  s_99dc3268dbef5f::t_6e25bf52f7b95c 661,726,730,732,816,824,829-833,835-837
+  s_99dc3268dbef5f::t_d92c47db53fc3a 85
+  s_99dc3268dbef5f::t_9022268254c49e 834
+Client/MirObjects/PlayerObject.cs
+  s_99dc3268dbef5f::t_4aeb26c872a028 1578,1603
+Server/MirObjects/HumanObject.cs
+  s_99dc3268dbef5f::t_47135ab7fb8143 190,1814,1826-1832,1834-1835,3506
+  s_99dc3268dbef5f::t_e045cad3f7fc56 3515,7135
+docs/词条系统-词条池.md
+  s_99dc3268dbef5f::t_d92c47db53fc3a 16,19,442-443
+  s_99dc3268dbef5f::t_6e25bf52f7b95c 88,101,147-148,183,229,233,263,276,465
+  s_99dc3268dbef5f::t_a7491b31465fb1 15
+  s_99dc3268dbef5f::t_8cac00fc41d260 132
+Client/MirScenes/GameScene.cs
+  s_99dc3268dbef5f::t_4209c850745034 4698-4700
+  s_99dc3268dbef5f::t_75f1352ded76fa 7510-7546
+Server/MirDatabase/MagicInfo.cs
+  s_99dc3268dbef5f::t_01b3b05ef8abe6 163,182,227,229-230,233,240-244,247-249,252
+  s_99dc3268dbef5f::t_4dc159b786f785 1
+  s_99dc3268dbef5f::t_d307ea951d9883 246
+Shared/Data/Stat.cs
+  s_99dc3268dbef5f::t_c54c570eee8ac7 113-114,132
+Server/Affix/AffixRepository.cs
+  s_99dc3268dbef5f::t_7d6e8f7ad37558 175,380,414
+  s_99dc3268dbef5f::t_6e25bf52f7b95c 13
+Client/Localization/Chinese.json
+  s_99dc3268dbef5f::t_b0e4564affc10f 881-882,1136
+Build/Server/Release/Envir/Affix/Affixes.json
+  s_99dc3268dbef5f::t_6527c67e913546 2947-3056,6086-6215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "375999b9c6943cc8fd6ba6e9c9e760a0f1260a42",
+  "prompts": {},
+  "sessions": {
+    "s_99dc3268dbef5f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1d2be-ee0a-7206-8c21-c2e0e5aa4afe",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
