@@ -1,0 +1,55 @@
+Server/RuneSystem/RuneEffects.cs
+  s_220f379c12fa5d::t_07ef6f2ec55b21 2,256-264,268,274-321
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_ba146dee031cef 1,17,126,1931-2010
+  s_220f379c12fa5d::t_33fb1771739af3 1887,1895,1906
+  s_220f379c12fa5d::t_cc18df275c514b 124,1747-1830,2011-2012
+  s_220f379c12fa5d::t_52524b82df6b72 125,1831-1886,1888-1894,1896-1905,1907-1922,1925-1930
+  s_220f379c12fa5d::t_1f3b837dfe4544 1923-1924
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_8c4fdb788034a8 2,47,54,56-57
+  s_220f379c12fa5d::t_ec5b476fc1c373 3-19,25-26,28,30
+  s_220f379c12fa5d::t_31ceddf2d2b9bc 20-24,27,29
+Tools/RuneTestTool/Program.cs
+  s_220f379c12fa5d::t_52524b82df6b72 63
+  s_220f379c12fa5d::t_6752d1062bc1a2 1,64,74
+  s_220f379c12fa5d::t_cc18df275c514b 62
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_816dcffc69ecb5 579-580,2322-2372
+  s_220f379c12fa5d::t_0102306813414a 581-582,2373-2420
+  s_220f379c12fa5d::t_be2b8f370e7607 539,578
+  s_220f379c12fa5d::t_39d1fabb024896 778,2267-2321,2421
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_8c4fdb788034a8 254,261-262
+  s_220f379c12fa5d::t_ec5b476fc1c373 512-530,536-537,539,541-542
+  s_220f379c12fa5d::t_4bf3cb60bd9d8a 531-535,538,540
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_816dcffc69ecb5 11,44
+Server/RuneSystem/RuneBehaviors/DebuffOnHitBehavior.cs
+  s_220f379c12fa5d::t_7eb0cf38db92ba 4,49,64-70,76
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_22ee8983b8fa91 31-74
+Server/MirObjects/HumanObject.cs
+  s_220f379c12fa5d::t_22ee8983b8fa91 3041
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_31bd483f37ea5e 250-251
+  s_220f379c12fa5d::t_54c1c063eddce1 278
+  s_220f379c12fa5d::t_65bac9bf874794 29-31,276-277
+  s_220f379c12fa5d::t_7eb0cf38db92ba 270-275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fc9b2f443e971aceb401b0bf947cd2687cf4e8e6",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
