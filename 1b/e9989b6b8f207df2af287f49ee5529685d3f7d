@@ -1,0 +1,86 @@
+Build/Server/Release/Envir/Migrations/V001__custom_wizard_skills.json
+  s_e627ee9f43f62f::t_81c34456841015 1-88
+Server/MirEnvir/DbMigrator.cs
+  s_e627ee9f43f62f::t_57890c15175879 40,72,91-102,290
+  s_e627ee9f43f62f::t_8f13ce98bf2061 1-39,41-71,73-90,103-138,140-289,291-366
+  s_e627ee9f43f62f::t_d90ab409619874 139
+Server/RuneSystem/RuneBehaviors/DebuffOnHitBehavior.cs
+  s_220f379c12fa5d::t_7eb0cf38db92ba 4,49,64-70,76
+Server/MirEnvir/Envir.cs
+  s_e627ee9f43f62f::t_e14210f3642fe8 2886-2887
+  s_e627ee9f43f62f::t_a620f64d15b5dc 57,125,2562-2565,3007-3014,3401-3405
+Server/MirDatabase/MigrationRecord.cs
+  s_e627ee9f43f62f::t_e2a2f9c682f3b9 1-36
+Build/Server/Release/Envir/Migrations/V002__town_portal_scroll.json
+  s_e627ee9f43f62f::t_43305c77bf9719 1-18
+.gitignore
+  s_e627ee9f43f62f::t_e99b65cb904da6 376-380
+Build/Server/Release/Envir/Migrations/README.md
+  s_e627ee9f43f62f::t_2496e00dfcabf5 1-46
+Server/MirObjects/SpellObject.cs
+  s_e627ee9f43f62f::t_00e445eb76d197 1,35,324-327
+Server/RuneSystem/RuneHooks.cs
+  s_220f379c12fa5d::t_22ee8983b8fa91 31-74
+docs/rune-hooks.md
+  s_220f379c12fa5d::t_816dcffc69ecb5 11,44
+Server/Settings.cs
+  s_e627ee9f43f62f::t_2f27be310f182a 25
+Server/RuneSystem/RuneEffects.cs
+  s_220f379c12fa5d::t_07ef6f2ec55b21 2,256-264,268,274-321
+Server/RuneSystem/RuneInfo.cs
+  s_220f379c12fa5d::t_7eb0cf38db92ba 270-275
+  s_220f379c12fa5d::t_31bd483f37ea5e 250-251
+  s_220f379c12fa5d::t_65bac9bf874794 29-31,276-277
+  s_220f379c12fa5d::t_54c1c063eddce1 278
+Tools/RuneTestTool/Program.cs
+  s_220f379c12fa5d::t_cc18df275c514b 62
+  s_220f379c12fa5d::t_6752d1062bc1a2 1,64,74
+  s_220f379c12fa5d::t_52524b82df6b72 63
+Server/MirObjects/HumanObject.cs
+  s_220f379c12fa5d::t_22ee8983b8fa91 3041
+Server/RuneSystem/RuneRepository.cs
+  s_220f379c12fa5d::t_8c4fdb788034a8 254,261-262
+  s_220f379c12fa5d::t_ec5b476fc1c373 512-530,536-537,539,541-542
+  s_220f379c12fa5d::t_4bf3cb60bd9d8a 531-535,538,540
+Server/MirObjects/PlayerObject.cs
+  s_e627ee9f43f62f::t_00e445eb76d197 6155
+Build/Server/Release/Envir/Rune/Runes.json
+  s_220f379c12fa5d::t_8c4fdb788034a8 2,47,54,56-57
+  s_220f379c12fa5d::t_ec5b476fc1c373 3-19,25-26,28,30
+  s_220f379c12fa5d::t_31ceddf2d2b9bc 20-24,27,29
+Tools/RuneTestTool/Smoke.cs
+  s_220f379c12fa5d::t_cc18df275c514b 124,1747-1830,2011-2012
+  s_220f379c12fa5d::t_33fb1771739af3 1887,1895,1906
+  s_220f379c12fa5d::t_ba146dee031cef 1,17,126,1931-2010
+  s_220f379c12fa5d::t_52524b82df6b72 125,1831-1886,1888-1894,1896-1905,1907-1922,1925-1930
+  s_220f379c12fa5d::t_1f3b837dfe4544 1923-1924
+docs/符文系统-可行性调研.md
+  s_220f379c12fa5d::t_be2b8f370e7607 539,578
+  s_220f379c12fa5d::t_39d1fabb024896 778,2267-2321,2421
+  s_220f379c12fa5d::t_816dcffc69ecb5 579-580,2322-2372
+  s_220f379c12fa5d::t_0102306813414a 581-582,2373-2420
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1be9989b6b8f207df2af287f49ee5529685d3f7d",
+  "prompts": {},
+  "sessions": {
+    "s_220f379c12fa5d": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bf62-ea9f-71bf-a485-e1f541d1798c",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    },
+    "s_e627ee9f43f62f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1cddb-0095-7206-8c21-c2df59748a22",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
