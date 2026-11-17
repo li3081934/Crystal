@@ -1,4 +1,4 @@
-﻿using Server.MirEnvir;
+using Server.MirEnvir;
 using Server.RuneSystem;
 using S = ServerPackets;
 
@@ -160,7 +160,7 @@ namespace Server.MirDatabase
                 };
         }
 
-        public ClientMagic CreateClientMagic()
+        public ClientMagic CreateClientMagic(int castSpeed = 0)
         {
             return new ClientMagic
             {
@@ -179,7 +179,7 @@ namespace Server.MirDatabase
                     Key = Key,
                     Experience = Experience,
                     IsTempSpell = IsTempSpell,
-                    Delay = GetDelay(),
+                    Delay = GetDelay(castSpeed),
                     Range = Info.Range,
                     CastTime = CastTime - Envir.Time
             };
@@ -224,22 +224,32 @@ namespace Server.MirDatabase
             return RuneHooks.Power(this, (int)Math.Round(power / 4F * (Level + 1) + DefPower()));
         }
 
-        public long GetDelay()
+        public long GetDelay(int castSpeed = 0)
         {
+            long delay;
+
             if (Info.Spell == Spell.ArcaneShift)
             {
-                long delay = Level switch
+                delay = Level switch
                 {
                     0 => (long)Info.DelayBase,
                     1 => (long)Info.DelayReduction,
                     2 => (long)Info.MultiplierBase,
                     _ => (long)Info.MultiplierBonus,
                 };
-
-                return RuneHooks.Delay(this, delay);
+            }
+            else
+            {
+                delay = Info.DelayBase - (Level * Info.DelayReduction);
             }
 
-            return RuneHooks.Delay(this, Info.DelayBase - (Level * Info.DelayReduction));
+            if (castSpeed > 0 && delay > 300)
+            {
+                delay -= castSpeed * 60L;
+                if (delay < 300) delay = 300;
+            }
+
+            return RuneHooks.Delay(this, delay);
         }
     }
 }

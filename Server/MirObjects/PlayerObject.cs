@@ -13,6 +13,7 @@ namespace Server.MirObjects
     {
         private long NextTradeTime;
         private long NextGroupInviteTime;
+        private int _lastSentCastSpeed = int.MinValue;
 
         public string GMPassword = Settings.GMPassword;
         public bool GMLogin, EnableGroupRecall, EnableGuildInvite, AllowMarriage, AllowLoverRecall, AllowMentor, HasMapShout, HasServerShout; //TODO - Remove        
@@ -366,7 +367,7 @@ namespace Server.MirObjects
             {
                 var magic = Info.Magics[i];
 
-                if (Envir.Time < (magic.CastTime + magic.GetDelay()))
+                if (Envir.Time < (magic.CastTime + magic.GetDelay(Stats[Stat.CastSpeed])))
                 {
                     magic.CastTime -= Envir.Time;
                 }
@@ -1129,6 +1130,31 @@ namespace Server.MirObjects
                 CallDefaultNPC(DefaultNPCType.Daily);
             }
         }
+        protected override void OnStatsRefreshed()
+        {
+            base.OnStatsRefreshed();
+
+            if (Connection == null || Connection.Stage != GameStage.Game) return;
+            if (_lastSentCastSpeed == Stats[Stat.CastSpeed]) return;
+
+            SendMagicDelays();
+        }
+
+        private void SendMagicDelays()
+        {
+            _lastSentCastSpeed = Stats[Stat.CastSpeed];
+
+            foreach (var magic in Info.Magics)
+            {
+                Enqueue(new S.MagicDelay
+                {
+                    ObjectID = ObjectID,
+                    Spell = magic.Spell,
+                    Delay = magic.GetDelay(Stats[Stat.CastSpeed])
+                });
+            }
+        }
+
         private void StartGameSuccess()
         {
             Connection.Stage = GameStage.Game;
@@ -1148,7 +1174,7 @@ namespace Server.MirObjects
                 var magic = Info.Magics[i];
                 magic.CastTime += Envir.Time;
 
-                if (magic.CastTime + magic.GetDelay() < Envir.Time)
+                if (magic.CastTime + magic.GetDelay(Stats[Stat.CastSpeed]) < Envir.Time)
                 {
                     magic.CastTime = int.MinValue;
                 }
@@ -1695,7 +1721,7 @@ namespace Server.MirObjects
 
             //Copy this method to prevent modification before sending packet information.
             for (int i = 0; i < Info.Magics.Count; i++)
-                packet.Magics.Add(Info.Magics[i].CreateClientMagic());
+                packet.Magics.Add(Info.Magics[i].CreateClientMagic(Stats[Stat.CastSpeed]));
 
             Info.Inventory.CopyTo(packet.Inventory, 0);
             Info.Equipment.CopyTo(packet.Equipment, 0);

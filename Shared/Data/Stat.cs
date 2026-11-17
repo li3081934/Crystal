@@ -110,6 +110,8 @@ public enum Stat : byte
     Freezing = 22,
     PoisonAttack = 23,
 
+    CastSpeed = 24,
+
     MagicResist = 30,
     PoisonResist = 31,
     HealthRecovery = 32,
@@ -127,6 +129,7 @@ public enum Stat : byte
     HPRatePercent = 46,
     MPRatePercent = 47,
     HPDrainRatePercent = 48,
+    CastSpeedRatePercent = 49,
 
     ExpRatePercent = 100,
     ItemDropRatePercent = 101,

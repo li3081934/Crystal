@@ -1223,7 +1223,7 @@ namespace Server.MirObjects
             };
 
             for (int i = 0; i < Info.Magics.Count; i++)
-                packet.Magics.Add(Info.Magics[i].CreateClientMagic());
+                packet.Magics.Add(Info.Magics[i].CreateClientMagic(Stats[Stat.CastSpeed]));
 
             Info.Inventory.CopyTo(packet.Inventory, 0);
             Info.Equipment.CopyTo(packet.Equipment, 0);

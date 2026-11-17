@@ -11,6 +11,7 @@ namespace Client.MirObjects
         public int HP, MP;
 
         public int AttackSpeed;
+        public int CastDelay = 1800;
 
         public Stats Stats;
 
@@ -167,12 +168,17 @@ namespace Client.MirObjects
             Stats[Stat.MaxMC] += (Stats[Stat.MaxMC] * Stats[Stat.MaxMCRatePercent]) / 100;
             Stats[Stat.MaxSC] += (Stats[Stat.MaxSC] * Stats[Stat.MaxSCRatePercent]) / 100;
             Stats[Stat.AttackSpeed] += (Stats[Stat.AttackSpeed] * Stats[Stat.AttackSpeedRatePercent]) / 100;
+            Stats[Stat.CastSpeed] += (Stats[Stat.CastSpeed] * Stats[Stat.CastSpeedRatePercent]) / 100;
 
             RefreshStatCaps();
 
             if (this == User && Light < 3) Light = 3;
             AttackSpeed = 1400 - ((Stats[Stat.AttackSpeed] * 60) + Math.Min(370, (Level * 14)));
             if (AttackSpeed < 550) AttackSpeed = 550;
+
+            CastDelay = 1800 - (Stats[Stat.CastSpeed] * 60);
+            if (CastDelay < 550) CastDelay = 550;
+            if (CastDelay > 1800) CastDelay = 1800;
 
             PercentHealth = (byte)(HP / (float)Stats[Stat.HP] * 100);
 

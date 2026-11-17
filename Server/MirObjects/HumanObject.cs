@@ -187,6 +187,7 @@ namespace Server.MirObjects
         public const long LoyaltyDelay = 1000, ItemExpireDelay = 60000, DuraDelay = 10000, RegenDelay = 10000, PotDelay = 200, HealDelay = 600, VampDelay = 500, MoveDelay = 600;
         public long StruckTime, RunTime, ActionTime, AttackTime, RegenTime, SpellTime, StackingTime, IncreaseLoyaltyTime, ItemExpireTime, TorchTime, DuraTime, PotTime, HealTime, VampTime, LogTime, DecreaseLoyaltyTime, SearchTime;
         public long ArcaneRecoveryTime;
+        public int CastDelay = 1800;
 
         protected int _stepCounter, _runCounter;
 
@@ -1810,6 +1811,7 @@ namespace Server.MirObjects
             Stats[Stat.MaxMC] += (Stats[Stat.MaxMC] * Stats[Stat.MaxMCRatePercent]) / 100;
             Stats[Stat.MaxSC] += (Stats[Stat.MaxSC] * Stats[Stat.MaxSCRatePercent]) / 100;
             Stats[Stat.AttackSpeed] += (Stats[Stat.AttackSpeed] * Stats[Stat.AttackSpeedRatePercent]) / 100;
+            Stats[Stat.CastSpeed] += (Stats[Stat.CastSpeed] * Stats[Stat.CastSpeedRatePercent]) / 100;
 
             RefreshStatCaps();
 
@@ -1821,7 +1823,16 @@ namespace Server.MirObjects
             AttackSpeed = 1400 - ((Stats[Stat.AttackSpeed] * 60) + Math.Min(370, (Level * 14)));
 
             if (AttackSpeed < 550) AttackSpeed = 550;
+
+            CastDelay = 1800 - (Stats[Stat.CastSpeed] * 60);
+
+            if (CastDelay < 550) CastDelay = 550;
+            if (CastDelay > 1800) CastDelay = 1800;
+
+            OnStatsRefreshed();
         }
+
+        protected virtual void OnStatsRefreshed() { }
         public virtual void RefreshGuildBuffs() { }
 
         public virtual void RefreshMaxExperience() { }
@@ -3492,7 +3503,7 @@ namespace Server.MirObjects
             }
 
             AttackTime = Envir.Time + MoveDelay;
-            SpellTime = Envir.Time + 1800; //Spell Delay
+            SpellTime = Envir.Time + CastDelay; //Spell Delay
 
             if (spell != Spell.ShoulderDash)
             {
@@ -3501,7 +3512,7 @@ namespace Server.MirObjects
 
             LogTime = Envir.Time + Globals.LogDelay;
 
-            long delay = magic.GetDelay();
+            long delay = magic.GetDelay(Stats[Stat.CastSpeed]);
 
             if (magic != null && Envir.Time < (magic.CastTime + delay))
             {
@@ -7121,7 +7132,7 @@ namespace Server.MirObjects
 
             if (oldLevel != magic.Level)
             {
-                long delay = magic.GetDelay();
+                long delay = magic.GetDelay(Stats[Stat.CastSpeed]);
                 Enqueue(new S.MagicDelay { ObjectID = ObjectID, Spell = magic.Spell, Delay = delay });
             }
 

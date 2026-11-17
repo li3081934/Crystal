@@ -1575,7 +1575,7 @@ namespace Client.MirObjects
                                 }
                                 else
                                 {
-                                    GameScene.SpellTime = Spell == Spell.FlameField ? CMain.Time + 2500 : CMain.Time + 1800;
+                                    GameScene.SpellTime = Spell == Spell.FlameField ? CMain.Time + 2500 : CMain.Time + GameScene.User.CastDelay;
                                     MapControl.NextAction = CMain.Time + 2500;
                                 }
                             }
@@ -1600,7 +1600,7 @@ namespace Client.MirObjects
                                 }
                                 else
                                 {
-                                    GameScene.SpellTime = Spell == Spell.FlameField ? CMain.Time + 2500 : CMain.Time + 1800;
+                                    GameScene.SpellTime = Spell == Spell.FlameField ? CMain.Time + 2500 : CMain.Time + GameScene.User.CastDelay;
                                     MapControl.NextAction = CMain.Time + 2500;
                                 }
                             }

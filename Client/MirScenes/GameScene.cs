@@ -4695,6 +4695,9 @@ namespace Client.MirScenes
                 magic = Hero.GetMagic(p.Spell);
             else
                 magic = User.GetMagic(p.Spell);
+
+            if (magic == null) return;
+
             magic.Delay = p.Delay;
         }
 
@@ -7500,6 +7503,43 @@ namespace Client.MirScenes
 
                 ItemLabel.Size = new Size(Math.Max(ItemLabel.Size.Width, ASPEEDLabel.DisplayRectangle.Right + 4),
                     Math.Max(ItemLabel.Size.Height, ASPEEDLabel.DisplayRectangle.Bottom));
+            }
+
+            #endregion
+
+            #region CASTSPEED
+
+            minValue = realItem.Stats[Stat.CastSpeed];
+            maxValue = 0;
+            addValue = (!hideAdded && (!HoverItem.Info.NeedIdentify || HoverItem.Identified)) ? addedStats[Stat.CastSpeed] : 0;
+
+            if (minValue != 0 || maxValue != 0 || addValue != 0)
+            {
+                string plus = (addValue + minValue < 0) ? String.Empty : "+";
+
+                count++;
+                if (HoverItem.Info.Type != ItemType.Gem)
+                {
+                    string negative = "+";
+                    if (addValue < 0) negative = String.Empty;
+
+                    text = GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.CastSpeedValue, plus, minValue + addValue) + (addValue != 0 ? $" ({negative}{addValue})" : string.Empty);
+                }
+                else
+                    text = GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.AddCastSpeed, minValue + maxValue + addValue);
+
+                MirLabel CASTSPEEDLabel = new MirLabel
+                {
+                    AutoSize = true,
+                    ForeColour = addValue > 0 ? Color.Cyan : Color.White,
+                    Location = new Point(4, ItemLabel.DisplayRectangle.Bottom),
+                    OutLine = true,
+                    Parent = ItemLabel,
+                    Text = text
+                };
+
+                ItemLabel.Size = new Size(Math.Max(ItemLabel.Size.Width, CASTSPEEDLabel.DisplayRectangle.Right + 4),
+                    Math.Max(ItemLabel.Size.Height, CASTSPEEDLabel.DisplayRectangle.Bottom));
             }
 
             #endregion

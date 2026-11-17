@@ -10,7 +10,7 @@ namespace Server
 {
     /// <summary>
     /// 词条定义仓库：读取/校验/缓存 Envir/Affix/Affixes.json。
-    /// 文件缺失时用内置 56 族 × 5 档默认表生成并写盘；损坏时回退默认表，保证开服可用。
+    /// 文件缺失时用内置 57 族 × 5 档默认表生成并写盘；损坏时回退默认表，保证开服可用。
     /// </summary>
     public static class AffixRepository
     {
@@ -172,7 +172,7 @@ namespace Server
             info = null;
             if (dto == null) return false;
 
-            if (dto.Id < 1001 || (dto.Id > 1275 && dto.Id < 2001) || dto.Id > 2275)
+            if (dto.Id < 1001 || (dto.Id > 1285 && dto.Id < 2001) || dto.Id > 2285)
             {
                 MessageQueue.Instance.Enqueue($"[Affix] 跳过：Id 越界 (Id={dto.Id}, {dto.Name})");
                 return false;
@@ -377,6 +377,7 @@ namespace Server
             new Family { BaseId = 1250, Name = "负重的", Group = "p_bag_weight", Stat = Stat.BagWeight, Weight = 38, Slots = SlotArmourBeltBoots, Values = new[] { "5-10", "10-20", "20-30", "30-40", "40-60" } },
             new Family { BaseId = 1260, Name = "强壮的", Group = "p_wear_weight", Stat = Stat.WearWeight, Weight = 38, Slots = SlotArmourHelmetBelt, Values = new[] { "3-5", "5-10", "10-16", "16-24", "24-32" } },
             new Family { BaseId = 1270, Name = "灵巧的", Group = "p_hand_weight", Stat = Stat.HandWeight, Weight = 30, Slots = SlotJewelry, Values = new[] { "2-4", "4-8", "8-12", "12-16", "16-24" } },
+            new Family { BaseId = 1280, Name = "吟唱的", Group = "p_cast_speed", Stat = Stat.CastSpeed, Weight = 30, Slots = SlotWeaponJewelry, Values = new[] { "1", "1", "1-2", "2", "2-3" } },
 
             // 后缀 A：输出向（8 族）
             new Family { BaseId = 2000, Name = "之熊", Group = "s_maxdc_flat", Stat = Stat.MaxDC, Weight = 80, Slots = SlotWeaponRingBracelet, Values = new[] { "1-2", "2-3", "3-4", "4-5", "5-6" } },
@@ -410,6 +411,7 @@ namespace Server
             new Family { BaseId = 2240, Name = "之轻身", Group = "s_bag_weight", Stat = Stat.BagWeight, Weight = 35, Slots = SlotArmourBeltBoots, Values = new[] { "5-10", "10-15", "15-25", "25-35", "35-50" } },
             new Family { BaseId = 2250, Name = "之活力", Group = "s_hp_rate", Stat = Stat.HPRatePercent, Weight = 25, Slots = SlotArmourJewelry, Values = new[] { "1", "1", "1-2", "2", "2-3" } },
             new Family { BaseId = 2260, Name = "之睿智", Group = "s_mp_rate", Stat = Stat.MPRatePercent, Weight = 25, Slots = SlotArmourJewelry, Values = new[] { "1", "1", "1-2", "2", "2-3" } },
+            new Family { BaseId = 2280, Name = "之咒语", Group = "s_cast_speed", Stat = Stat.CastSpeed, Weight = 35, Slots = SlotAllGear, Values = new[] { "1", "1", "2", "2", "3" } },
             // 2270 之攻速（AttackSpeedRatePercent）已删除：HumanObject.cs:1812 是整数乘除，
             // Stats[AttackSpeed] 常规值 2~8，5%~15% 的结果恒为 0，属死词条。需要攻速请用 1020/2040。
         };
