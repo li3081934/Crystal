@@ -1,0 +1,26 @@
+docs/词条系统-设计方案.md
+  s_99dc3268dbef5f::t_5bcf40ba280d00 474,487,495,796
+  s_99dc3268dbef5f::t_cbae1ef722bea8 470-473,483-486,497
+  s_99dc3268dbef5f::t_1016179bfb337e 544,797
+Client/MirControls/MirItemCell.cs
+  s_99dc3268dbef5f::t_2af5d51f619972 7,2576-2641
+Shared/Data/AffixData.cs
+  s_99dc3268dbef5f::t_32e12f15dafee5 70,72,74,76
+  s_99dc3268dbef5f::t_1697c7012e2996 62,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "41ff5a50a7420ec4a645a25e0caeb17789aac92a",
+  "prompts": {},
+  "sessions": {
+    "s_99dc3268dbef5f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1d2be-ee0a-7206-8c21-c2e0e5aa4afe",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
