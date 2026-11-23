@@ -1,0 +1,28 @@
+Client/MirSounds/Libraries/LoopProvider.cs
+  s_622923b70b74fc::t_7a3cf5972bc468 70-71,81-85,109-110,116-118
+Tests/ItemSecurity/Program.cs
+  s_622923b70b74fc::t_7a3cf5972bc468 75-103
+Client/MirSounds/SoundManager.cs
+  s_622923b70b74fc::t_7a3cf5972bc468 17-21,72-76,79-82,185,240,242
+  s_622923b70b74fc::t_79ae01d3af6115 182,184
+Server/MirObjects/PlayerObject.cs
+  s_622923b70b74fc::t_7a3cf5972bc468 1483-1484
+Shared/Data/ItemData.cs
+  s_622923b70b74fc::t_7a3cf5972bc468 790-791
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bb0a04d34edc5cf2b2b1e28e2cccea26f78a471",
+  "prompts": {},
+  "sessions": {
+    "s_622923b70b74fc": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a207d7-399b-73cc-84d8-4b08e1a37e3a",
+        "model": "deepseek-v4.1-flash"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
