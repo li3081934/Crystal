@@ -1480,6 +1480,8 @@ namespace Server.MirObjects
         }
         public override bool Teleport(Map temp, Point location, bool effects = true, byte effectnumber = 0)
         {
+            if (temp == null) return false;
+
             Map oldMap = CurrentMap;
             Point oldLocation = CurrentLocation;
             bool mapChanged = temp != oldMap;
